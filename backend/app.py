@@ -22,8 +22,6 @@ app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USE_SSL"] = False
-app.config["MAIL_USERNAME"] = "uyinshubao@gmail.com"  # Replace with your email
-app.config["MAIL_PASSWORD"] = "zbfs xxfv zlfx wqwb"  # Replace with your App Password
 
 
 # --- 2. INITIALIZATION ---
