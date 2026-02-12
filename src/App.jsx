@@ -12,6 +12,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import VerifyEmail from "./components/VerifyEmail";
 import UserDashboard from "./pages/UserDashBoard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
           <Route path='/contact' element={<Contact />} />
           <Route path='/verify/:token' element={<VerifyEmail />} />
           <Route path='/user-dashboard' element={<UserDashboard />} />
+          <Route path='/admin-dashboard' element={<AdminDashboard />} />
 
           {/* 404 Fallback - Optional */}
           <Route
