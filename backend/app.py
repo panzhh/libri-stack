@@ -22,7 +22,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
     BASE_DIR, "libri.db"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["JWT_SECRET_KEY"] = "libri-stack-super-secret-2026"
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
 # MAIL SERVER CONFIG (Required for Email Verification)
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
@@ -52,7 +52,7 @@ def register():
     data = request.get_json()
     full_name = data.get("full_name")
     email = data.get("email")
-    hashed_pw = generate_password_hash(data.get("password"))
+    passwd = data.get("password")
 
     role = data.get("role", "user")
     provided_code = data.get("adminCode")
@@ -88,7 +88,7 @@ def register():
             invited_by=inviter_email,
             is_verified=False,
         )
-        new_user.set_password(hashed_pw)
+        new_user.set_password(passwd)
 
         if role == "admin":
             new_user.own_invite_code = User.generate_unique_code()
@@ -144,23 +144,42 @@ def verify_email(token):
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
-    user = User.query.filter_by(email=data["email"]).first()
-    if user and user.check_password(data["password"]):
+    email = data.get("email")
+    password = data.get("password")  # The plain text from the form
+    role = data.get("role")  # The role from the form
+
+    user = User.query.filter_by(email=email).first()
+    print("data:", data)
+    print("role:", role)
+    print("user role:", user.role)
+
+    # user.check_password handles the complex math of comparing hashes
+    if user and user.check_password(password):
+        print("come here")
         if not user.is_verified:
-            return jsonify({"msg": "Please verify your email first!"}), 401
+            print("come here2")
+            return jsonify({"msg": "Please verify your email first"}), 401
+
+        if role != user.role:
+            print("come here3")
+            return jsonify({"msg": "You input Invalid email or password"}), 401
+
         access_token = create_access_token(identity={"id": user.id, "role": user.role})
+
+        print("come here4")
         return (
             jsonify(
                 {
                     "token": access_token,
                     "role": user.role,
+                    "full_name": user.full_name,
                     "email": user.email,
-                    "own_code": user.own_invite_code,
                 }
             ),
             200,
         )
-    return jsonify({"msg": "Invalid credentials"}), 401
+
+    return jsonify({"msg": "Invalid email or password"}), 401
 
 
 # --- 4. BOOKS API (Paginated for 5,000 entries) ---
