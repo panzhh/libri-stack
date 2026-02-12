@@ -84,12 +84,12 @@ def register():
 
     # --- EMAIL VERIFICATION FLOW ---
     token = serializer.dumps(email, salt="email-confirm")
-    verify_url = f"http://localhost:5173/verify/{token}"
+    verify_url = f"http://localhost:5173/api/verify/{token}"
 
     try:
         msg = Message("Verify Your LibriStack Account", recipients=[email])
         msg.html = f"<h3>Welcome to the Stack!</h3><p>Please click below to verify your email:</p><a href='{verify_url}'>Verify Account</a>"
-        # mail.send(msg) # Uncomment this when your MAIL_USERNAME/PASSWORD are set
+        mail.send(msg) # Uncomment this when your MAIL_USERNAME/PASSWORD are set
         print(f"\n[DEV MODE] Verification Link: {verify_url}\n")
     except Exception as e:
         print(f"Error sending email: {e}")
@@ -160,6 +160,42 @@ def get_books():
             "current_page": books_paginated.page,
         }
     )
+
+
+@app.route('/api/debug/users', methods=['GET'])
+def get_all_users():
+    # Optional filter: /api/debug/users?role=admin
+    role_filter = request.args.get('role')
+    
+    if role_filter:
+        users = User.query.filter_by(role=role_filter).all()
+    else:
+        users = User.query.all()
+    
+    # Use the to_dict() method we added to models.py earlier
+    return jsonify([user.to_dict() for user in users]), 200
+
+
+@app.route('/api/debug/delete-user', methods=['DELETE'])
+def delete_user():
+    # We use query parameters for ease of use in tools like Postman or Curl
+    email = request.args.get('email')
+    
+    if not email:
+        return jsonify({"msg": "Email parameter is required"}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        return jsonify({"msg": f"User {email} not found"}), 404
+    
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"msg": f"User {email} deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error deleting user", "error": str(e)}), 500
 
 
 if __name__ == "__main__":

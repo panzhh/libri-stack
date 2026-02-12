@@ -3,7 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [role, setRole] = useState("user");
-  const [agreed, setAgreed] = useState(false); // Agreement state
+  const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false); // New: Loading state
+  const [status, setStatus] = useState({ type: "", msg: "" }); // New: Feedback state
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -30,23 +33,51 @@ export default function Register() {
 
   // --- VALIDATION LOGIC ---
   const passwordsMatch = formData.password === formData.confirmPassword;
-  const hasPassword = formData.password.length > 0;
+  const hasPassword = formData.password.length >= 6; // Recommended min length
   const hasEmail = formData.email.includes("@");
   const hasAdminCode = role === "admin" ? formData.adminCode.length > 0 : true;
 
-  // Added "agreed" to the required submission conditions
-  const canSubmit =
-    passwordsMatch && hasPassword && hasEmail && hasAdminCode && agreed;
+  const canSubmit = passwordsMatch && hasPassword && hasEmail && hasAdminCode && agreed && !loading;
 
-  const handleSubmit = (e) => {
+  // --- UPDATED SUBMIT LOGIC ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(`Registering ${role}:`, formData);
-    navigate("/login");
+    setLoading(true);
+    setStatus({ type: "", msg: "" });
+
+    try {
+      const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          role: role,
+          adminCode: role === "admin" ? formData.adminCode : null
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus({ type: "success", msg: "Registration successful! Check your email for the link." });
+        // Optionally navigate after a delay so they read the message
+        // setTimeout(() => navigate("/login"), 4000);
+      } else {
+        setStatus({ type: "error", msg: data.msg || "Registration failed" });
+      }
+    } catch (err) {
+      setStatus({ type: "error", msg: "Server is offline. Please try again later." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className='min-h-[90vh] flex items-center justify-center px-6 py-12'>
       <div className='bg-white w-full max-w-md p-8 rounded-[3rem] border-2 border-slate-100 shadow-xl'>
+        
         {/* HEADER */}
         <div className='text-center mb-8'>
           <h2 className='text-3xl font-black uppercase italic tracking-tighter'>
@@ -56,6 +87,15 @@ export default function Register() {
             Create your LibriStack account
           </p>
         </div>
+
+        {/* FEEDBACK UI */}
+        {status.msg && (
+          <div className={`mb-6 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-center animate-in zoom-in-95 duration-200 ${
+            status.type === "success" ? "bg-green-50 text-green-600 border border-green-100" : "bg-rose-50 text-rose-600 border border-rose-100"
+          }`}>
+            {status.msg}
+          </div>
+        )}
 
         {/* ROLE SELECTOR */}
         <div className='flex bg-slate-50 p-1.5 rounded-2xl mb-8'>
@@ -86,9 +126,7 @@ export default function Register() {
               required
               placeholder='name@example.com'
               className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-bold text-sm'
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
 
@@ -102,9 +140,7 @@ export default function Register() {
               required
               placeholder='••••••••'
               className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-bold text-sm'
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
 
@@ -118,13 +154,11 @@ export default function Register() {
               required
               placeholder='••••••••'
               className={`w-full px-5 py-4 bg-slate-50 border-2 rounded-2xl outline-none transition-all font-bold text-sm ${!passwordsMatch && formData.confirmPassword ? "border-rose-400 focus:border-rose-500" : "border-transparent focus:border-indigo-600 focus:bg-white"}`}
-              onChange={(e) =>
-                setFormData({ ...formData, confirmPassword: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             />
           </div>
 
-          {/* PHONE (Optional) */}
+          {/* PHONE */}
           <div>
             <div className='flex justify-between items-center ml-2 mb-1'>
               <label className='text-[10px] font-black uppercase tracking-widest text-slate-400 block'>
@@ -154,14 +188,12 @@ export default function Register() {
                 required
                 placeholder='Enter Secret Code'
                 className='w-full px-5 py-4 bg-rose-50 border-2 border-rose-100 focus:border-rose-500 rounded-2xl outline-none transition-all font-bold text-sm'
-                onChange={(e) =>
-                  setFormData({ ...formData, adminCode: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, adminCode: e.target.value })}
               />
             </div>
           )}
 
-          {/* AGREEMENT CHECKBOX */}
+          {/* AGREEMENT */}
           <div className='flex items-start gap-3 px-2 py-2'>
             <input
               type='checkbox'
@@ -170,16 +202,8 @@ export default function Register() {
               onChange={(e) => setAgreed(e.target.checked)}
               className='mt-1 w-5 h-5 accent-indigo-600 cursor-pointer'
             />
-            <label
-              htmlFor='agree'
-              className='text-[10px] font-bold text-slate-500 leading-tight cursor-pointer select-none'
-            >
-              I agree to the{" "}
-              <span className='text-indigo-600 underline'>
-                Terms of Service
-              </span>{" "}
-              and{" "}
-              <span className='text-indigo-600 underline'>Privacy Policy</span>.
+            <label htmlFor='agree' className='text-[10px] font-bold text-slate-500 leading-tight cursor-pointer select-none'>
+              I agree to the <span className='text-indigo-600 underline'>Terms</span> and <span className='text-indigo-600 underline'>Privacy Policy</span>.
             </label>
           </div>
 
@@ -194,11 +218,7 @@ export default function Register() {
                   : "bg-indigo-600 shadow-indigo-200 hover:scale-[1.02]"
             }`}
           >
-            {canSubmit
-              ? "Create Account"
-              : agreed
-                ? "Fill Required Fields"
-                : "Check Agreement"}
+            {loading ? "Sending..." : canSubmit ? "Create Account" : agreed ? "Fill Fields" : "Check Agreement"}
           </button>
         </form>
       </div>
