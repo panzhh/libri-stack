@@ -31,4 +31,4 @@ backend/*.db
 backend/.env
 *.pyc
 
-./env
+.env
