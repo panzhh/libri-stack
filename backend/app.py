@@ -5,6 +5,13 @@ from flask_jwt_extended import JWTManager, create_access_token
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from flask_mail import Mail, Message
 from models import db, User, Book
+from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash
+
+# Points to the .env file one directory up
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, "../.env"))
+
 
 app = Flask(__name__)
 CORS(app)
@@ -22,6 +29,10 @@ app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USE_SSL"] = False
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = ("LibriStack", os.getenv("MAIL_DEFAULT_SENDER"))
 
 
 # --- 2. INITIALIZATION ---
@@ -40,70 +51,87 @@ with app.app_context():
 def register():
     data = request.get_json()
     email = data.get("email")
-    password = data.get("password")
+    hashed_pw = generate_password_hash(data.get("password"))
+
     role = data.get("role", "user")
     provided_code = data.get("adminCode")
-
-    if User.query.filter_by(email=email).first():
-        return jsonify({"msg": "Email already registered"}), 400
-
-    inviter_email = None
-
-    # --- SECURE ADMIN LOGIC (ROOT1 works only for the very first Admin) ---
-    if role == "admin":
-        first_admin = User.query.filter_by(role="admin").first()
-        if not first_admin:
-            if provided_code == "ROOT1":
-                inviter_email = "SYSTEM_ROOT"
-            else:
-                return (
-                    jsonify({"msg": "System setup required. Enter Master Code."}),
-                    403,
-                )
-        else:
-            # ROOT1 is now inactive; must use an existing admin's 5-digit code
-            inviter = User.query.filter_by(own_invite_code=provided_code).first()
-            if not inviter:
-                return jsonify({"msg": "Invalid or expired Invite Code"}), 403
-            inviter_email = inviter.email
-
-    new_user = User(
-        email=email,
-        phone=data.get("phone"),
-        role=role,
-        invited_by=inviter_email,
-        is_verified=False,
-    )
-    new_user.set_password(password)
-
-    if role == "admin":
-        new_user.own_invite_code = User.generate_unique_code()
-
-    db.session.add(new_user)
-    db.session.commit()
-
-    # --- EMAIL VERIFICATION FLOW ---
-    token = serializer.dumps(email, salt="email-confirm")
-    verify_url = f"http://localhost:5173/api/verify/{token}"
-
     try:
-        msg = Message("Verify Your LibriStack Account", recipients=[email])
-        msg.html = f"<h3>Welcome to the Stack!</h3><p>Please click below to verify your email:</p><a href='{verify_url}'>Verify Account</a>"
-        mail.send(msg) # Uncomment this when your MAIL_USERNAME/PASSWORD are set
-        print(f"\n[DEV MODE] Verification Link: {verify_url}\n")
-    except Exception as e:
-        print(f"Error sending email: {e}")
+        if User.query.filter_by(email=email).first():
+            return jsonify({"msg": "Email already registered"}), 400
 
-    return jsonify({"msg": "Registration successful! Please verify your email."}), 201
+        inviter_email = None
+
+        # --- SECURE ADMIN LOGIC (ROOT1 works only for the very first Admin) ---
+        if role == "admin":
+            first_admin = User.query.filter_by(role="admin").first()
+            if not first_admin:
+                if provided_code == "ROOT1":
+                    inviter_email = "SYSTEM_ROOT"
+                else:
+                    return (
+                        jsonify({"msg": "System setup required. Enter Master Code."}),
+                        403,
+                    )
+            else:
+                # ROOT1 is now inactive; must use an existing admin's 5-digit code
+                inviter = User.query.filter_by(own_invite_code=provided_code).first()
+                if not inviter:
+                    return jsonify({"msg": "Invalid or expired Invite Code"}), 403
+                inviter_email = inviter.email
+
+        new_user = User(
+            email=email,
+            phone=data.get("phone"),
+            role=role,
+            invited_by=inviter_email,
+            is_verified=False,
+        )
+        new_user.set_password(hashed_pw)
+
+        if role == "admin":
+            new_user.own_invite_code = User.generate_unique_code()
+
+        db.session.add(new_user)
+
+        # --- EMAIL VERIFICATION LOGIC ---
+        token = serializer.dumps(data.get("email"), salt="email-confirm")
+        # We add 'role' to the URL so the verify route knows which table to update!
+        verify_url = f"http://localhost:5173/verify/{token}?role={role}"
+
+        msg = Message(
+            "Verify Your Account",
+            sender=app.config["MAIL_USERNAME"],
+            recipients=[data.get("email")],
+        )
+        msg.body = f"Click here to verify in 15 mins: {verify_url}"
+        mail.send(msg)
+
+        db.session.commit()
+        return (
+            jsonify(
+                {
+                    "message": "Registration Successful > A verification link has been sent to your email address. Please click the link within 15 minutes to activate your account."
+                }
+            ),
+            201,
+        )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/verify/<token>", methods=["POST"])
 def verify_email(token):
+    role = request.args.get("role")  # Get 'owner' or 'courier' from URL
+    print("role is: ", role)
     try:
         email = serializer.loads(token, salt="email-confirm", max_age=3600)
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"msg": "User not found"}), 404
+        if role != user.role:
+            return jsonify({"msg": "Verification failed: Role mismatch"}), 403
+
         user.is_verified = True
         db.session.commit()
         return jsonify({"msg": "Email verified successfully!"}), 200
@@ -162,33 +190,33 @@ def get_books():
     )
 
 
-@app.route('/api/debug/users', methods=['GET'])
+@app.route("/api/debug/users", methods=["GET"])
 def get_all_users():
     # Optional filter: /api/debug/users?role=admin
-    role_filter = request.args.get('role')
-    
+    role_filter = request.args.get("role")
+
     if role_filter:
         users = User.query.filter_by(role=role_filter).all()
     else:
         users = User.query.all()
-    
+
     # Use the to_dict() method we added to models.py earlier
     return jsonify([user.to_dict() for user in users]), 200
 
 
-@app.route('/api/debug/delete-user', methods=['DELETE'])
+@app.route("/api/debug/delete-user", methods=["DELETE"])
 def delete_user():
     # We use query parameters for ease of use in tools like Postman or Curl
-    email = request.args.get('email')
-    
+    email = request.args.get("email")
+
     if not email:
         return jsonify({"msg": "Email parameter is required"}), 400
-    
+
     user = User.query.filter_by(email=email).first()
-    
+
     if not user:
         return jsonify({"msg": f"User {email} not found"}), 404
-    
+
     try:
         db.session.delete(user)
         db.session.commit()
