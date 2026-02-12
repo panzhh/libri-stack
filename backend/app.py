@@ -50,6 +50,7 @@ with app.app_context():
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.get_json()
+    full_name = data.get("full_name")
     email = data.get("email")
     hashed_pw = generate_password_hash(data.get("password"))
 
@@ -80,6 +81,7 @@ def register():
                 inviter_email = inviter.email
 
         new_user = User(
+            full_name=full_name,
             email=email,
             phone=data.get("phone"),
             role=role,
