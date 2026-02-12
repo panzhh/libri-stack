@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
@@ -247,5 +248,34 @@ def delete_user():
         return jsonify({"msg": "Error deleting user", "error": str(e)}), 500
 
 
+def seed_database():
+    with app.app_context():
+        # Check if the database is empty
+        if Book.query.count() == 0:
+            print("🚀 Database empty. Seeding from books.json...")
+            try:
+                with open("../src/data/books.json", "r", encoding="utf-8") as f:
+                    books_data = json.load(f)
+                    for item in books_data:
+                        # Map all JSON keys to the Model columns automatically
+                        new_book = Book(
+                            **{k: v for k, v in item.items() if hasattr(Book, k)}
+                        )
+                        db.session.add(new_book)
+
+                    db.session.commit()
+                    print(f"✅ Success! {len(books_data)} books imported.")
+            except Exception as e:
+                print(f"❌ Error during seeding: {e}")
+        else:
+            print("📚 Database already has data. Skipping seed.")
+
+
 if __name__ == "__main__":
+    with app.app_context():
+        # 1. Create the database tables based on your model
+        db.create_all()
+
+        # 2. Run the seed function
+        seed_database()
     app.run(debug=True, port=5000)

@@ -136,7 +136,10 @@ export default function Home() {
             </p>
             <div className='flex justify-between items-center pt-4 border-t border-slate-50'>
               <span className='font-black text-slate-900'>
-                ${book.price.toFixed(2)}
+                $
+                {book.listPriceUsd
+                  ? Number(book.listPriceUsd).toFixed(2)
+                  : "0.00"}
               </span>
               <button className='text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white px-4 py-2 rounded-full hover:bg-indigo-600 transition-colors'>
                 View

@@ -50,23 +50,66 @@ class User(db.Model):
 
 
 class Book(db.Model):
-    __tablename__ = "book"
-
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
-    author = db.Column(db.String(255), nullable=False)
-    language = db.Column(db.String(50), default="English")
-    isbn = db.Column(db.String(20), nullable=True)
-    description = db.Column(db.Text, nullable=True)
-    cover_image = db.Column(db.String(255), nullable=True)
+    title = db.Column(db.String(500))
+    subtitle = db.Column(db.String(500))
+    series = db.Column(db.String(255))
+    volume = db.Column(db.String(100))
+    author = db.Column(db.String(255))
+    authorLastFirst = db.Column(db.String(255))
+    illustrator = db.Column(db.String(255))
+    narrator = db.Column(db.String(255))
+    translator = db.Column(db.String(255))
+    publisher = db.Column(db.String(255))
+    datePublished = db.Column(db.String(100))
+    yearPublished = db.Column(db.Integer)
+    genre = db.Column(db.String(100))
+    edition = db.Column(db.String(100))
+    editor = db.Column(db.String(255))
+    summary = db.Column(db.Text)
+    guidedReadingLevel = db.Column(db.String(50))
+    lexileMeasure = db.Column(db.String(50))
+    gradeLevelEquivalent = db.Column(db.String(50))
+    developmentalReadingAssessment = db.Column(db.String(50))
+    interestLevel = db.Column(db.String(50))
+    wordCount = db.Column(db.Integer)
+    originalTitle = db.Column(db.String(500))
+    numberOfPages = db.Column(db.Integer)
+    format = db.Column(db.String(100))
+    dimensions = db.Column(db.String(100))
+    weight = db.Column(db.String(100))
+    listPrice = db.Column(db.String(100))  # The "1 $" string
+    language = db.Column(db.String(100))
+    ddc = db.Column(db.String(50))
+    lcc = db.Column(db.String(50))
+    oclc = db.Column(db.String(50))
+    isbn = db.Column(db.String(50))
+    favorites = db.Column(db.Float)
+    rating = db.Column(db.Float)
+    physicalLocation = db.Column(db.String(255))
+    status = db.Column(db.String(100))
+    dateStarted = db.Column(db.String(100))
+    dateFinished = db.Column(db.String(100))
+    loanedTo = db.Column(db.String(255))
+    dateLoaned = db.Column(db.String(100))
+    borrowedFrom = db.Column(db.String(255))
+    dateBorrowed = db.Column(db.String(100))
+    quantity = db.Column(db.Integer)
+    condition = db.Column(db.String(100))
+    recommendedBy = db.Column(db.String(255))
+    dateAdded = db.Column(db.String(100))
+    tags = db.Column(db.Text)
+    purchaseDate = db.Column(db.String(100))
+    purchasePlace = db.Column(db.String(255))
+    purchasePrice = db.Column(db.String(100))
+    notes = db.Column(db.Text)
+    googleVolumeid = db.Column(db.String(100))
+    category = db.Column(db.String(255))
+    wishList = db.Column(db.Float)
+    uploadedImageUrl = db.Column(db.Text)
+    copies = db.Column(db.Integer)
+    listPriceUsd = db.Column(db.Float)  # The numeric price
+    purchasePriceUsd = db.Column(db.Float)
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "author": self.author,
-            "language": self.language,
-            "isbn": self.isbn,
-            "description": self.description,
-            "cover_image": self.cover_image,
-        }
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
