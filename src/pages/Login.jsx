@@ -32,6 +32,8 @@ export default function Login() {
         localStorage.setItem("role", data.role);
         localStorage.setItem("userName", data.full_name);
         localStorage.setItem("userEmail", data.email); // Fixed the 'undefined' issue
+        // We stringify the object because localStorage only stores strings
+        localStorage.setItem("user", JSON.stringify({ name: data.full_name, email: data.email, role: data.role }));
 
         // Success redirect
         if (data.role === "admin") {
