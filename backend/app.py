@@ -33,7 +33,10 @@ app.config["MAIL_USE_SSL"] = False
 app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
 app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
-app.config["MAIL_DEFAULT_SENDER"] = ("LibriStack", os.getenv("MAIL_DEFAULT_SENDER"))
+app.config["MAIL_DEFAULT_SENDER"] = (
+    "Church in Dunn Loring Library",
+    os.getenv("MAIL_DEFAULT_SENDER"),
+)
 
 
 # --- 2. INITIALIZATION ---
@@ -188,28 +191,9 @@ def login():
 
 @app.route("/api/books", methods=["GET"])
 def get_books():
-    search = request.args.get("search", "").strip()
-    language = request.args.get("language", "All")
-    page = request.args.get("page", 1, type=int)
-
-    query = Book.query
-    if search:
-        query = query.filter(
-            Book.title.icontains(search) | Book.author.icontains(search)
-        )
-    if language != "All":
-        query = query.filter(Book.language == language)
-
-    books_paginated = query.paginate(page=page, per_page=20, error_out=False)
-
-    return jsonify(
-        {
-            "books": [book.to_dict() for book in books_paginated.items],
-            "total": books_paginated.total,
-            "pages": books_paginated.pages,
-            "current_page": books_paginated.page,
-        }
-    )
+    all_books = Book.query.all()
+    # Returns all 5,000+ books as a JSON array
+    return jsonify([book.to_dict() for book in all_books])
 
 
 @app.route("/api/debug/users", methods=["GET"])
@@ -250,22 +234,31 @@ def delete_user():
 
 def seed_database():
     with app.app_context():
-        # Check if the database is empty
         if Book.query.count() == 0:
             print("🚀 Database empty. Seeding from books.json...")
             try:
                 with open("../src/data/books.json", "r", encoding="utf-8") as f:
                     books_data = json.load(f)
                     for item in books_data:
-                        # Map all JSON keys to the Model columns automatically
-                        new_book = Book(
-                            **{k: v for k, v in item.items() if hasattr(Book, k)}
-                        )
+                        # 1. Map existing JSON keys to model
+                        book_args = {k: v for k, v in item.items() if hasattr(Book, k)}
+
+                        # 2. Logic: If copies is null/None, set to 0
+                        # Otherwise, use the value from JSON
+                        raw_copies = item.get("copies")
+                        num_copies = int(raw_copies) if raw_copies is not None else 0
+
+                        # 3. Apply to both fields to keep them identical
+                        book_args["copies"] = num_copies
+                        book_args["availableCopies"] = num_copies
+
+                        new_book = Book(**book_args)
                         db.session.add(new_book)
 
                     db.session.commit()
                     print(f"✅ Success! {len(books_data)} books imported.")
             except Exception as e:
+                db.session.rollback()
                 print(f"❌ Error during seeding: {e}")
         else:
             print("📚 Database already has data. Skipping seed.")

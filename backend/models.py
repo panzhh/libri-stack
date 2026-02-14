@@ -108,6 +108,7 @@ class Book(db.Model):
     wishList = db.Column(db.Float)
     uploadedImageUrl = db.Column(db.Text)
     copies = db.Column(db.Integer)
+    availableCopies = db.Column(db.Integer)
     listPriceUsd = db.Column(db.Float)  # The numeric price
     purchasePriceUsd = db.Column(db.Float)
 

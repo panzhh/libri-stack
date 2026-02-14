@@ -97,10 +97,11 @@ export default function Register() {
         {/* HEADER */}
         <div className='text-center mb-8'>
           <h2 className='text-3xl font-black uppercase italic tracking-tighter'>
-            Join the <span className='text-indigo-600'>Stack</span>
+            Join the Church in Dunn Loring
+            <span className='text-indigo-600'> Library</span>
           </h2>
           <p className='text-slate-400 font-bold uppercase tracking-widest text-[9px] mt-2'>
-            Create your LibriStack account
+            Create your Church in Dunn Loring Library account
           </p>
         </div>
 

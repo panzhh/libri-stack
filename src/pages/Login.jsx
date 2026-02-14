@@ -54,7 +54,8 @@ export default function Login() {
       <div className='bg-white w-full max-w-md p-8 rounded-[3rem] border-2 border-slate-100 shadow-xl'>
         <div className='text-center mb-8'>
           <h2 className='text-3xl font-black uppercase italic tracking-tighter'>
-            Libri<span className='text-indigo-600'>Stack</span>
+            Church in Dunn Loring Library
+            <span className='text-indigo-600'>Library</span>
           </h2>
           <p className='text-slate-400 font-bold uppercase tracking-widest text-[9px] mt-2'>
             Secure {role} Access

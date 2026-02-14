@@ -7,9 +7,10 @@ export default function About() {
         Our <span className='text-indigo-600'>Mission</span>
       </h1>
       <p className='text-slate-600 text-lg leading-relaxed font-medium'>
-        LibriStack is a modern digital archive designed to organize and manage
-        extensive book collections. With nearly 5,000 titles, our goal is to
-        make literature accessible and searchable for everyone.
+        Church in Dunn Loring Library is a modern digital archive designed to
+        organize and manage extensive book collections. With nearly 5,000
+        titles, our goal is to make literature accessible and searchable for
+        everyone.
       </p>
     </div>
   );
