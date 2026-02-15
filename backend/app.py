@@ -264,11 +264,10 @@ def seed_database():
             print("📚 Database already has data. Skipping seed.")
 
 
-
-@app.route('/api/borrow/<int:book_id>', methods=['POST'])
+@app.route("/api/borrow/<int:book_id>", methods=["POST"])
 def borrow_book(book_id):
+    print("borrowing book_id: ", book_id)
     return jsonify({"message": "Book borrowed successfully!"}), 200
-
 
 
 if __name__ == "__main__":

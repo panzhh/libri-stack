@@ -29,6 +29,7 @@ export default function Home() {
   const handleBorrow = async (bookId) => {
     // 1. Check if user is logged in
     const user = localStorage.getItem("user");
+    console.log("user: ", user);
 
     if (!user || user === "undefined") {
       alert("You must be logged in to borrow books!");
@@ -51,16 +52,30 @@ export default function Home() {
       );
 
       const data = await response.json();
-      console;
+      console.log("data: ", data);
 
       if (response.ok) {
-        alert("Success! Book borrowed.");
         // Update the UI locally so the stock number drops immediately
         setBookData((prev) =>
-          prev.map((b) =>
-            b.id === bookId ? { ...b, copies: b.copies - 1 } : b,
-          ),
+          prev.map((b) => {
+            if (b.id === bookId) {
+              return {
+                ...b,
+                // If availableCopies > 0, subtract 1. Otherwise, keep it 0.
+                availableCopies:
+                  b.availableCopies > 0 ? b.availableCopies - 1 : 0,
+              };
+            }
+            return b;
+          }),
         );
+        setSelectedBook((prev) => ({
+          ...prev,
+          availableCopies:
+            prev.availableCopies > 0 ? prev.availableCopies - 1 : 0,
+        }));
+        alert("Success! Book borrowed.");
+        //setSelectedBook(null);
       } else {
         alert(data.error);
       }
@@ -201,14 +216,7 @@ export default function Home() {
                   onClick={() => setSelectedBook(book)}
                   className='flex-1 text-xs font-black uppercase tracking-widest bg-slate-900 text-white px-4 py-4 rounded-xl hover:bg-indigo-600 transition-colors shadow-lg'
                 >
-                  View
-                </button>
-                <button
-                  onClick={() => handleBorrow(book.id)}
-                  disabled={(book.copies || 0) <= 0}
-                  className='flex-1 text-xs font-black uppercase tracking-widest bg-indigo-600 text-white px-4 py-4 rounded-xl hover:bg-slate-900 transition-colors disabled:bg-slate-200 disabled:text-slate-400 shadow-lg shadow-indigo-100'
-                >
-                  Borrow
+                  View and Borrow
                 </button>
               </div>
             </div>
