@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from flask_mail import Mail, Message
-from models import db, User, Book
+from models import db, User, Book, BorrowRecord
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 
@@ -178,6 +178,7 @@ def login():
                     "role": user.role,
                     "full_name": user.full_name,
                     "email": user.email,
+                    "id": user.id,
                 }
             ),
             200,
@@ -264,10 +265,77 @@ def seed_database():
             print("📚 Database already has data. Skipping seed.")
 
 
-@app.route("/api/borrow/<int:book_id>", methods=["POST"])
-def borrow_book(book_id):
-    print("borrowing book_id: ", book_id)
-    return jsonify({"message": "Book borrowed successfully!"}), 200
+# @app.route("/api/borrow/<int:book_id>", methods=["POST"])
+# def borrow_book(book_id):
+#     print("borrowing book_id: ", book_id)
+#     return jsonify({"message": "Book borrowed successfully!"}), 200
+
+
+@app.route("/api/borrow/<int:book_id>", methods=["POST"])  # Added OPTIONS support
+def borrow_book_by_id(book_id):
+    print("book_id ", book_id)
+    print("request ", request)
+    data = request.get_json()
+    print("data:", data)
+    user_id = data.get("userId")  # Still need to know WHO is borrowing
+
+    if not user_id:
+        return jsonify({"error": "User ID is required"}), 400
+
+    book = Book.query.get_or_404(book_id)
+
+    if book.availableCopies <= 0:
+        return jsonify({"error": "No copies available"}), 400
+
+    # Create the record and update stock
+    new_record = BorrowRecord(user_id=user_id, book_id=book_id)
+    book.availableCopies -= 1
+
+    db.session.add(new_record)
+    db.session.commit()
+
+    print("borrow book succussfully")
+
+    return jsonify(book.to_dict()), 200
+
+
+# Route to fetch books currently borrowed by a specific user
+@app.route("/api/users/<int:user_id>/borrowed-books", methods=["GET"])
+def get_borrowed_books(user_id):
+    # Join the BorrowRecord with the Book table to get the titles/images
+    records = (
+        db.session.query(Book, BorrowRecord)
+        .join(BorrowRecord, Book.id == BorrowRecord.book_id)
+        .filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
+        .all()
+    )
+
+    results = []
+    for book, record in records:
+        book_data = book.to_dict()
+        book_data["borrow_record_id"] = record.id  # Need this to return it later
+        results.append(book_data)
+
+    return jsonify(results), 200
+
+
+# Route to return a book
+@app.route("/api/books/return", methods=["POST"])
+def return_book():
+    data = request.json
+    record_id = data.get("recordId")
+    book_id = data.get("bookId")
+
+    record = BorrowRecord.query.get(record_id)
+    book = Book.query.get(book_id)
+
+    if record:
+        record.status = "returned"  # Update status instead of deleting for history
+        book.availableCopies += 1  # Put it back on the shelf
+        db.session.commit()
+        return jsonify({"message": "Book returned successfully"}), 200
+
+    return jsonify({"message": "Record not found"}), 404
 
 
 if __name__ == "__main__":

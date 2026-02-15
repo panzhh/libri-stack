@@ -114,3 +114,26 @@ class Book(db.Model):
 
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+    # --- ADD THIS TO app.py ---
+
+
+class BorrowRecord(db.Model):
+    __tablename__ = "borrow_records"  # Good practice to name the table
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Links to the User table
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    # Links to the Book table
+    book_id = db.Column(db.Integer, db.ForeignKey("book.id"), nullable=False)
+
+    # Automatically records when the book was taken
+    borrow_date = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    # Tracks if it's currently out or brought back
+    status = db.Column(db.String(50), default="borrowed")  # "borrowed" or "returned"
+
+    # Optional: Relationship helper to make querying easier
+    book = db.relationship("Book", backref="borrow_history")

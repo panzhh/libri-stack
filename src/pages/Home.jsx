@@ -29,7 +29,8 @@ export default function Home() {
   const handleBorrow = async (bookId) => {
     // 1. Check if user is logged in
     const user = localStorage.getItem("user");
-    console.log("user: ", user);
+    const userData = JSON.parse(user);
+    console.log("userData: ", userData);
 
     if (!user || user === "undefined") {
       alert("You must be logged in to borrow books!");
@@ -45,9 +46,12 @@ export default function Home() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // Optional: Send user ID if your backend needs to know WHO borrowed it
-            Authorization: `Bearer ${JSON.parse(user).token}`,
+            Authorization: `Bearer ${userData.token}`,
           },
+          // THE FIX: Send the userId in the body so Flask's request.json isn't empty
+          body: JSON.stringify({
+            userId: userData.id,
+          }),
         },
       );
 
