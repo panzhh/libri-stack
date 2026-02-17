@@ -282,6 +282,38 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 @jwt_required()  # This checks if the token is valid and hasn't expired
 def borrow_book_by_id(book_id):
     user_id = get_jwt_identity()
+
+    active_borrows_count = BorrowRecord.query.filter_by(
+        user_id=user_id, status="borrowed"
+    ).count()
+
+    if active_borrows_count >= 5:
+        return (
+            jsonify(
+                {
+                    "error": "Borrowing limit reached.",
+                    "message": "You can only have 5 active borrows at a time. Please return a book first.",
+                }
+            ),
+            403,
+        )  # 403 Forbidden is the correct status code here
+
+    # CHECK 2: Prevent duplicate borrowing of the SAME book
+    already_has_book = BorrowRecord.query.filter_by(
+        user_id=user_id, book_id=book_id, status="borrowed"
+    ).first()
+
+    if already_has_book:
+        return (
+            jsonify(
+                {
+                    "error": "Already Borrowed, Please don't borrow it again.",
+                    "message": "You already have a copy of this book in your library!",
+                }
+            ),
+            400,
+        )  # 400 Bad Request
+
     data = request.get_json()
     # user_id = data.get("userId")
 
