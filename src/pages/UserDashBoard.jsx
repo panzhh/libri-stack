@@ -28,13 +28,26 @@ export default function UserDashboard() {
             >
               🏠 Overview / My Books
             </Link>
+
+            {/* --- ADDED: BORROW HISTORY LINK --- */}
+            <Link
+              to='/user-dashboard/history'
+              className={`block w-full p-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+                isActive("/user-dashboard/history")
+                  ? "bg-indigo-50 text-indigo-600"
+                  : "text-slate-400 hover:bg-slate-50"
+              }`}
+            >
+              📜 Borrow History
+            </Link>
+            {/* ---------------------------------- */}
+
             <Link
               to='/'
               className='block w-full p-3 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 font-bold text-xs uppercase tracking-widest transition-all'
             >
               📖 Browse Catalog
             </Link>
-            {/* Add more Links here as you build more components */}
           </nav>
         </div>
 
@@ -101,7 +114,6 @@ export default function UserDashboard() {
 
         {/* --- DYNAMIC CONTENT AREA --- */}
         <section className='max-w-5xl bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm'>
-          {/* This is where BorrowedBooks will render when the path is /user-dashboard */}
           <Outlet />
         </section>
       </main>

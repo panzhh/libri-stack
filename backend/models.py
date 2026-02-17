@@ -133,6 +133,7 @@ class BorrowRecord(db.Model):
     # Automatically records when the book was taken
     borrow_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     due_date = db.Column(db.DateTime, nullable=False)
+    return_date = db.Column(db.DateTime)
 
     # Tracks if it's currently out or brought back
     status = db.Column(db.String(50), default="borrowed")  # "borrowed" or "returned"

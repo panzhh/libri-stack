@@ -422,6 +422,7 @@ def return_book(record_id):
     try:
         # Update the record status
         record.status = "returned"
+        record.return_date = datetime.now(timezone.utc)  # This saves the date!
         # Increase the library stock
         book.availableCopies += 1
 
@@ -430,6 +431,40 @@ def return_book(record_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Database error", "details": str(e)}), 500
+
+
+@app.route("/api/user/history", methods=["GET"])
+@jwt_required()
+def get_borrow_history():
+    user_id = int(get_jwt_identity())
+
+    # Query records that have been returned
+    records = (
+        db.session.query(Book, BorrowRecord)
+        .join(BorrowRecord, Book.id == BorrowRecord.book_id)
+        .filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "returned")
+        .order_by(BorrowRecord.return_date.desc())  # Newest first
+        .all()
+    )
+
+    print("history books: ", records)
+
+    results = []
+    for book, record in records:
+        results.append(
+            {
+                "title": book.title,
+                "author": book.author,
+                "borrow_date": record.borrow_date.strftime("%Y-%m-%d"),
+                "return_date": (
+                    record.return_date.strftime("%Y-%m-%d")
+                    if record.return_date
+                    else "N/A"
+                ),
+            }
+        )
+
+    return jsonify(results), 200
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ import Contact from "./pages/Contact";
 import VerifyEmail from "./components/VerifyEmail";
 import UserDashboard from "./pages/UserDashBoard";
 import BorrowedBooks from "./pages/BorrowedBooks";
+import BorrowHistory from "./pages/BorrowHistory";
 import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
@@ -38,6 +39,8 @@ export default function App() {
           <Route path='/user-dashboard' element={<UserDashboard />}>
             {/* When the user goes to /user-dashboard, it fills the <Outlet /> with BorrowedBooks */}
             <Route index element={<BorrowedBooks />} />
+            <Route path='history' element={<BorrowHistory />} />{" "}
+            {/* Add this line */}
             {/* You can add more routes here later, e.g., <Route path="history" element={<History />} /> */}
           </Route>
 
