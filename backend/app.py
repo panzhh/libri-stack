@@ -372,23 +372,32 @@ def get_my_borrowed_books():
     return jsonify(results), 200
 
 
-# Route to return a book
-@app.route("/api/books/return", methods=["POST"])
-def return_book():
-    data = request.json
-    record_id = data.get("recordId")
-    book_id = data.get("bookId")
+@app.route("/api/return/<int:record_id>", methods=["POST"])
+@jwt_required()
+def return_book(record_id):
+    # 1. Identify the user from the token
+    user_id = int(get_jwt_identity())
 
-    record = BorrowRecord.query.get(record_id)
-    book = Book.query.get(book_id)
+    # 2. Find the specific record AND verify it belongs to this user
+    # We only look for records with status 'borrowed'
+    record = BorrowRecord.query.filter_by(
+        id=record_id, user_id=user_id, status="borrowed"
+    ).first_or_404()
 
-    if record:
-        record.status = "returned"  # Update status instead of deleting for history
-        book.availableCopies += 1  # Put it back on the shelf
+    # 3. Find the associated book to put it back in stock
+    book = db.session.get(Book, record.book_id)
+
+    try:
+        # Update the record status
+        record.status = "returned"
+        # Increase the library stock
+        book.availableCopies += 1
+
         db.session.commit()
-        return jsonify({"message": "Book returned successfully"}), 200
-
-    return jsonify({"message": "Record not found"}), 404
+        return jsonify({"message": "Success! Book returned."}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Database error", "details": str(e)}), 500
 
 
 if __name__ == "__main__":
