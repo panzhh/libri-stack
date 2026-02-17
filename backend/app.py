@@ -338,6 +338,40 @@ def get_borrowed_books(user_id):
     return jsonify(results), 200
 
 
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+
+@app.route("/api/user/borrowed-books", methods=["GET"])
+@jwt_required()
+def get_my_borrowed_books():
+    # Get the ID from the secure token
+    user_id = int(get_jwt_identity())
+
+    # Query only "active" borrowed books
+    records = (
+        db.session.query(Book, BorrowRecord)
+        .join(BorrowRecord, Book.id == BorrowRecord.book_id)
+        .filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
+        .all()
+    )
+
+    results = []
+    for book, record in records:
+        results.append(
+            {
+                "record_id": record.id,
+                "book_id": book.id,
+                "title": book.title,
+                "author": book.author,
+                "borrow_date": record.borrow_date.strftime("%Y-%m-%d"),
+                "due_date": record.due_date.strftime("%Y-%m-%d"),
+                "image": book.uploadedImageUrl,
+            }
+        )
+
+    return jsonify(results), 200
+
+
 # Route to return a book
 @app.route("/api/books/return", methods=["POST"])
 def return_book():

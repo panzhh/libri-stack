@@ -12,6 +12,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import VerifyEmail from "./components/VerifyEmail";
 import UserDashboard from "./pages/UserDashBoard";
+import BorrowedBooks from "./pages/BorrowedBooks";
 import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
@@ -33,8 +34,12 @@ export default function App() {
           <Route path='/about' element={<About />} />
           <Route path='/contact' element={<Contact />} />
           <Route path='/verify/:token' element={<VerifyEmail />} />
-          <Route path='/user-dashboard' element={<UserDashboard />} />
           <Route path='/admin-dashboard' element={<AdminDashboard />} />
+          <Route path='/user-dashboard' element={<UserDashboard />}>
+            {/* When the user goes to /user-dashboard, it fills the <Outlet /> with BorrowedBooks */}
+            <Route index element={<BorrowedBooks />} />
+            {/* You can add more routes here later, e.g., <Route path="history" element={<History />} /> */}
+          </Route>
 
           {/* 404 Fallback - Optional */}
           <Route
