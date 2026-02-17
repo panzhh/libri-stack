@@ -29,6 +29,7 @@ export default function Home() {
   const handleBorrow = async (bookId) => {
     // 1. Check if user is logged in
     const user = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
     const userData = JSON.parse(user);
     console.log("userData: ", userData);
 
@@ -46,7 +47,7 @@ export default function Home() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${userData.token}`,
+            Authorization: `Bearer ${token}`,
           },
           // THE FIX: Send the userId in the body so Flask's request.json isn't empty
           body: JSON.stringify({

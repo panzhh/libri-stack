@@ -168,7 +168,10 @@ def login():
             print("come here3")
             return jsonify({"msg": "You input Invalid email or password"}), 401
 
-        access_token = create_access_token(identity={"id": user.id, "role": user.role})
+        # access_token = create_access_token(identity={"id": user.id, "role": user.role})
+        access_token = create_access_token(
+            identity=str(user.id)
+        )  # Explicitly convert to string
 
         print("come here4")
         return (
@@ -178,7 +181,7 @@ def login():
                     "role": user.role,
                     "full_name": user.full_name,
                     "email": user.email,
-                    "id": user.id,
+                    "id": str(user.id),
                 }
             ),
             200,
@@ -271,13 +274,16 @@ def seed_database():
 #     return jsonify({"message": "Book borrowed successfully!"}), 200
 
 
-@app.route("/api/borrow/<int:book_id>", methods=["POST"])  # Added OPTIONS support
+from datetime import datetime, timedelta, timezone
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+
+@app.route("/api/borrow/<int:book_id>", methods=["POST"])
+@jwt_required()  # This checks if the token is valid and hasn't expired
 def borrow_book_by_id(book_id):
-    print("book_id ", book_id)
-    print("request ", request)
+    user_id = get_jwt_identity()
     data = request.get_json()
-    print("data:", data)
-    user_id = data.get("userId")  # Still need to know WHO is borrowing
+    # user_id = data.get("userId")
 
     if not user_id:
         return jsonify({"error": "User ID is required"}), 400
@@ -287,16 +293,29 @@ def borrow_book_by_id(book_id):
     if book.availableCopies <= 0:
         return jsonify({"error": "No copies available"}), 400
 
-    # Create the record and update stock
-    new_record = BorrowRecord(user_id=user_id, book_id=book_id)
+    # --- THE FIX: Calculate Dates ---
+    current_time = datetime.now(timezone.utc)
+    # Defaulting to a 30-day borrow period
+    calculated_due_date = current_time + timedelta(days=30)
+
+    # Create the record with the required dates
+    new_record = BorrowRecord(
+        user_id=user_id,
+        book_id=book_id,
+        borrow_date=current_time,  # Added this
+        due_date=calculated_due_date,  # Added this (fixes the error)
+        status="borrowed",
+    )
+
     book.availableCopies -= 1
 
-    db.session.add(new_record)
-    db.session.commit()
-
-    print("borrow book succussfully")
-
-    return jsonify(book.to_dict()), 200
+    try:
+        db.session.add(new_record)
+        db.session.commit()
+        return jsonify(book.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 # Route to fetch books currently borrowed by a specific user

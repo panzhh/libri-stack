@@ -32,7 +32,6 @@ export default function Login() {
         localStorage.setItem("role", data.role);
         localStorage.setItem("userName", data.full_name);
         localStorage.setItem("userEmail", data.email); // Fixed the 'undefined' issue
-        // We stringify the object because localStorage only stores strings
         localStorage.setItem(
           "user",
           JSON.stringify({
@@ -40,6 +39,7 @@ export default function Login() {
             email: data.email,
             role: data.role,
             id: data.id,
+            token: data.token, // <--- ADD THIS LINE
           }),
         );
 

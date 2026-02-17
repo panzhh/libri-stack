@@ -2,6 +2,7 @@ import random
 import string
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta, timezone
 
 db = SQLAlchemy()
 
@@ -130,7 +131,8 @@ class BorrowRecord(db.Model):
     book_id = db.Column(db.Integer, db.ForeignKey("book.id"), nullable=False)
 
     # Automatically records when the book was taken
-    borrow_date = db.Column(db.DateTime, default=db.func.current_timestamp())
+    borrow_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    due_date = db.Column(db.DateTime, nullable=False)
 
     # Tracks if it's currently out or brought back
     status = db.Column(db.String(50), default="borrowed")  # "borrowed" or "returned"
