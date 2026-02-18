@@ -357,7 +357,8 @@ def get_borrowed_books(user_id):
     records = (
         db.session.query(Book, BorrowRecord)
         .join(BorrowRecord, Book.id == BorrowRecord.book_id)
-        .filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
+        .filter(BorrowRecord.user_id == user_id)
+        #.filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
         .all()
     )
 
@@ -467,6 +468,41 @@ def get_borrow_history():
     return jsonify(results), 200
 
 
+from flask_apscheduler import APScheduler
+from datetime import datetime, timezone
+
+scheduler = APScheduler()
+
+def check_overdue_tasks():
+    with app.app_context():
+        # 1. Find books that are past due and not yet returned
+        print("Running overdue check...")
+        now = datetime.now(timezone.utc)
+        overdue_list = BorrowRecord.query.filter(
+            BorrowRecord.due_date < now + timedelta(days=1),
+            BorrowRecord.status == "borrowed"
+        ).all()
+
+        for record in overdue_list:
+            # 3. Send reminder email
+            # Assuming you have a User relationship or can query user by ID
+            send_reminder_email(record.user_id, record.book.title)
+        
+        db.session.commit()
+        print(f"Scan complete: {len(overdue_list)} books marked as overdue.")
+
+# Helper function for the email
+def send_reminder_email(user_id, book_title):
+    user = User.query.get(user_id)
+    if user:
+        msg = Message(
+            subject="Action Required: Overdue Book",
+            recipients=[user.email],
+            body=f"Hi {user.full_name  }, the book '{book_title}' is past its due date. Please return it soon!"
+        )
+        mail.send(msg)
+
+
 if __name__ == "__main__":
     with app.app_context():
         # 1. Create the database tables based on your model
@@ -474,4 +510,17 @@ if __name__ == "__main__":
 
         # 2. Run the seed function
         seed_database()
+    
+    # Initialize scheduler
+    scheduler.init_app(app)
+    
+    # Add the job: runs once every 24 hours
+    scheduler.add_job(
+        id='overdue_check', 
+        func=check_overdue_tasks, 
+        trigger='interval', 
+        minutes=1
+    )
+    
+    scheduler.start()
     app.run(debug=True, port=5000)

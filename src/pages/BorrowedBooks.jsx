@@ -143,6 +143,14 @@ export default function BorrowedBooks() {
                       {formatDate(book.due_date)}
                     </p>
                   </div>
+                  <div>
+                    <p className='text-[8px] font-black text-slate-400 uppercase'>
+                      Status
+                    </p>
+                    <p className='text-[11px] font-bold' style={{ color: book.status === "overdue" ? "#e11d48" : "#16a34a" }}>
+                      {book.status === "overdue" ? "Overdue" : "Borrowed"}
+                    </p>
+                  </div>
                 </div>
               </div>
               <button

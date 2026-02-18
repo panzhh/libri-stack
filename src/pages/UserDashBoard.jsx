@@ -46,7 +46,7 @@ export default function UserDashboard() {
               to='/'
               className='block w-full p-3 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 font-bold text-xs uppercase tracking-widest transition-all'
             >
-              📖 Browse Catalog
+              📖 Browse Book
             </Link>
           </nav>
         </div>
