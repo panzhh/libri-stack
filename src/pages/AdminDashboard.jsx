@@ -61,7 +61,7 @@ export default function AdminDashboard() {
   // --- NEW EDIT LOGIC ---
   const startEditing = (book) => {
     // Ensure we capture the price even if it's under the old 'listPrice' key
-    const currentPrice = book.listPriceUsd || book.listPrice || "";
+    const currentPrice = book.listPriceUsd || "";
     setEditFormData({
       ...book,
       listPriceUsd: currentPrice,
@@ -409,7 +409,6 @@ export default function AdminDashboard() {
                       <p className='text-sm font-bold text-slate-800 leading-relaxed'>
                         {field.key === "listPriceUsd"
                           ? selectedBook.listPriceUsd ||
-                            selectedBook.listPrice ||
                             "---"
                           : selectedBook[field.key] || "---"}
                       </p>

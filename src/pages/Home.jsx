@@ -317,7 +317,7 @@ export default function Home() {
                   { label: "Language", key: "language" },
                   { label: "ISBN", key: "isbn" },
                   { label: "Pages", key: "numberOfPages" },
-                  { label: "Price", key: "listPrice" },
+                  { label: "Price", key: "listPriceUsd" },
                   { label: "Summary", key: "summary", fullWidth: true },
                   { label: "Notes", key: "notes", fullWidth: true },
                 ].map((field) => {

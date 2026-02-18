@@ -622,11 +622,14 @@ def get_admin_profile():
 
 @app.route("/api/books/<int:id>", methods=["PUT"])
 def update_book(id):
-    book = Book.query.get(id)
+    book = db.session.get(Book, id)
+
+
     if not book:
         return jsonify({"error": "Book not found"}), 404
 
     data = request.get_json()
+    print("Received update data:", data)  # Debugging line to check incoming data
 
     try:
         # --- TITLE VALIDATION (NEW) ---
@@ -637,12 +640,13 @@ def update_book(id):
             book.title = title.strip()
 
         # --- PRICE VALIDATION (Positive) ---
-        if "listPrice" in data:
+        if "listPriceUsd" in data:
             try:
-                price = float(data.get("listPrice", 0))
+                clean_price = str(data.get("listPriceUsd", 0)).replace('$', '').strip()
+                price = float(clean_price)
                 if price <= 0:
                     return jsonify({"error": "Price must be a positive number"}), 400
-                book.listPrice = price
+                book.listPriceUsd = price
             except (ValueError, TypeError):
                 return jsonify({"error": "Invalid price format"}), 400
 
