@@ -134,21 +134,7 @@ export default function Home() {
   return (
     <div className='max-w-7xl mx-auto px-6 pb-12 font-sans'>
       {/* FILTER CONTROLS (Your Original Section) */}
-      <div className='flex flex-col w-full sm:flex-1'>
-        <label className='text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1 ml-2'>
-          Search Books
-        </label>
-        <input
-          type='text'
-          placeholder='Search by title or author...'
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1); // 搜索时重置到第一页
-          }}
-          className='bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white px-4 py-2 rounded-xl font-bold text-sm outline-none transition-all'
-        />
-      </div>
+
       <div className='mb-8 mt-8 flex flex-col sm:flex-row gap-4 items-center bg-white p-5 rounded-[2rem] border-2 border-slate-100 shadow-sm'>
         <div className='flex flex-col w-full sm:w-auto'>
           <label className='text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1 ml-2'>
