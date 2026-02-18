@@ -140,3 +140,4 @@ class BorrowRecord(db.Model):
 
     # Optional: Relationship helper to make querying easier
     book = db.relationship("Book", backref="borrow_history")
+    renewed = db.Column(db.Boolean, default=False)  # Add this line

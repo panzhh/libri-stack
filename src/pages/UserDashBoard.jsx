@@ -57,7 +57,7 @@ export default function UserDashboard() {
                   : "text-slate-400 hover:bg-slate-50"
               }`}
             >
-              🏠 Overview / My Books
+              🏠 My Borrows
             </Link>
 
             {/* --- ADDED: BORROW HISTORY LINK --- */}

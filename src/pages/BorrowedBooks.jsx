@@ -70,6 +70,40 @@ export default function BorrowedBooks() {
     }
   };
 
+  // --- NEW: HANDLE RENEW LOGIC ---
+  const handleRenew = async (recordId) => {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/renew/${recordId}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${userData.token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message);
+        // Update local state: Update due_date and set renewed to true
+        setBooks((prev) =>
+          prev.map((b) =>
+            b.record_id === recordId
+              ? { ...b, due_date: data.new_due_date, renewed: true }
+              : b,
+          ),
+        );
+      } else {
+        alert(data.message || data.error);
+      }
+    } catch (err) {
+      alert("Renewal failed. Please check your connection.");
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, {
       month: "short",
@@ -160,6 +194,17 @@ export default function BorrowedBooks() {
                 >
                   Details
                 </button>
+
+                {/* --- RENEW BUTTON: Only shows if book.renewed is false --- */}
+                {!book.renewed && (
+                  <button
+                    onClick={() => handleRenew(book.record_id)}
+                    className='px-5 py-3 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all'
+                  >
+                    Renew
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleReturn(book.record_id)}
                   className='px-5 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 transition-all active:scale-95'
@@ -198,11 +243,16 @@ export default function BorrowedBooks() {
                     <p className='text-indigo-600 font-black uppercase tracking-[0.2em] text-sm mt-2'>
                       by {selectedBook.author}
                     </p>
-                    {/* <div className='flex gap-3 mt-4'>
+                    <div className='flex gap-3 mt-4'>
                       <span className='px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-[10px] font-black uppercase text-indigo-600'>
                         Borrowing Status: {selectedBook.status}
                       </span>
-                    </div> */}
+                      {selectedBook.renewed && (
+                        <span className='px-4 py-2 bg-amber-50 border border-amber-100 rounded-xl text-[10px] font-black uppercase text-amber-600'>
+                          Renewed Once
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => setSelectedBook(null)}
@@ -226,7 +276,7 @@ export default function BorrowedBooks() {
                   { label: "Language", key: "language" },
                   { label: "ISBN", key: "isbn" },
                   { label: "Pages", key: "numberOfPages" },
-                  { label: "Original Price", key: "listPrice" },
+                  { label: "Price ($)", key: "listPrice" },
                   { label: "Summary", key: "summary", fullWidth: true },
                   { label: "Notes", key: "notes", fullWidth: true },
                 ].map((field) => {

@@ -525,6 +525,48 @@ def send_reminder_email(user_id, book_title):
         mail.send(msg)
 
 
+@app.route("/api/renew/<int:record_id>", methods=["POST"])
+@jwt_required()
+def renew_book(record_id):
+    user_id = int(get_jwt_identity())
+
+    # Find the record and ensure it belongs to the user and isn't returned
+    record = BorrowRecord.query.filter_by(
+        id=record_id, user_id=user_id, status="borrowed"
+    ).first_or_404()
+
+    # CHECK: Can only renew once
+    if record.renewed:
+        return (
+            jsonify(
+                {
+                    "error": "Already Renewed",
+                    "message": "This book has already been renewed once. Please return it by the due date.",
+                }
+            ),
+            400,
+        )
+
+    try:
+        # Extend the due date by 30 days from the CURRENT due date
+        record.due_date = record.due_date + timedelta(days=30)
+        record.renewed = True  # Mark as renewed
+
+        db.session.commit()
+        return (
+            jsonify(
+                {
+                    "message": "Success! Due date extended by 30 days.",
+                    "new_due_date": record.due_date.strftime("%Y-%m-%d"),
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     with app.app_context():
         # 1. Create the database tables based on your model
