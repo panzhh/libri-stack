@@ -16,6 +16,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(128), nullable=False)
     phone = db.Column(db.String(20), nullable=True)
     role = db.Column(db.String(10), default="user")  # 'admin' or 'user'
+    registration_date = db.Column(
+        db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
     # Verification logic
     is_verified = db.Column(db.Boolean, default=False)
@@ -46,7 +49,13 @@ class User(db.Model):
             "email": self.email,
             "role": self.role,
             "is_verified": self.is_verified,
+            "phone": self.phone,
             "own_invite_code": self.own_invite_code,
+            "registration_date": (
+                self.registration_date.strftime("%Y-%m-%d")
+                if self.registration_date
+                else "N/A"
+            ),
         }
 
 

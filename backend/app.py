@@ -11,6 +11,7 @@ from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_apscheduler import APScheduler
+from flask import request, jsonify
 
 # Points to the .env file one directory up
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -93,6 +94,7 @@ def register():
             email=email,
             phone=data.get("phone"),
             role=role,
+            registration_date=datetime.now(timezone.utc),
             invited_by=inviter_email,
             is_verified=False,
         )
@@ -274,6 +276,22 @@ def seed_database():
 @jwt_required()  # This checks if the token is valid and hasn't expired
 def borrow_book_by_id(book_id):
     user_id = get_jwt_identity()
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.role == "admin":
+        return (
+            jsonify(
+                {
+                    "error": "Access Denied. Administrative accounts are not permitted to borrow books. Please use a Member account.",
+                    "message": "Administrative accounts are not permitted to borrow books. Please use a Member account.",
+                }
+            ),
+            403,
+        )
+    # -------------------------
 
     active_borrows_count = BorrowRecord.query.filter_by(
         user_id=user_id, status="borrowed"
@@ -562,6 +580,119 @@ def renew_book(record_id):
             ),
             200,
         )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# --- ADDED: USER PROFILE ROUTE ---
+@app.route("/api/users/profile", methods=["GET"])
+@jwt_required()
+def get_admin_profile():
+    try:
+        # get_jwt_identity() returns the user.id as a string based on your login logic
+        user_id = get_jwt_identity()
+
+        # Query the user from the database
+        user = User.query.get(user_id)
+
+        if not user:
+            return jsonify({"msg": "User not found"}), 404
+
+        # Return the full model information
+        return (
+            jsonify(
+                {
+                    "id": user.id,
+                    "full_name": user.full_name,
+                    "email": user.email,
+                    "phone": user.phone,
+                    "role": user.role,
+                    "is_verified": user.is_verified,
+                    "registration_date": user.registration_date,
+                    "invited_by": user.invited_by,
+                    "own_invite_code": user.own_invite_code,  # This is the key field for your Admin Profile
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/books/<int:id>", methods=["PUT"])
+def update_book(id):
+    book = Book.query.get(id)
+    if not book:
+        return jsonify({"error": "Book not found"}), 404
+
+    data = request.get_json()
+
+    try:
+        # --- TITLE VALIDATION (NEW) ---
+        title = data.get("title")
+        if title is not None:  # If the title field is being updated
+            if not title.strip():  # Check if it's empty or just spaces
+                return jsonify({"error": "Book title cannot be empty"}), 400
+            book.title = title.strip()
+
+        # --- PRICE VALIDATION (Positive) ---
+        if "listPrice" in data:
+            try:
+                price = float(data.get("listPrice", 0))
+                if price <= 0:
+                    return jsonify({"error": "Price must be a positive number"}), 400
+                book.listPrice = price
+            except (ValueError, TypeError):
+                return jsonify({"error": "Invalid price format"}), 400
+
+        # --- STOCK VALIDATION (Non-negative) ---
+        if "copies" in data:
+            try:
+                num_copies = int(data.get("copies", 0))
+                if num_copies < 0:
+                    return jsonify({"error": "Total copies cannot be negative"}), 400
+                book.copies = num_copies
+            except (ValueError, TypeError):
+                return jsonify({"error": "Copies must be a whole number"}), 400
+
+        if "availableCopies" in data:
+            try:
+                available = int(data.get("availableCopies", 0))
+                if available < 0:
+                    return (
+                        jsonify({"error": "Available copies cannot be negative"}),
+                        400,
+                    )
+                if available > int(data.get("copies", book.copies)):
+                    return (
+                        jsonify({"error": "Available stock cannot exceed total stock"}),
+                        400,
+                    )
+                book.availableCopies = available
+            except (ValueError, TypeError):
+                return (
+                    jsonify({"error": "Available copies must be a whole number"}),
+                    400,
+                )
+
+        # --- UPDATE REMAINING FIELDS ---
+        book.author = data.get("author", book.author)
+        book.series = data.get("series", book.series)
+        book.volume = data.get("volume", book.volume)
+        book.publisher = data.get("publisher", book.publisher)
+        book.datePublished = data.get("datePublished", book.datePublished)
+        book.genre = data.get("genre", book.genre)
+        book.language = data.get("language", book.language)
+        book.isbn = data.get("isbn", book.isbn)
+        book.numberOfPages = data.get("numberOfPages", book.numberOfPages)
+        book.summary = data.get("summary", book.summary)
+        book.notes = data.get("notes", book.notes)
+        book.uploadedImageUrl = data.get("uploadedImageUrl", book.uploadedImageUrl)
+
+        db.session.commit()
+        return jsonify({"message": "Book updated successfully"}), 200
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
