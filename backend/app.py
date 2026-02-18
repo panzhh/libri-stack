@@ -8,6 +8,9 @@ from flask_mail import Mail, Message
 from models import db, User, Book, BorrowRecord
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
+from datetime import datetime, timedelta, timezone
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_apscheduler import APScheduler
 
 # Points to the .env file one directory up
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -24,6 +27,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
 
 # MAIL SERVER CONFIG (Required for Email Verification)
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
@@ -191,8 +195,6 @@ def login():
 
 
 # --- 4. BOOKS API (Paginated for 5,000 entries) ---
-
-
 @app.route("/api/books", methods=["GET"])
 def get_books():
     all_books = Book.query.all()
@@ -266,16 +268,6 @@ def seed_database():
                 print(f"❌ Error during seeding: {e}")
         else:
             print("📚 Database already has data. Skipping seed.")
-
-
-# @app.route("/api/borrow/<int:book_id>", methods=["POST"])
-# def borrow_book(book_id):
-#     print("borrowing book_id: ", book_id)
-#     return jsonify({"message": "Book borrowed successfully!"}), 200
-
-
-from datetime import datetime, timedelta, timezone
-from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
 @app.route("/api/borrow/<int:book_id>", methods=["POST"])
@@ -358,7 +350,7 @@ def get_borrowed_books(user_id):
         db.session.query(Book, BorrowRecord)
         .join(BorrowRecord, Book.id == BorrowRecord.book_id)
         .filter(BorrowRecord.user_id == user_id)
-        #.filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
+        # .filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
         .all()
     )
 
@@ -372,37 +364,6 @@ def get_borrowed_books(user_id):
 
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
-
-@app.route("/api/user/borrowed-books", methods=["GET"])
-@jwt_required()
-def get_my_borrowed_books():
-    # Get the ID from the secure token
-    user_id = int(get_jwt_identity())
-
-    # Query only "active" borrowed books
-    records = (
-        db.session.query(Book, BorrowRecord)
-        .join(BorrowRecord, Book.id == BorrowRecord.book_id)
-        .filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
-        .all()
-    )
-
-    results = []
-    for book, record in records:
-        results.append(
-            {
-                "record_id": record.id,
-                "book_id": book.id,
-                "title": book.title,
-                "author": book.author,
-                "borrow_date": record.borrow_date.strftime("%Y-%m-%d"),
-                "due_date": record.due_date.strftime("%Y-%m-%d"),
-                "image": book.uploadedImageUrl,
-            }
-        )
-
-    return jsonify(results), 200
 
 
 @app.route("/api/return/<int:record_id>", methods=["POST"])
@@ -432,6 +393,68 @@ def return_book(record_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Database error", "details": str(e)}), 500
+
+
+@app.route("/api/user/borrowed-books", methods=["GET"])
+@jwt_required()
+def get_my_borrowed_books():
+    # Get the ID from the secure token
+    user_id = int(get_jwt_identity())
+
+    # Query only "active" borrowed books
+    records = (
+        db.session.query(Book, BorrowRecord)
+        .join(BorrowRecord, Book.id == BorrowRecord.book_id)
+        .filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
+        .all()
+    )
+
+    results = []
+    for book, record in records:
+        results.append(
+            {
+                "record_id": record.id,
+                "book_id": book.id,
+                "title": book.title,
+                "author": book.author,
+                "borrow_date": record.borrow_date.strftime("%Y-%m-%d"),
+                "due_date": record.due_date.strftime("%Y-%m-%d"),
+                "uploadedImageUrl": book.uploadedImageUrl,
+                "status": record.status,
+                # --- ADDED: ALL EXTRA FIELDS FOR THE MODAL ---
+                "series": book.series,
+                "volume": book.volume,
+                "publisher": book.publisher,
+                "datePublished": book.datePublished,
+                "genre": book.genre,
+                "language": book.language,
+                "isbn": book.isbn,
+                "numberOfPages": book.numberOfPages,
+                "listPrice": book.listPriceUsd,  # Matches the price display
+                "summary": book.summary,
+                "notes": book.notes,
+            }
+        )
+
+    return jsonify(results), 200
+
+
+@app.route("/api/user/stats", methods=["GET"])
+@jwt_required()
+def get_user_stats():
+    user_id = get_jwt_identity()
+
+    # Count only books that haven't been returned yet
+    active_count = BorrowRecord.query.filter_by(
+        user_id=user_id, status="borrowed"
+    ).count()
+
+    # Count total books ever read for the 'Collection' stat
+    total_read = BorrowRecord.query.filter_by(
+        user_id=user_id, status="returned"
+    ).count()
+
+    return jsonify({"active": active_count, "total": total_read}), 200
 
 
 @app.route("/api/user/history", methods=["GET"])
@@ -468,10 +491,8 @@ def get_borrow_history():
     return jsonify(results), 200
 
 
-from flask_apscheduler import APScheduler
-from datetime import datetime, timezone
-
 scheduler = APScheduler()
+
 
 def check_overdue_tasks():
     with app.app_context():
@@ -480,16 +501,17 @@ def check_overdue_tasks():
         now = datetime.now(timezone.utc)
         overdue_list = BorrowRecord.query.filter(
             BorrowRecord.due_date < now + timedelta(days=1),
-            BorrowRecord.status == "borrowed"
+            BorrowRecord.status == "borrowed",
         ).all()
 
         for record in overdue_list:
             # 3. Send reminder email
             # Assuming you have a User relationship or can query user by ID
             send_reminder_email(record.user_id, record.book.title)
-        
+
         db.session.commit()
         print(f"Scan complete: {len(overdue_list)} books marked as overdue.")
+
 
 # Helper function for the email
 def send_reminder_email(user_id, book_title):
@@ -498,7 +520,7 @@ def send_reminder_email(user_id, book_title):
         msg = Message(
             subject="Action Required: Overdue Book",
             recipients=[user.email],
-            body=f"Hi {user.full_name  }, the book '{book_title}' is past its due date. Please return it soon!"
+            body=f"Hi {user.full_name  }, the book '{book_title}' is past its due date. Please return it soon!",
         )
         mail.send(msg)
 
@@ -510,17 +532,14 @@ if __name__ == "__main__":
 
         # 2. Run the seed function
         seed_database()
-    
+
     # Initialize scheduler
     scheduler.init_app(app)
-    
+
     # Add the job: runs once every 24 hours
     scheduler.add_job(
-        id='overdue_check', 
-        func=check_overdue_tasks, 
-        trigger='interval', 
-        minutes=1
+        id="overdue_check", func=check_overdue_tasks, trigger="interval", days=1
     )
-    
+
     scheduler.start()
     app.run(debug=True, port=5000)

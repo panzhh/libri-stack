@@ -1,10 +1,41 @@
-import React from "react";
+import React, { useState, useEffect } from "react"; // Added useState and useEffect
 import { Outlet, Link, useLocation } from "react-router-dom";
 
 export default function UserDashboard() {
   const userName = localStorage.getItem("userName") || "Member";
   const userEmail = localStorage.getItem("userEmail") || "Verified User";
   const location = useLocation();
+
+  // --- NEW: Stats State ---
+  const [stats, setStats] = useState({ active: 0, total: 0 });
+
+  // --- NEW: Fetch Stats from Backend ---
+  useEffect(() => {
+    const fetchStats = async () => {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData?.token) return;
+
+      try {
+        const response = await fetch("http://localhost:5000/api/user/stats", {
+          headers: {
+            Authorization: `Bearer ${userData.token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setStats({
+            active: data.active || 0,
+            total: data.total || 0,
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching dashboard stats:", err);
+      }
+    };
+
+    fetchStats();
+  }, [location.pathname]); // Refreshes stats when you navigate between Overview and History
 
   // Helper to highlight the active link
   const isActive = (path) => location.pathname === path;
@@ -83,9 +114,12 @@ export default function UserDashboard() {
               📚
             </div>
             <h3 className='font-black uppercase tracking-widest text-[9px] text-slate-400'>
-              Collection
+              History Borrows
             </h3>
-            <p className='text-2xl font-black text-slate-800'>12</p>
+            {/* REAL STAT: Replaced fixed 12 */}
+            <p className='text-2xl font-black text-slate-800'>
+              {stats.total.toString().padStart(2, "0")}
+            </p>
           </div>
 
           <div className='bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm'>
@@ -95,7 +129,10 @@ export default function UserDashboard() {
             <h3 className='font-black uppercase tracking-widest text-[9px] text-slate-400'>
               Active Borrows
             </h3>
-            <p className='text-2xl font-black text-slate-800'>03</p>
+            {/* REAL STAT: Replaced fixed 03 */}
+            <p className='text-2xl font-black text-slate-800'>
+              {stats.active.toString().padStart(2, "0")}
+            </p>
           </div>
 
           <Link

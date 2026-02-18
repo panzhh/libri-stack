@@ -11,6 +11,13 @@ export default function BorrowHistory() {
         const response = await fetch("http://localhost:5000/api/user/history", {
           headers: { Authorization: `Bearer ${userData.token}` },
         });
+
+        if (response.status === 401) {
+          alert("Your session has expired. Please log in again.");
+          localStorage.removeItem("user"); // Clear the expired token
+          window.location.href = "/login"; // Send them to the login page
+          return;
+        }
         const data = await response.json();
         setHistory(Array.isArray(data) ? data : []);
       } catch (err) {
