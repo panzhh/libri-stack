@@ -624,7 +624,6 @@ def get_admin_profile():
 def update_book(id):
     book = db.session.get(Book, id)
 
-
     if not book:
         return jsonify({"error": "Book not found"}), 404
 
@@ -642,7 +641,7 @@ def update_book(id):
         # --- PRICE VALIDATION (Positive) ---
         if "listPriceUsd" in data:
             try:
-                clean_price = str(data.get("listPriceUsd", 0)).replace('$', '').strip()
+                clean_price = str(data.get("listPriceUsd", 0)).replace("$", "").strip()
                 price = float(clean_price)
                 if price <= 0:
                     return jsonify({"error": "Price must be a positive number"}), 400
@@ -700,6 +699,69 @@ def update_book(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+
+# ... (existing imports)
+
+
+# --- NEW: ROUTE FOR ADMIN BULK EMAIL ---
+@app.route("/api/admin/send-email", methods=["POST"])
+@jwt_required()
+def admin_bulk_email():
+    # 1. Identity Check
+    user_id = get_jwt_identity()
+    admin = User.query.get(user_id)
+
+    if not admin or admin.role != "admin":
+        return jsonify({"error": "Unauthorized. Admin access required."}), 403
+
+    # 2. Get Data
+    data = request.get_json()
+    recipients = data.get("recipients")  # Expected: list of strings
+    subject = data.get("subject")
+    message_body = data.get("message")
+
+    if not recipients or not subject or not message_body:
+        return jsonify({"error": "Recipients, subject, and message are required."}), 400
+
+    if not isinstance(recipients, list):
+        return jsonify({"error": "Recipients must be a list of email addresses."}), 400
+
+    try:
+        # 3. Send Emails
+        # Note: We use Bcc to prevent users from seeing each other's email addresses
+        msg = Message(
+            subject=subject,
+            sender=app.config["MAIL_USERNAME"],
+            bcc=recipients,  # Using BCC for privacy
+            body=message_body,
+        )
+
+        # If you prefer to send individual emails so they are personalized:
+        # for email in recipients:
+        #     individual_msg = Message(subject, recipients=[email], body=message_body)
+        #     mail.send(individual_msg)
+
+        mail.send(msg)
+        return (
+            jsonify({"message": f"Successfully sent to {len(recipients)} users."}),
+            200,
+        )
+
+    except Exception as e:
+        print(f"Mail Server Error: {e}")
+        return (
+            jsonify(
+                {
+                    "error": "Failed to send email through SMTP server.",
+                    "details": str(e),
+                }
+            ),
+            500,
+        )
+
+
+# ... (rest of your existing code: db.init_app, register, etc.)
 
 
 if __name__ == "__main__":
