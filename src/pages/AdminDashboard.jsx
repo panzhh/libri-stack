@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   // --- EDITING STATE ---
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
+  const [selectedUser, setSelectedUser] = useState(null);
 
   // --- FIELD DEFINITIONS ---
   const bookFields = [
@@ -386,7 +387,10 @@ export default function AdminDashboard() {
                         onChange={() => toggleUserSelection(u.email)}
                       />
                     </td>
-                    <td className='py-5 font-bold text-slate-800 text-sm'>
+                    <td
+                      className='py-5 font-bold text-slate-800 text-sm cursor-pointer hover:text-indigo-600 hover:underline transition-all'
+                      onClick={() => setSelectedUser(u)}
+                    >
                       {u.full_name}
                     </td>
                     <td className='py-5 text-sm text-slate-500'>{u.email}</td>
@@ -713,6 +717,75 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+        {/* --- USER DETAIL MODAL --- */}
+        {selectedUser && (
+          <div className='fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in'>
+            <div className='bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden'>
+              {/* Header */}
+              <div className='bg-slate-900 p-8 text-white flex justify-between items-center'>
+                <div className='flex items-center gap-4'>
+                  <div className='w-12 h-12 bg-rose-500 rounded-xl flex items-center justify-center font-black'>
+                    {selectedUser.full_name?.charAt(0)}
+                  </div>
+                  <h2 className='text-xl font-black uppercase'>
+                    {selectedUser.full_name}
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className='text-xl hover:text-rose-500'
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Grid Details */}
+              <div className='p-10 grid grid-cols-2 gap-8'>
+                <div>
+                  <p className='text-[10px] font-black text-slate-400 uppercase mb-1'>
+                    Email
+                  </p>
+                  <p className='font-bold text-slate-800'>
+                    {selectedUser.email}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-[10px] font-black text-slate-400 uppercase mb-1'>
+                    Role
+                  </p>
+                  <p className='font-bold text-indigo-600 uppercase'>
+                    {selectedUser.role}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-[10px] font-black text-slate-400 uppercase mb-1'>
+                    Phone
+                  </p>
+                  <p className='font-bold text-slate-800'>
+                    {selectedUser.phone || "---"}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-[10px] font-black text-slate-400 uppercase mb-1'>
+                    Invite Code
+                  </p>
+                  <p className='font-black text-slate-800'>
+                    {selectedUser.own_invite_code || "---"}
+                  </p>
+                </div>
+              </div>
+
+              <div className='p-6 bg-slate-50 text-right'>
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className='px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase'
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>
