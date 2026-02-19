@@ -812,6 +812,48 @@ def return_book_by_admin(record_id):
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/admin/add-book', methods=['POST'])
+def add_new_book():
+    print("call add book.")
+    data = request.get_json()
+    print("data: ", data)
+    new_entry = Book(
+        title=data.get('title'),
+        # ... other fields ...
+        listPriceUsd=data.get('listPriceUsd'), # The float
+        listPrice=data.get('listPriceUsd'),       # The string "XX $"
+        copies=data.get('copies'),
+        availableCopies=data.get('copies')
+    )
+    db.session.add(new_entry)
+    db.session.commit()
+    return jsonify({"message": "Saved"}), 201
+
+
+@app.route('/api/admin/delete-book/<int:book_id>', methods=['DELETE'])
+def delete_book(book_id):
+    book = Book.query.get_or_404(book_id)
+
+    # 1. Safety Check: Check if there are active loans for this book
+    active_loans = BorrowRecord.query.filter_by(book_id=book_id, status='borrowed').first()
+    
+    if active_loans:
+        return jsonify({
+            "error": "Cannot delete book. There are active loans currently out. Mark them as returned first."
+        }), 400
+
+    try:
+        # 2. Optional: If you want to keep borrow history but delete the book, 
+        # you might need to handle foreign key constraints depending on your DB setup.
+        # Usually, we just delete the book if all copies are accounted for.
+        db.session.delete(book)
+        db.session.commit()
+        return jsonify({"message": f"Book '{book.title}' deleted successfully"}), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     with app.app_context():

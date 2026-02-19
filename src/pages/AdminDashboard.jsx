@@ -30,6 +30,18 @@ export default function AdminDashboard() {
   const [languageFilter, setLanguageFilter] = useState("All");
   const [stockFilter, setStockFilter] = useState("All"); // Options: "All", "In Stock", "Out of Stock"
 
+  const [newBook, setNewBook] = useState({
+    title: "",
+    author: "",
+    category: "",
+    language: "English",
+    copies: 1,
+    isbn: "",
+    summary: "",
+    uploadedImageUrl: "",
+    listPriceUsd: 0.0, // Added for your float column
+  });
+
   // --- FIELD DEFINITIONS ---
   const bookFields = [
     { label: "Title", key: "title", required: true },
@@ -110,6 +122,50 @@ export default function AdminDashboard() {
       setBorrowRecords(data);
     } catch (err) {
       console.error("Error fetching borrow records:", err);
+    }
+  };
+
+  // --- HANDLERS ---
+  const handleAddBookSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+
+    const payload = {
+      ...newBook,
+      availableCopies: newBook.copies,
+      listPrice: `${newBook.listPriceUsd} $`,
+      dateAdded: new Date().toISOString().split("T")[0],
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/api/admin/add-book", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      console.log(response);
+
+      if (response.ok) {
+        alert("✨ Book added to LibriStack!");
+        setNewBook({
+          title: "",
+          author: "",
+          category: "",
+          language: "English",
+          copies: 1,
+          isbn: "",
+          summary: "",
+          uploadedImageUrl: "",
+          listPriceUsd: 0.0,
+        });
+        setActiveTab("inventory");
+        // fetchBooks(); // Trigger a refresh of your list
+      }
+    } catch (err) {
+      console.error("Error saving book:", err);
     }
   };
 
@@ -236,15 +292,39 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteBook = async (bookId, title) => {
-    if (!window.confirm(`Remove "${title}" from the library?`)) return;
+    // Always ask for confirmation before destructive actions
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${title}"? This action cannot be undone.`,
+    );
+
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem("token");
+
     try {
       const response = await fetch(
-        `http://localhost:5000/api/books/${bookId}`,
-        { method: "DELETE" },
+        `http://localhost:5000/api/admin/delete-book/${bookId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
-      if (response.ok) fetchSystemData();
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Book removed from registry.");
+        // Refresh the book list so the UI updates
+        fetchSystemData();
+      } else {
+        // Show the specific error message from Flask (e.g., active loans exist)
+        alert(`Error: ${data.error || "Failed to delete book"}`);
+      }
     } catch (err) {
-      alert("Error deleting book.");
+      console.error("Delete error:", err);
+      alert("Server error while deleting book.");
     }
   };
 
@@ -353,6 +433,17 @@ export default function AdminDashboard() {
                 }`}
               >
                 Borrowed Books
+              </li>
+
+              <li
+                onClick={() => setActiveTab("add-book")}
+                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
+                  activeTab === "add-book"
+                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
+                    : "text-slate-400 hover:text-white border-transparent"
+                }`}
+              >
+                Add New Book
               </li>
             </ul>
           </div>
@@ -1179,6 +1270,190 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* 3. ADD NEW BOOK TAB */}
+        {activeTab === "add-book" && (
+          <section className='bg-white rounded-[3rem] border border-slate-100 shadow-sm p-12 animate-in slide-in-from-bottom-6 duration-500'>
+            <div className='max-w-5xl mx-auto'>
+              <header className='mb-12'>
+                <h3 className='text-3xl font-black text-slate-900 uppercase italic leading-none'>
+                  Catalog New Title
+                </h3>
+                <p className='text-xs text-slate-400 font-bold uppercase mt-3 tracking-widest'>
+                  Database entry / Global Library System
+                </p>
+              </header>
+
+              <form
+                onSubmit={handleAddBookSubmit}
+                className='grid grid-cols-1 lg:grid-cols-3 gap-12'
+              >
+                {/* Left & Middle: Text Metadata */}
+                <div className='lg:col-span-2 space-y-8'>
+                  <div className='grid grid-cols-2 gap-6'>
+                    <div className='col-span-2'>
+                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                        Main Title
+                      </label>
+                      <input
+                        type='text'
+                        required
+                        value={newBook.title}
+                        onChange={(e) =>
+                          setNewBook({ ...newBook, title: e.target.value })
+                        }
+                        placeholder='Enter book title...'
+                        className='w-full mt-2 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-rose-500/5 outline-none transition-all'
+                      />
+                    </div>
+                    <div>
+                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                        Primary Author
+                      </label>
+                      <input
+                        type='text'
+                        required
+                        value={newBook.author}
+                        onChange={(e) =>
+                          setNewBook({ ...newBook, author: e.target.value })
+                        }
+                        className='w-full mt-2 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                      />
+                    </div>
+                    <div>
+                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                        ISBN-13
+                      </label>
+                      <input
+                        type='text'
+                        value={newBook.isbn}
+                        onChange={(e) =>
+                          setNewBook({ ...newBook, isbn: e.target.value })
+                        }
+                        placeholder='978-...'
+                        className='w-full mt-2 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      Language <span className='text-rose-500'>*</span>
+                    </label>
+                    <select
+                      required
+                      value={newBook.language}
+                      onChange={(e) =>
+                        setNewBook({ ...newBook, language: e.target.value })
+                      }
+                      className='w-full mt-2 px-4 py-4 bg-white border border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:ring-4 focus:ring-rose-500/5 transition-all cursor-pointer'
+                    >
+                      <option value=''>Select Language</option>
+                      <option value='English'>English</option>
+                      <option value='Chinese'>Chinese</option>
+                      <option value='Malay'>Malay</option>
+                      <option value='French'>French</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      Book Summary
+                    </label>
+                    <textarea
+                      rows='6'
+                      value={newBook.summary}
+                      onChange={(e) =>
+                        setNewBook({ ...newBook, summary: e.target.value })
+                      }
+                      className='w-full mt-2 px-6 py-4 bg-slate-50 border border-slate-100 rounded-[2rem] text-sm font-medium outline-none resize-none'
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* Right Column: Financials & Media */}
+                <div className='space-y-8 bg-slate-50/50 p-10 rounded-[3rem] border border-slate-100'>
+                  <div>
+                    <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      Category / Genre
+                    </label>
+                    <input
+                      type='text'
+                      value={newBook.category}
+                      onChange={(e) =>
+                        setNewBook({ ...newBook, category: e.target.value })
+                      }
+                      placeholder='e.g. Science Fiction'
+                      className='w-full mt-2 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                    />
+                  </div>
+
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div>
+                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                        Total Copies
+                      </label>
+                      <input
+                        type='number'
+                        min='1'
+                        required
+                        value={newBook.copies}
+                        onChange={(e) =>
+                          setNewBook({
+                            ...newBook,
+                            copies: parseInt(e.target.value),
+                          })
+                        }
+                        className='w-full mt-2 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                      />
+                    </div>
+                    <div>
+                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                        Price (USD)
+                      </label>
+                      <input
+                        type='number'
+                        step='0.01'
+                        required
+                        value={newBook.listPriceUsd}
+                        onChange={(e) =>
+                          setNewBook({
+                            ...newBook,
+                            listPriceUsd: parseFloat(e.target.value),
+                          })
+                        }
+                        className='w-full mt-2 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      Cover Image URL
+                    </label>
+                    <input
+                      type='text'
+                      value={newBook.uploadedImageUrl}
+                      onChange={(e) =>
+                        setNewBook({
+                          ...newBook,
+                          uploadedImageUrl: e.target.value,
+                        })
+                      }
+                      className='w-full mt-2 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                    />
+                  </div>
+
+                  <button
+                    type='submit'
+                    className='w-full py-6 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-600 transition-all shadow-xl shadow-slate-200 active:scale-95'
+                  >
+                    Confirm & Save Entry
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
         )}
       </main>
     </div>
