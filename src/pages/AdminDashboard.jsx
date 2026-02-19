@@ -42,6 +42,29 @@ export default function AdminDashboard() {
     listPriceUsd: 0.0, // Added for your float column
   });
 
+  const [contactMessages, setContactMessages] = useState([]);
+
+  const fetchMessages = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/admin/contact_messages",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const data = await response.json();
+      setContactMessages(data);
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+    }
+  };
+
+  // Call this inside your existing useEffect when the tab changes
+  useEffect(() => {
+    if (activeTab === "messages") fetchMessages();
+  }, [activeTab]);
+
   // --- FIELD DEFINITIONS ---
   const bookFields = [
     { label: "Title", key: "title", required: true },
@@ -444,6 +467,16 @@ export default function AdminDashboard() {
                 }`}
               >
                 Add New Book
+              </li>
+              <li
+                onClick={() => setActiveTab("messages")}
+                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
+                  activeTab === "messages"
+                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
+                    : "text-slate-400 hover:text-white border-transparent"
+                }`}
+              >
+                Contact Messages
               </li>
             </ul>
           </div>
@@ -1452,6 +1485,67 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </form>
+            </div>
+          </section>
+        )}
+
+        {activeTab === "messages" && (
+          <section className='animate-in fade-in space-y-6'>
+            <div className='flex justify-between items-center mb-8'>
+              <h3 className='text-2xl font-black text-slate-900 uppercase italic'>
+                Inbox
+              </h3>
+              <span className='bg-indigo-100 text-indigo-600 px-4 py-1 rounded-full text-[10px] font-black uppercase'>
+                {contactMessages.length} Messages
+              </span>
+            </div>
+
+            <div className='grid grid-cols-1 gap-4'>
+              {contactMessages.length === 0 ? (
+                <div className='py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100'>
+                  <p className='text-slate-400 font-black text-xs uppercase'>
+                    No messages yet
+                  </p>
+                </div>
+              ) : (
+                contactMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className='bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all'
+                  >
+                    <div className='flex justify-between items-start mb-4'>
+                      <div>
+                        <h4 className='font-black text-slate-800 uppercase text-sm'>
+                          {msg.name}
+                        </h4>
+                        <p className='text-indigo-500 text-[10px] font-bold'>
+                          {msg.email}
+                        </p>
+                      </div>
+                      <span className='text-[9px] font-black text-slate-400 uppercase bg-slate-50 px-3 py-1 rounded-lg'>
+                        {msg.date}
+                      </span>
+                    </div>
+                    <p className='text-slate-600 text-sm leading-relaxed bg-slate-50 p-6 rounded-2xl border border-slate-100 italic'>
+                      "{msg.message}"
+                    </p>
+                    <div className='mt-6 flex gap-3'>
+                      <a
+                        href={`mailto:${msg.email}`}
+                        className='text-[9px] font-black bg-slate-900 text-white px-6 py-3 rounded-xl uppercase hover:bg-rose-500 transition-all'
+                      >
+                        Reply via Email
+                      </a>
+                      <button
+                        onClick={() => handleDeleteMessage(msg.id)}
+                        className='text-[9px] font-black border-2 border-slate-100 text-slate-400 px-6 py-3 rounded-xl uppercase hover:text-rose-500 hover:border-rose-100 transition-all'
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </section>
         )}

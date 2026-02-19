@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from flask_mail import Mail, Message
-from models import db, User, Book, BorrowRecord
+from models import db, User, Book, BorrowRecord, ContactMessage
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta, timezone
@@ -853,6 +853,37 @@ def delete_book(book_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+    
+
+@app.route('/api/admin/contact_messages', methods=['GET'])
+def get_messages():
+    # Only admins should see this (add your @admin_required decorator here)
+    messages = ContactMessage.query.order_by(ContactMessage.created_at.desc()).all()
+    return jsonify([m.to_dict() for m in messages])
+
+@app.route('/api/admin/delete-message/<int:msg_id>', methods=['DELETE'])
+def delete_message(msg_id):
+    msg = ContactMessage.query.get_or_404(msg_id)
+    db.session.delete(msg)
+    db.session.commit()
+    return jsonify({"message": "Deleted"}), 200
+
+@app.route('/api/contact', methods=['POST'])
+def save_message():
+    data = request.get_json()
+    
+    # Extracting data from the React request
+    new_msg = ContactMessage(
+        name=data.get('name'),
+        email=data.get('email'),
+        message=data.get('message')
+    )
+    
+    db.session.add(new_msg) # This puts it in the "waiting area"
+    db.session.commit()      # This saves it permanently to the .db file
+    
+    return jsonify({"status": "success", "message": "Saved to database!"}), 201
 
 
 if __name__ == "__main__":
@@ -873,3 +904,26 @@ if __name__ == "__main__":
 
     scheduler.start()
     app.run(debug=True, port=5000)
+
+    
+
+@app.route('/api/contact', methods=['POST'])
+def receive_contact():
+    data = request.get_json()
+    
+    name = data.get('name')
+    email = data.get('email')
+    message = data.get('message')
+
+    # Backend Validation
+    if not name or not email or not message:
+        return jsonify({"error": "All fields are required"}), 400
+
+    try:
+        new_msg = ContactMessage(name=name, email=email, message=message)
+        db.session.add(new_msg)
+        db.session.commit()
+        return jsonify({"message": "Message received successfully!"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Failed to save message"}), 500
