@@ -764,6 +764,55 @@ def admin_bulk_email():
 # ... (rest of your existing code: db.init_app, register, etc.)
 
 
+@app.route('/api/admin/borrow-records', methods=['GET'])
+def get_all_borrow_records():
+    # Joining with User and Book to get names for the table
+    records = db.session.query(BorrowRecord, User, Book).join(
+        User, BorrowRecord.user_id == User.id
+    ).join(
+        Book, BorrowRecord.book_id == Book.id
+    ).all()
+
+    output = []
+    for record, user, book in records:
+        output.append({
+            "id": record.id,
+            "user_name": user.full_name,
+            "book_title": book.title,
+            "book_id": book.id,
+            "borrow_date": record.borrow_date.strftime('%Y-%m-%d'),
+            "due_date": record.due_date.strftime('%Y-%m-%d'),
+            "status": record.status
+        })
+    return jsonify(output)
+
+    
+
+@app.route('/api/admin/return-book/<int:record_id>', methods=['PATCH'])
+def return_book_by_admin(record_id):
+    # 1. Find the specific record
+    record = BorrowRecord.query.get_or_404(record_id)
+    
+    if record.status == "returned":
+        return jsonify({"message": "Book already returned"}), 400
+
+    # 2. Update the record status
+    record.status = "returned"
+    record.return_date = datetime.now(timezone.utc)
+    
+    # 3. Increase the available copies in the Book table
+    book = Book.query.get(record.book_id)
+    if book:
+        book.availableCopies += 1
+
+    try:
+        db.session.commit()
+        return jsonify({"message": "Book returned successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     with app.app_context():
         # 1. Create the database tables based on your model

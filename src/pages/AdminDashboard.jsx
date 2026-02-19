@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [borrowSearch, setBorrowSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // options: "all", "borrowed", "returned"
 
   // --- STATE MANAGEMENT ---
   const [activeTab, setActiveTab] = useState("overview");
@@ -45,6 +47,7 @@ export default function AdminDashboard() {
     { label: "Notes", key: "notes", fullWidth: true, isTextArea: true },
   ];
 
+  const [borrowRecords, setBorrowRecords] = useState([]);
   // --- FETCH FUNCTIONS ---
   const fetchAdminProfile = async () => {
     const token = localStorage.getItem("token");
@@ -60,6 +63,59 @@ export default function AdminDashboard() {
       console.error("Error fetching admin profile:", err);
     }
   };
+
+  const handleReturnBook = async (recordId) => {
+    if (!window.confirm("Confirm this book has been returned?")) return;
+
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/admin/return-book/${recordId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        // Refresh the borrow records to show the updated status
+        fetchBorrowRecords();
+        // Also refresh system data to update available book counts
+        fetchSystemData();
+        alert("Success: Book marked as returned.");
+      } else {
+        alert("Failed to update record.");
+      }
+    } catch (err) {
+      console.error("Error returning book:", err);
+    }
+  };
+
+  const fetchBorrowRecords = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/admin/borrow-records",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const data = await response.json();
+      setBorrowRecords(data);
+    } catch (err) {
+      console.error("Error fetching borrow records:", err);
+    }
+  };
+
+  // Call this inside your useEffect
+  useEffect(() => {
+    fetchAdminProfile();
+    fetchSystemData();
+    fetchBorrowRecords(); // Add this
+  }, []);
 
   const fetchSystemData = async () => {
     const token = localStorage.getItem("token");
@@ -209,6 +265,16 @@ export default function AdminDashboard() {
       b.author?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  const filteredBorrowRecords = borrowRecords.filter((record) => {
+    const matchesStatus =
+      statusFilter === "all" || record.status === statusFilter;
+    const matchesSearch =
+      record.user_name.toLowerCase().includes(borrowSearch.toLowerCase()) ||
+      record.book_title.toLowerCase().includes(borrowSearch.toLowerCase());
+
+    return matchesStatus && matchesSearch;
+  });
+
   return (
     <div className='min-h-screen bg-slate-50 flex'>
       {/* Sidebar (ORIGINAL) */}
@@ -253,6 +319,20 @@ export default function AdminDashboard() {
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "inventory" ? "bg-rose-500 text-white border-rose-500 shadow-lg" : "text-slate-400 hover:text-white border-transparent"}`}
               >
                 Book Inventory
+              </li>
+
+              <li
+                onClick={() => {
+                  setActiveTab("borrowed");
+                  setSearchQuery("");
+                }}
+                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
+                  activeTab === "borrowed"
+                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
+                    : "text-slate-400 hover:text-white border-transparent"
+                }`}
+              >
+                Borrowed Books
               </li>
             </ul>
           </div>
@@ -462,6 +542,235 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
+        )}
+
+        {activeTab === "borrowed" && (
+          <section className='bg-white rounded-[3rem] border border-slate-100 shadow-sm p-10 animate-in fade-in'>
+            {/* Header & Filters */}
+            <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10'>
+              <div>
+                <h3 className='text-xl font-black text-slate-800 uppercase italic leading-none'>
+                  Loan Registry
+                </h3>
+                <p className='text-[10px] text-slate-400 font-bold uppercase mt-2'>
+                  Monitoring {filteredBorrowRecords.length} Records
+                </p>
+              </div>
+
+              <div className='flex flex-wrap items-center gap-4 w-full lg:w-auto'>
+                {/* Search Bar */}
+                <div className='relative flex-1 lg:w-64'>
+                  <span className='absolute inset-y-0 left-4 flex items-center text-slate-400 text-xs'>
+                    🔍
+                  </span>
+                  <input
+                    type='text'
+                    placeholder='Search borrower or book...'
+                    value={borrowSearch}
+                    onChange={(e) => setBorrowSearch(e.target.value)}
+                    className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-rose-500/20'
+                  />
+                </div>
+
+                {/* Status Toggle */}
+                <div className='flex bg-slate-100 p-1 rounded-xl'>
+                  {["all", "borrowed", "returned"].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setStatusFilter(s)}
+                      className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${
+                        statusFilter === s
+                          ? "bg-white text-rose-500 shadow-sm"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className='overflow-x-auto'>
+              <table className='w-full text-left'>
+                <thead>
+                  <tr className='text-[10px] font-black text-slate-400 border-b uppercase'>
+                    <th className='pb-4'>Borrower Details</th>
+                    <th className='pb-4'>Book Information</th>
+                    <th className='pb-4'>Timeline</th>
+                    <th className='pb-4'>Status</th>
+                    <th className='pb-4 text-right'>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredBorrowRecords.map((record) => {
+                    // 1. Logic to check if the book is late
+                    const isOverdue =
+                      record.status === "borrowed" &&
+                      new Date(record.due_date) < new Date();
+
+                    return (
+                      <tr
+                        key={record.id}
+                        className={`border-b border-slate-50 transition-colors group ${
+                          isOverdue
+                            ? "bg-rose-50/30 hover:bg-rose-50/60"
+                            : "hover:bg-slate-50"
+                        }`}
+                      >
+                        {/* COLUMN: Borrower Details */}
+                        <td className='py-5'>
+                          <p className='font-bold text-slate-800 text-sm'>
+                            {record.user_name}
+                          </p>
+                          <p className='text-[10px] text-indigo-500 font-black uppercase tracking-tighter'>
+                            User ID: #{record.user_id}
+                          </p>
+                        </td>
+
+                        {/* COLUMN: Book Information */}
+                        <td className='py-5'>
+                          <p className='font-black text-slate-700 text-[11px] uppercase truncate max-w-[200px]'>
+                            {record.book_title}
+                          </p>
+                          <p className='text-[9px] text-slate-400 font-bold'>
+                            Book ID: {record.book_id}
+                          </p>
+                        </td>
+
+                        {/* COLUMN: Timeline */}
+                        <td className='py-5'>
+                          <div className='flex flex-col gap-1'>
+                            <span className='text-[9px] font-bold text-slate-500 italic'>
+                              Out: {record.borrow_date}
+                            </span>
+                            <span
+                              className={`text-[9px] font-black uppercase flex items-center gap-1 ${
+                                isOverdue ? "text-rose-600" : "text-slate-400"
+                              }`}
+                            >
+                              Due: {record.due_date}
+                              {isOverdue && (
+                                <span className='animate-pulse'>⚠️ LATE</span>
+                              )}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* COLUMN: Status Badge */}
+                        <td className='py-5'>
+                          <span
+                            className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase ${
+                              record.status === "borrowed"
+                                ? "bg-amber-100 text-amber-600 shadow-sm border border-amber-200"
+                                : "bg-emerald-100 text-emerald-600 border border-emerald-200"
+                            }`}
+                          >
+                            {record.status}
+                          </span>
+                        </td>
+
+                        {/* COLUMN: Action Button */}
+                        <td className='py-5 text-right'>
+                          {record.status === "borrowed" ? (
+                            <button
+                              onClick={() => handleReturnBook(record.id)}
+                              className={`text-[9px] font-black px-4 py-2 rounded-xl uppercase transition-all transform hover:scale-105 active:scale-95 shadow-sm ${
+                                isOverdue
+                                  ? "bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200"
+                                  : "bg-slate-900 text-white hover:bg-indigo-600"
+                              }`}
+                            >
+                              Return Book
+                            </button>
+                          ) : (
+                            <div className='flex flex-col items-end'>
+                              <span className='text-[9px] font-black text-slate-300 uppercase tracking-widest'>
+                                Archived
+                              </span>
+                              <span className='text-[8px] text-slate-400 italic'>
+                                In: {record.return_date || "N/A"}
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* {filteredBorrowRecords.map((record) => (
+                    <tr
+                      key={record.id}
+                      className='border-b border-slate-50 hover:bg-slate-100/50 transition-colors group'
+                    >
+                      <td className='py-5'>
+                        <p className='font-bold text-slate-800 text-sm'>
+                          {record.user_name}
+                        </p>
+                        <p className='text-[10px] text-indigo-500 font-black uppercase tracking-tighter'>
+                          User ID: #{record.user_id}
+                        </p>
+                      </td>
+                      <td className='py-5'>
+                        <p className='font-black text-slate-700 text-[11px] uppercase truncate max-w-[200px]'>
+                          {record.book_title}
+                        </p>
+                        <p className='text-[9px] text-slate-400 font-bold'>
+                          Book ID: {record.book_id}
+                        </p>
+                      </td>
+                      <td className='py-5'>
+                        <div className='flex flex-col gap-1'>
+                          <span className='text-[9px] font-bold text-slate-500 italic'>
+                            Out: {record.borrow_date}
+                          </span>
+                          <span
+                            className={`text-[9px] font-black uppercase ${record.status === "borrowed" && new Date(record.due_date) < new Date() ? "text-rose-600" : "text-slate-400"}`}
+                          >
+                            Due: {record.due_date}
+                          </span>
+                        </div>
+                      </td>
+                      <td className='py-5'>
+                        <span
+                          className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase ${
+                            record.status === "borrowed"
+                              ? "bg-amber-100 text-amber-600"
+                              : "bg-emerald-100 text-emerald-600"
+                          }`}
+                        >
+                          {record.status}
+                        </span>
+                      </td>
+                      <td className='py-5 text-right'>
+                        {record.status === "borrowed" ? (
+                          <button
+                            onClick={() => handleReturnBook(record.id)}
+                            className='text-[9px] font-black bg-slate-900 text-white px-4 py-2 rounded-xl uppercase hover:bg-rose-600 transition-all transform hover:scale-105 active:scale-95'
+                          >
+                            Return Book
+                          </button>
+                        ) : (
+                          <span className='text-[9px] font-black text-slate-300 uppercase'>
+                            Archive Only
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))} */}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Empty State */}
+            {filteredBorrowRecords.length === 0 && (
+              <div className='py-20 text-center'>
+                <p className='text-slate-400 font-black text-xs uppercase tracking-widest'>
+                  No records found matching your filters
+                </p>
+              </div>
+            )}
+          </section>
         )}
 
         {/* --- PROFILE TAB (ENHANCED WITH ALL DATA) --- */}
