@@ -26,6 +26,9 @@ export default function AdminDashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
+  const [inventorySearch, setInventorySearch] = useState("");
+  const [languageFilter, setLanguageFilter] = useState("All");
+  const [stockFilter, setStockFilter] = useState("All"); // Options: "All", "In Stock", "Out of Stock"
 
   // --- FIELD DEFINITIONS ---
   const bookFields = [
@@ -275,6 +278,23 @@ export default function AdminDashboard() {
     return matchesStatus && matchesSearch;
   });
 
+  const filteredInventory = books.filter((book) => {
+    const matchesSearch =
+      book.title?.toLowerCase().includes(inventorySearch.toLowerCase()) ||
+      book.author?.toLowerCase().includes(inventorySearch.toLowerCase());
+
+    const matchesLanguage =
+      languageFilter === "All" || book.language === languageFilter;
+
+    const matchesStock =
+      stockFilter === "All" ||
+      (stockFilter === "In Stock"
+        ? book.availableCopies > 0
+        : book.availableCopies === 0);
+
+    return matchesSearch && matchesLanguage && matchesStock;
+  });
+
   return (
     <div className='min-h-screen bg-slate-50 flex'>
       {/* Sidebar (ORIGINAL) */}
@@ -371,7 +391,7 @@ export default function AdminDashboard() {
           </h2>
         </header>
 
-        {(activeTab === "users" || activeTab === "inventory") && (
+        {activeTab === "users" && (
           <div className='relative w-full max-w-md mb-10'>
             <span className='absolute inset-y-0 left-4 flex items-center text-slate-400'>
               🔍
@@ -494,6 +514,129 @@ export default function AdminDashboard() {
 
         {/* --- INVENTORY TAB (RESTORED ORIGINAL) --- */}
         {activeTab === "inventory" && (
+          <div className='animate-in fade-in'>
+            {/* --- FILTER BAR --- */}
+            <div className='flex flex-wrap items-center gap-4 mb-10 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm'>
+              {/* Search Input */}
+              <div className='relative flex-1 min-w-[250px]'>
+                <span className='absolute inset-y-0 left-4 flex items-center text-slate-400'>
+                  🔍
+                </span>
+                <input
+                  type='text'
+                  placeholder='Search title or author...'
+                  value={inventorySearch}
+                  onChange={(e) => setInventorySearch(e.target.value)}
+                  className='w-full pl-11 pr-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-500/20'
+                />
+              </div>
+
+              {/* Language Filter */}
+              <select
+                value={languageFilter}
+                onChange={(e) => setLanguageFilter(e.target.value)}
+                className='px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-black uppercase text-slate-600 focus:outline-none'
+              >
+                <option value='All'>All Languages</option>
+                <option value='English'>English</option>
+                <option value='Chinese'>Chinese</option>
+                {/* Add more as needed */}
+              </select>
+
+              {/* Stock Filter */}
+              <div className='flex bg-slate-100 p-1 rounded-2xl'>
+                {["All", "In Stock", "Out of Stock"].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStockFilter(s)}
+                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all ${
+                      stockFilter === s
+                        ? "bg-white text-rose-500 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* --- BOOK GRID --- */}
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
+              {filteredInventory.map((book) => (
+                <div
+                  key={book.id}
+                  className='bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group'
+                >
+                  <div className='aspect-square bg-slate-50 rounded-[2rem] mb-4 flex items-center justify-center text-5xl border border-slate-100 overflow-hidden relative'>
+                    {book.uploadedImageUrl ? (
+                      <img
+                        src={book.uploadedImageUrl}
+                        className='w-full h-full object-cover'
+                        alt='cover'
+                      />
+                    ) : (
+                      "📖"
+                    )}
+                    {/* Quick Stock Badge */}
+                    <div
+                      className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] font-black uppercase ${
+                        book.availableCopies > 0
+                          ? "bg-emerald-500 text-white"
+                          : "bg-rose-500 text-white"
+                      }`}
+                    >
+                      {book.availableCopies > 0
+                        ? `${book.availableCopies} Left`
+                        : "Out of Stock"}
+                    </div>
+                  </div>
+
+                  <h4 className='font-black text-slate-900 truncate uppercase text-sm'>
+                    {book.title}
+                  </h4>
+                  <p className='text-slate-500 text-[10px] font-bold italic mb-6'>
+                    by {book.author || "Unknown"}
+                  </p>
+
+                  <div className='space-y-2'>
+                    <button
+                      onClick={() => setSelectedBook(book)}
+                      className='w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-indigo-600 transition-all shadow-md'
+                    >
+                      View Details
+                    </button>
+                    <div className='flex gap-2'>
+                      <button
+                        onClick={() => startEditing(book)}
+                        className='flex-1 py-3 border-2 border-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-all'
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBook(book.id, book.title)}
+                        className='px-4 py-3 border-2 border-slate-100 text-rose-500 rounded-xl text-[10px] font-black uppercase hover:bg-rose-50 transition-all'
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Empty State */}
+            {filteredInventory.length === 0 && (
+              <div className='py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100'>
+                <p className='text-slate-400 font-black text-xs uppercase tracking-widest'>
+                  No books match those filters
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* {activeTab === "inventory" && (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in'>
             {filteredBooks.map((book) => (
               <div
@@ -542,7 +685,7 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-        )}
+        )} */}
 
         {activeTab === "borrowed" && (
           <section className='bg-white rounded-[3rem] border border-slate-100 shadow-sm p-10 animate-in fade-in'>
@@ -698,66 +841,6 @@ export default function AdminDashboard() {
                       </tr>
                     );
                   })}
-                  {/* {filteredBorrowRecords.map((record) => (
-                    <tr
-                      key={record.id}
-                      className='border-b border-slate-50 hover:bg-slate-100/50 transition-colors group'
-                    >
-                      <td className='py-5'>
-                        <p className='font-bold text-slate-800 text-sm'>
-                          {record.user_name}
-                        </p>
-                        <p className='text-[10px] text-indigo-500 font-black uppercase tracking-tighter'>
-                          User ID: #{record.user_id}
-                        </p>
-                      </td>
-                      <td className='py-5'>
-                        <p className='font-black text-slate-700 text-[11px] uppercase truncate max-w-[200px]'>
-                          {record.book_title}
-                        </p>
-                        <p className='text-[9px] text-slate-400 font-bold'>
-                          Book ID: {record.book_id}
-                        </p>
-                      </td>
-                      <td className='py-5'>
-                        <div className='flex flex-col gap-1'>
-                          <span className='text-[9px] font-bold text-slate-500 italic'>
-                            Out: {record.borrow_date}
-                          </span>
-                          <span
-                            className={`text-[9px] font-black uppercase ${record.status === "borrowed" && new Date(record.due_date) < new Date() ? "text-rose-600" : "text-slate-400"}`}
-                          >
-                            Due: {record.due_date}
-                          </span>
-                        </div>
-                      </td>
-                      <td className='py-5'>
-                        <span
-                          className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase ${
-                            record.status === "borrowed"
-                              ? "bg-amber-100 text-amber-600"
-                              : "bg-emerald-100 text-emerald-600"
-                          }`}
-                        >
-                          {record.status}
-                        </span>
-                      </td>
-                      <td className='py-5 text-right'>
-                        {record.status === "borrowed" ? (
-                          <button
-                            onClick={() => handleReturnBook(record.id)}
-                            className='text-[9px] font-black bg-slate-900 text-white px-4 py-2 rounded-xl uppercase hover:bg-rose-600 transition-all transform hover:scale-105 active:scale-95'
-                          >
-                            Return Book
-                          </button>
-                        ) : (
-                          <span className='text-[9px] font-black text-slate-300 uppercase'>
-                            Archive Only
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))} */}
                 </tbody>
               </table>
             </div>
