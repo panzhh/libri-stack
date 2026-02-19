@@ -44,7 +44,56 @@ export default function Navbar() {
         </NavLink>
 
         {/* --- CONDITIONAL RENDERING --- */}
+
+        {/* --- CONDITIONAL RENDERING --- */}
         {!token ? (
+          <>
+            <NavLink title='Register' to='/register' className={linkStyles}>
+              Register
+            </NavLink>
+
+            <NavLink
+              to='/login'
+              className={({ isActive }) =>
+                `px-6 py-2.5 rounded-full font-black transition-all text-sm ${
+                  isActive
+                    ? "bg-indigo-600 text-white"
+                    : "bg-slate-900 text-white hover:bg-indigo-600"
+                }`
+              }
+            >
+              Login
+            </NavLink>
+          </>
+        ) : (
+          <>
+            {/* 1. Show Admin Panel ONLY if user is admin */}
+            {role === "admin" && (
+              <NavLink to='/admin-dashboard' className={linkStyles}>
+                Admin Panel
+              </NavLink>
+            )}
+
+            {/* 2. Show My Borrows (User Dashboard) for BOTH admin and regular users */}
+            <NavLink to='/user-dashboard' className={linkStyles}>
+              {role === "admin" ? "My Borrows" : "Dashboard"}
+            </NavLink>
+
+            <div className='flex items-center gap-6 ml-4 pl-6 border-l-2 border-slate-100'>
+              <span className='text-slate-500 font-bold tracking-tight italic normal-case text-base'>
+                Hi, {userName || "User"}
+              </span>
+              <button
+                onClick={handleLogout}
+                className='px-6 py-2.5 rounded-full bg-rose-50 text-rose-600 font-black text-sm hover:bg-rose-600 hover:text-white transition-all border border-rose-100 shadow-sm'
+              >
+                Logout
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* {!token ? (
           <>
             <NavLink title='Register' to='/register' className={linkStyles}>
               Register
@@ -84,7 +133,7 @@ export default function Navbar() {
               </button>
             </div>
           </>
-        )}
+        )} */}
       </div>
     </nav>
   );

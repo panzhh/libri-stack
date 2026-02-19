@@ -219,7 +219,16 @@ def get_all_users():
 
 
 @app.route("/api/debug/delete-user", methods=["DELETE"])
+@jwt_required() # Assuming you use JWT for the admin session
 def delete_user():
+    
+    # Get the identity of the person making the request
+    current_admin_email = get_jwt_identity() 
+
+    if email == current_admin_email:
+        return jsonify({"error": "Self-destruction blocked! You cannot delete your own admin account."}), 400
+
+    user = User.query.filter_by(email=email).first()
     # We use query parameters for ease of use in tools like Postman or Curl
     email = request.args.get("email")
 
@@ -281,17 +290,17 @@ def borrow_book_by_id(book_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    if user.role == "admin":
-        return (
-            jsonify(
-                {
-                    "error": "Access Denied. Administrative accounts are not permitted to borrow books. Please use a Member account.",
-                    "message": "Administrative accounts are not permitted to borrow books. Please use a Member account.",
-                }
-            ),
-            403,
-        )
-    # -------------------------
+    # if user.role == "admin":
+    #     return (
+    #         jsonify(
+    #             {
+    #                 "error": "Access Denied. Administrative accounts are not permitted to borrow books. Please use a Member account.",
+    #                 "message": "Administrative accounts are not permitted to borrow books. Please use a Member account.",
+    #             }
+    #         ),
+    #         403,
+    #     )
+    # # -------------------------
 
     active_borrows_count = BorrowRecord.query.filter_by(
         user_id=user_id, status="borrowed"
@@ -855,6 +864,24 @@ def delete_book(book_id):
         return jsonify({"error": str(e)}), 500
     
     
+
+@app.route('/api/admin/promote-user/<int:user_id>', methods=['PATCH'])
+def promote_user(user_id):
+    # Optional: Verify requester is admin here
+    user = User.query.get_or_404(user_id)
+    print("promote user to admin: ", user.to_dict())
+    
+    try:
+        user.role = "admin"
+        user.own_invite_code = User.generate_unique_code()
+        db.session.commit()
+        print("after promote user to admin: ", user.to_dict())
+        return jsonify({"message": "User promoted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
 
 @app.route('/api/admin/contact_messages', methods=['GET'])
 def get_messages():

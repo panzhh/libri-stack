@@ -302,6 +302,17 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteUser = async (email) => {
+    const loggedInEmail = localStorage.getItem("userEmail");
+
+    if (email === loggedInEmail) {
+      alert(
+        "Safety Protocol: You cannot delete the account you are currently logged into.",
+      );
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete ${targetEmail}?`))
+      return;
     if (!window.confirm(`Permanently delete user ${email}?`)) return;
     try {
       const response = await fetch(
@@ -397,6 +408,58 @@ export default function AdminDashboard() {
 
     return matchesSearch && matchesLanguage && matchesStock;
   });
+
+  const handlePromoteUser = async (userId, name) => {
+    const confirmPromote = window.confirm(
+      `Are you sure you want to promote ${name} to ADMIN? This gives them full access to LibriStack.`,
+    );
+
+    if (!confirmPromote) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/admin/promote-user/${userId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        alert(`${name} is now an Admin.`);
+        fetchSystemData(); // Refresh the list so they move to the Admin tab
+      } else {
+        const errorData = await response.json();
+        alert("Failed to promote: " + errorData.error);
+      }
+    } catch (err) {
+      console.error("Promotion error:", err);
+    }
+  };
+
+  const [myStats, setMyStats] = useState({ active: 0, total: 0 });
+
+  const fetchMyAdminStats = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch("http://localhost:5000/api/user/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setMyStats(data);
+    } catch (err) {
+      console.error("Error fetching admin stats:", err);
+    }
+  };
+
+  // Update your useEffect to include stats
+  useEffect(() => {
+    if (activeTab === "profile") {
+      fetchMyAdminStats();
+    }
+  }, [activeTab]);
 
   return (
     <div className='min-h-screen bg-slate-50 flex'>
@@ -622,12 +685,29 @@ export default function AdminDashboard() {
                       {u.registration_date || "Unknown"}
                     </td>
                     <td className='py-5 text-right'>
-                      <button
+                      <div className='flex justify-end gap-4'>
+                        {/* Only show Promote button if the user is not an admin */}
+                        {u.role === "user" && userSubTab === "user" && (
+                          <button
+                            onClick={() => handlePromoteUser(u.id, u.full_name)}
+                            className='text-[9px] font-black text-indigo-600 uppercase hover:underline'
+                          >
+                            Promote
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteUser(u.email)}
+                          className='text-[9px] font-black text-rose-500 uppercase hover:underline'
+                        >
+                          Delete
+                        </button>
+                      </div>
+                      {/* <button
                         onClick={() => handleDeleteUser(u.email)}
                         className='text-[9px] font-black text-rose-500 uppercase hover:underline'
                       >
                         Delete
-                      </button>
+                      </button> */}
                     </td>
                   </tr>
                 ))}
