@@ -1,36 +1,24 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
+# --- Frontend (Root) ---
+node_modules/
+dist/
+dist-ssr/
+.eslintcache
+.DS_Store
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# --- Python / Flask ---
+# --- Backend Folder ---
 backend/venv/
 backend/env/
 backend/__pycache__/
+backend/*.py[cod]
 backend/*.db
-backend/.env
-*.pyc
-
-.env
-
+backend/*.sqlite
 backend/notes.txt
+
+# --- Environment Secrets ---
+.env
+backend/.env
+
+# --- Editor ---
+.vscode/
+.idea/
