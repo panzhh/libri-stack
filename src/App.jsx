@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import VerifyEmail from "./components/VerifyEmail";
+import Footer from "./components/Footer"; // Import your new footer
 import UserDashboard from "./pages/UserDashBoard";
 import BorrowedBooks from "./pages/BorrowedBooks";
 import BorrowHistory from "./pages/BorrowHistory";
@@ -59,6 +60,7 @@ export default function App() {
             }
           />
         </Routes>
+        <Footer />
       </main>
 
       {/* You could also add a <Footer /> here later */}

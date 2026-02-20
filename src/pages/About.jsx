@@ -7,8 +7,12 @@ export default function About() {
       a: "All members and regular attenders of the Church in Dunn Loring are welcome to register and borrow resources.",
     },
     {
+      q: "How can I be a library admin?",
+      a: "You can register directly as an admin, but you will need a registration invitation code, which you can obtain from any existing admin. Alternatively, you can register as a user and request that an admin promote you to admin status.",
+    },
+    {
       q: "How long can I keep a book?",
-      a: "The standard borrowing period is 14 days. You can renew your book once via your dashboard if there are no pending requests.",
+      a: "The standard borrowing period is 30 days. You can renew your book once via your dashboard if there are no pending requests.",
     },
     {
       q: "Where do I return physical books?",
@@ -43,11 +47,11 @@ export default function About() {
               1
             </div>
             <h3 className='font-black text-slate-800 uppercase text-sm tracking-wide'>
-              Browse Catalog
+              Book Browse
             </h3>
             <p className='text-slate-500 text-sm leading-relaxed'>
-              Explore our collection of spiritual resources. Filter by category
-              or search for specific authors.
+              Explore our collection of spiritual resources. Filter by title,
+              language or search for specific authors.
             </p>
           </div>
 

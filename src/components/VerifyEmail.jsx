@@ -53,7 +53,7 @@ export default function VerifyEmail() {
       <div className='bg-white w-full max-w-md p-10 rounded-[3rem] shadow-2xl border-2 border-slate-100 text-center'>
         {/* LOGO / HEADER */}
         <h2 className='text-2xl font-black uppercase italic tracking-tighter mb-6'>
-          Libri<span className='text-indigo-600'>Stack</span>
+          Church in Dunn Loring <span className='text-indigo-600'>Library</span>
         </h2>
 
         {/* LOADING STATE */}

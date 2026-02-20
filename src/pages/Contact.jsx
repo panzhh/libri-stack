@@ -46,7 +46,7 @@ export default function Contact() {
           Contact Us
         </h2>
         <p className='text-slate-400 font-bold uppercase tracking-widest text-[9px] mb-8'>
-          Reach out to the LibriStack team
+          Reach out to the Church in Dunn Loring Library Team
         </p>
 
         <form onSubmit={handleSubmit} className='space-y-4'>

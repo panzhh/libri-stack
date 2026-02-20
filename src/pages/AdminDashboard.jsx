@@ -473,7 +473,7 @@ export default function AdminDashboard() {
       <aside className='w-72 bg-slate-900 text-white p-8 flex flex-col sticky top-0 h-screen overflow-y-auto'>
         <div className='mb-12'>
           <h1 className='text-2xl font-black italic tracking-tighter'>
-            LIBRI<span className='text-rose-500'>STACK</span>
+            Church in Dunn Loring<span className='text-rose-500'>Library</span>
           </h1>
           <p className='text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]'>
             Control Panel
