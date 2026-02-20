@@ -22,10 +22,12 @@ app = Flask(__name__)
 CORS(app)
 
 # --- 1. FULL CONFIGURATION ---
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
-    BASE_DIR, "libri.db"
-)
+# BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
+#     BASE_DIR, "libri.db"
+# )
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://library_admin:root@localhost:5432/libri_db'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
@@ -65,8 +67,11 @@ def register():
 
     role = data.get("role", "user")
     provided_code = data.get("adminCode")
+    print("data ", data)
     try:
+        print("1111")
         if User.query.filter_by(email=email).first():
+            print("1112")
             return jsonify({"msg": "Email already registered"}), 400
 
         inviter_email = None
@@ -103,12 +108,16 @@ def register():
         if role == "admin":
             new_user.own_invite_code = User.generate_unique_code()
 
+        print("1112")
         db.session.add(new_user)
+        print("1113")
 
         # --- EMAIL VERIFICATION LOGIC ---
         token = serializer.dumps(data.get("email"), salt="email-confirm")
+        print("1114")
         # We add 'role' to the URL so the verify route knows which table to update!
         verify_url = f"http://localhost:5173/verify/{token}?role={role}"
+        print("1115")
 
         msg = Message(
             "Verify Your Account",
@@ -116,9 +125,17 @@ def register():
             recipients=[data.get("email")],
         )
         msg.body = f"Click here to verify in 15 mins: {verify_url}"
+        print("1116")
         mail.send(msg)
+        print("1117")
 
-        db.session.commit()
+        try:
+            db.session.commit()
+            print("1118")
+        except Exception as e:
+            db.session.rollback() # Crucial! Postgres requires a rollback after a fail
+            print(f"COMMIT FAILED: {e}")
+            return jsonify({"error": str(e)}), 500
         return (
             jsonify(
                 {
@@ -161,7 +178,6 @@ def login():
     user = User.query.filter_by(email=email).first()
     print("data:", data)
     print("role:", role)
-    print("user role:", user.role)
 
     # user.check_password handles the complex math of comparing hashes
     if user and user.check_password(password):
