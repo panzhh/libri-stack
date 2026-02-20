@@ -26,7 +26,7 @@ def rebuild_database():
         # db.session.add(admin)
         # db.session.commit()
         
-        print("✅ Database reset and Admin user (admin@example.com) created!")
+        print("✅ Database reset!")
 
 if __name__ == "__main__":
     rebuild_database()
