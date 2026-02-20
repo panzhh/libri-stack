@@ -644,51 +644,6 @@ export default function AdminDashboard() {
                 <h4 className='text-4xl font-black mt-2'>{myStats.total}</h4>
               </div>
             </div>
-
-            {/* --- The Borrows List --- */}
-            <div className='bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm'>
-              <h3 className='text-xl font-black text-slate-800 uppercase italic mb-8'>
-                Currently Reading
-              </h3>
-
-              {myBorrows.length === 0 ? (
-                <div className='py-20 text-center'>
-                  <p className='text-slate-400 font-black text-xs uppercase tracking-widest'>
-                    Your shelf is empty
-                  </p>
-                </div>
-              ) : (
-                <div className='space-y-4'>
-                  {myBorrows.map((borrow) => (
-                    <div
-                      key={borrow.id}
-                      className='flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] border border-slate-50 hover:border-emerald-200 transition-all'
-                    >
-                      <div className='flex items-center gap-6'>
-                        <div className='w-12 h-16 bg-slate-200 rounded-lg overflow-hidden shadow-sm'>
-                          <img
-                            src={borrow.book_image}
-                            alt=''
-                            className='w-full h-full object-cover'
-                          />
-                        </div>
-                        <div>
-                          <h4 className='font-black text-slate-800 text-sm uppercase'>
-                            {borrow.book_title}
-                          </h4>
-                          <p className='text-[10px] text-slate-400 font-bold uppercase'>
-                            Due: {borrow.due_date}
-                          </p>
-                        </div>
-                      </div>
-                      <button className='px-6 py-2 bg-white border-2 border-slate-100 text-[10px] font-black uppercase rounded-xl hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all'>
-                        Return Book
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </section>
         )}
 
@@ -967,9 +922,6 @@ export default function AdminDashboard() {
             {/* Header & Filters */}
             <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10'>
               <div>
-                <h3 className='text-xl font-black text-slate-800 uppercase italic leading-none'>
-                  Loan Registry
-                </h3>
                 <p className='text-[10px] text-slate-400 font-bold uppercase mt-2'>
                   Monitoring {filteredBorrowRecords.length} Records
                 </p>
