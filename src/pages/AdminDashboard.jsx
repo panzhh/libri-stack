@@ -578,7 +578,7 @@ export default function AdminDashboard() {
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
-        className='md:hidden fixed bottom-6 right-6 z-[60] w-16 h-16 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl active:scale-95 transition-transform'
+        className='xl:hidden fixed bottom-6 right-6 z-[60] w-16 h-16 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl active:scale-95 transition-transform'
       >
         {isSidebarOpen ? "✕" : "☰"}
       </button>
@@ -586,7 +586,7 @@ export default function AdminDashboard() {
       {/* Mobile overlay */}
       {isSidebarOpen && (
         <div
-          className='md:hidden fixed inset-0 z-50 bg-black/50'
+          className='xl:hidden fixed inset-0 z-50 bg-black/50'
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -594,17 +594,17 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed md:sticky top-0 z-50 md:z-auto
+          fixed xl:sticky top-0 z-50 xl:z-auto
           h-screen overflow-y-auto
-          bg-slate-900 text-white p-6 md:p-8
-          w-[85vw] max-w-xs md:w-72
+          bg-slate-900 text-white p-6 xl:p-8
+          w-[85vw] max-w-xs xl:w-72 shrink-0
           transform transition-transform duration-200
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0
+          xl:translate-x-0
         `}
       >
         {/* Close button for mobile */}
-        <div className='md:hidden flex justify-end mb-4'>
+        <div className='xl:hidden flex justify-end mb-4'>
           <button
             onClick={() => setIsSidebarOpen(false)}
             className='text-xl font-black'
@@ -616,7 +616,7 @@ export default function AdminDashboard() {
 
         <div className='mb-12'>
           <h1 className='text-2xl font-black italic tracking-tighter'>
-            Church in Dunn Loring
+            Church in Dunn Loring{" "}
             <span className='text-rose-500'>Library</span>
           </h1>
           <p className='text-slate-300 text-xs font-bold uppercase tracking-[0.2em]'>
@@ -799,12 +799,12 @@ export default function AdminDashboard() {
         {/* USERS TAB */}
         {activeTab === "users" && (
           <section className='bg-slate-200 rounded-[2rem] md:rounded-[3rem] border border-slate-400 shadow-sm p-5 md:p-10 animate-in fade-in'>
-            <div className='flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-10'>
+            <div className='flex flex-col md:flex-row md:flex-wrap md:justify-between md:items-center gap-4 mb-6 md:mb-10'>
               <h3 className='text-lg md:text-xl font-black text-slate-800 uppercase italic'>
                 Database Records
               </h3>
 
-              <div className='flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between'>
+              <div className='flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center sm:justify-between'>
                 <button
                   onClick={() => setIsEmailModalOpen(true)}
                   className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${
