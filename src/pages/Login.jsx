@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { API_URL } from "../api";
 
 export default function Login() {
@@ -8,13 +8,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false); // New: prevents double clicks
   const [message, setMessage] = useState({ type: "", text: "" });
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  // Where to go after logging in, e.g. /login?next=/order-books.
-  // Only paths on this site, so a link can't send people elsewhere.
-  const nextParam = searchParams.get("next") || "";
-  const next =
-    nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "";
-  const reason = searchParams.get("reason");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,9 +43,7 @@ export default function Login() {
         );
 
         // Success redirect
-        if (next) {
-          navigate(next);
-        } else if (data.role === "admin") {
+        if (data.role === "admin") {
           navigate("/admin-dashboard");
         } else {
           navigate("/user-dashboard");
@@ -105,13 +96,6 @@ export default function Login() {
             Admin
           </button>
         </div>
-
-        {reason === "order" && (
-          <div className='p-4 rounded-2xl mb-6 text-base font-bold bg-indigo-50 border-2 border-indigo-200 text-indigo-800'>
-            Please log in first to order books. You'll come back to the order
-            form right after.
-          </div>
-        )}
 
         {message.text && (
           <div

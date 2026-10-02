@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { STATUS_STYLES } from "../utils/requestStatus";
 import { API_URL, authHeaders } from "../api";
-
-// Ordering needs an account: log in, then come back to this form
-const LOGIN_TO_ORDER = "/login?next=/order-books&reason=order";
 
 const emptyForm = { title: "", author: "", copies: 1, language: "", notes: "" };
 
@@ -75,7 +72,24 @@ export default function OrderBooks() {
     "text-base font-black text-slate-800 uppercase ml-2 mb-1 block";
 
   if (!token) {
-    return <Navigate to={LOGIN_TO_ORDER} replace />;
+    return (
+      <div className='max-w-xl mx-auto px-6 py-20'>
+        <div className='bg-slate-200 p-8 sm:p-12 rounded-[3rem] border-2 border-slate-400 shadow-xl text-center'>
+          <h2 className='text-4xl font-black uppercase italic tracking-tighter mb-4'>
+            Order <span className='text-indigo-600'>Books</span>
+          </h2>
+          <p className='text-lg text-black mb-8'>
+            Please log in to ask the library to order a book.
+          </p>
+          <Link
+            to='/login'
+            className='inline-block px-10 py-5 bg-slate-900 text-white text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-colors'
+          >
+            Log In
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
