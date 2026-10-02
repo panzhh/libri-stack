@@ -361,10 +361,10 @@ export default function Home() {
 
       {selectedBook && (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300'>
-          <div className='bg-slate-200 w-full max-w-4xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95'>
+          <div className='bg-slate-200 w-full max-w-2xl max-h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95'>
             {/* Header Section */}
-            <div className='p-8 border-b-2 border-slate-400 flex gap-8 items-start bg-slate-300'>
-              <div className='w-32 h-44 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 flex-shrink-0 overflow-hidden flex items-center justify-center'>
+            <div className='p-6 border-b-2 border-slate-400 flex gap-5 items-start bg-slate-300'>
+              <div className='w-24 h-32 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 flex-shrink-0 overflow-hidden flex items-center justify-center'>
                 {selectedBook.uploadedImageUrl ? (
                   <img
                     src={coverUrl(selectedBook.id)}
@@ -373,26 +373,26 @@ export default function Home() {
                     onError={showFallbackCover}
                   />
                 ) : (
-                  <span className='text-5xl opacity-30'>📖</span>
+                  <span className='text-5xl'>📖</span>
                 )}
               </div>
-              <div className='flex-1'>
-                <div className='flex justify-between items-start'>
-                  <div>
-                    <h2 className='text-4xl font-black text-slate-900 leading-tight'>
+              <div className='flex-1 min-w-0'>
+                <div className='flex justify-between items-start gap-4'>
+                  <div className='min-w-0'>
+                    <h2 className='text-2xl sm:text-3xl font-black text-slate-900 leading-tight break-words'>
                       {selectedBook.title}
                     </h2>
-                    <p className='text-indigo-600 font-black uppercase tracking-[0.2em] text-sm mt-2'>
+                    <p className='text-indigo-700 font-black text-base mt-2'>
                       by {selectedBook.author}
                     </p>
 
                     {/* STOCK STATUS BADGES */}
-                    <div className='flex gap-3 mt-4'>
-                      <span className='px-4 py-2 bg-slate-200 border border-slate-400 rounded-xl text-xs font-black uppercase text-slate-700'>
+                    <div className='flex flex-wrap gap-2 mt-3'>
+                      <span className='whitespace-nowrap px-3 py-1.5 bg-slate-200 border border-slate-400 rounded-xl text-sm font-black uppercase text-slate-800'>
                         Total: {selectedBook.copies || 0}
                       </span>
                       <span
-                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase border ${
+                        className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm font-black uppercase border ${
                           (selectedBook.availableCopies || 0) > 0
                             ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                             : "bg-rose-50 border-rose-200 text-rose-700"
@@ -404,7 +404,8 @@ export default function Home() {
                   </div>
                   <button
                     onClick={() => setSelectedBook(null)}
-                    className='w-12 h-12 flex items-center justify-center rounded-full bg-slate-900 text-white hover:bg-rose-600 transition-all text-2xl font-black'
+                    aria-label='Close'
+                    className='w-12 h-12 shrink-0 flex items-center justify-center rounded-full bg-slate-900 text-white hover:bg-rose-600 transition-all text-2xl font-black'
                   >
                     ✕
                   </button>
@@ -413,8 +414,8 @@ export default function Home() {
             </div>
 
             {/* Scrollable Details */}
-            <div className='p-10 overflow-y-auto bg-slate-200 flex-1'>
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-8'>
+            <div className='p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5'>
                 {[
                   { label: "Series", key: "series" },
                   { label: "Volume", key: "volume" },
@@ -423,21 +424,22 @@ export default function Home() {
                   { label: "Language", key: "language" },
                   { label: "ISBN", key: "isbn" },
                   { label: "Pages", key: "numberOfPages" },
-                  { label: "Price ($)", key: "listPriceUsd" },
+                  { label: "Price", key: "listPriceUsd" },
                   { label: "Summary", key: "summary", fullWidth: true },
-                  { label: "Notes", key: "notes", fullWidth: true },
                 ].map((field) => {
-                  const value = selectedBook[field.key];
-                  //if (!value) return null;
+                  let value = selectedBook[field.key];
+                  if (value === null || value === undefined || value === "") return null;
+                  if (field.key === "listPriceUsd") value = `$${Number(value).toFixed(2)}`;
+                  if (typeof value === "string") value = value.replace(/^https?:\/\/(www\.)?/, "");
                   return (
                     <div
                       key={field.key}
-                      className={`border-b-2 border-slate-50 pb-4 ${field.fullWidth ? "md:col-span-2 lg:col-span-3" : ""}`}
+                      className={`border-b-2 border-slate-300 pb-3 ${field.fullWidth ? "sm:col-span-2" : ""}`}
                     >
-                      <p className='text-xs font-black uppercase tracking-widest text-slate-800 mb-2'>
+                      <p className='text-sm font-black uppercase tracking-widest text-slate-800 mb-1'>
                         {field.label}
                       </p>
-                      <p className='text-base font-bold text-slate-900 leading-relaxed'>
+                      <p className='text-lg font-bold text-slate-900 leading-relaxed break-words'>
                         {value}
                       </p>
                     </div>
@@ -447,17 +449,17 @@ export default function Home() {
             </div>
 
             {/* Footer Actions */}
-            <div className='p-8 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-4'>
+            <div className='p-5 sm:p-6 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-3'>
               <button
                 onClick={() => setSelectedBook(null)}
-                className='px-10 py-5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-widest'
+                className='px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider'
               >
                 Close
               </button>
               <button
                 onClick={() => handleBorrow(selectedBook.id)}
                 disabled={selectedBook.availableCopies <= 0}
-                className={`px-14 py-5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-2xl ${
+                className={`px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wider transition-all shadow-xl ${
                   selectedBook.availableCopies > 0
                     ? "bg-indigo-600 text-white hover:bg-slate-900"
                     : "bg-slate-200 text-slate-800 cursor-not-allowed"
