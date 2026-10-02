@@ -45,8 +45,8 @@ Requirements: Node 24, Python 3.10, PostgreSQL.
 
 ## Deploying to Heroku
 
-The Heroku app is `dunn-loring-library` (git remote `heroku`). Pushing `main`
-to it builds and releases the site:
+The Heroku app is `libri-stack-be` (git remote `heroku`). It hosts both the
+website and the API. Pushing `main` to it builds and releases the site:
 
 ```bash
 git push heroku main
@@ -66,15 +66,19 @@ database is empty, and starts the daily reminder job (9:00 AM Eastern).
 ### One-time setup
 
 ```bash
-heroku buildpacks:clear -a dunn-loring-library
-heroku buildpacks:add heroku/nodejs -a dunn-loring-library
-heroku buildpacks:add heroku/python -a dunn-loring-library
+heroku login
+heroku git:remote -a libri-stack-be   # point the `heroku` git remote at the app
+heroku info -a libri-stack-be         # "Web URL" is the site address
 
-heroku config:set -a dunn-loring-library \
+heroku buildpacks:clear -a libri-stack-be
+heroku buildpacks:add heroku/nodejs -a libri-stack-be
+heroku buildpacks:add heroku/python -a libri-stack-be
+
+heroku config:set -a libri-stack-be \
   JWT_SECRET_KEY=<long random string> \
   MAIL_USERNAME=<gmail address> \
   MAIL_PASSWORD=<gmail app password> \
-  FRONTEND_URL=https://<app-name>.herokuapp.com
+  FRONTEND_URL=<Web URL from heroku info, without the trailing slash>
 ```
 
 `DATABASE_URL` is set automatically by the Heroku Postgres add-on.
