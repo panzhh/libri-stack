@@ -273,53 +273,51 @@ export default function Home() {
       )}
 
       {/* BOOK GRID */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
         {books.map((book) => (
           <div
             key={book.id}
-            className='bg-slate-200 border-2 border-slate-400 p-6 rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all group'
+            className='bg-slate-200 border-2 border-slate-400 p-5 rounded-[2rem] shadow-sm hover:shadow-xl transition-all flex flex-col'
           >
-            <div className='aspect-square bg-slate-300 rounded-[2rem] mb-4 flex items-center justify-center text-[9.5rem] leading-none group-hover:scale-105 transition-transform border border-slate-400 overflow-hidden'>
-              {book.uploadedImageUrl ? (
-                <img
-                  src={coverUrl(book.id)}
-                  className='w-full h-full object-cover'
-                  alt=''
-                  loading='lazy'
-                  onError={showFallbackCover}
-                />
-              ) : (
-                "📖"
-              )}
-            </div>
+            <div className='flex gap-4 mb-4'>
+              {/* Small cover in the top-left corner */}
+              <div className='w-20 h-28 shrink-0 bg-slate-300 rounded-xl border border-slate-400 overflow-hidden flex items-center justify-center text-5xl leading-none'>
+                {book.uploadedImageUrl ? (
+                  <img
+                    src={coverUrl(book.id)}
+                    className='w-full h-full object-cover'
+                    alt=''
+                    loading='lazy'
+                    onError={showFallbackCover}
+                  />
+                ) : (
+                  "📖"
+                )}
+              </div>
 
-            {/* Stock Status */}
-            <p
-              className={`mb-2 text-base font-black uppercase tracking-widest ${(book.copies || 0) > 0 ? "text-emerald-700" : "text-rose-700"}`}
-            >
-              {(book.copies || 0) > 0
-                ? `${book.copies} In Stock`
-                : "Out of Stock"}
-            </p>
-
-            <h3 className='font-black text-2xl leading-tight line-clamp-2 h-16 mb-2 text-slate-900'>
-              {book.title}
-            </h3>
-            <p className='text-slate-700 text-lg font-bold italic mb-6'>
-              by {book.author || "Unknown"}
-            </p>
-
-            <div className='flex flex-col gap-4 pt-4 border-t-2 border-slate-100'>
-              {/* LARGE HIGH-CONTRAST BUTTONS */}
-              <div className='flex gap-2'>
-                <button
-                  onClick={() => setSelectedBook(book)}
-                  className='flex-1 text-sm font-black uppercase tracking-wider bg-slate-900 text-white px-4 py-4 rounded-xl hover:bg-indigo-600 transition-colors shadow-lg'
+              <div className='min-w-0 flex-1'>
+                <p
+                  className={`mb-1 text-sm font-black uppercase tracking-wider ${(book.copies || 0) > 0 ? "text-emerald-700" : "text-rose-700"}`}
                 >
-                  View and Borrow
-                </button>
+                  {(book.copies || 0) > 0
+                    ? `${book.copies} In Stock`
+                    : "Out of Stock"}
+                </p>
+                <h3 className='font-black text-xl leading-snug line-clamp-3 text-slate-900 break-words'>
+                  {book.title}
+                </h3>
+                <p className='text-slate-700 text-base font-bold italic mt-1 truncate'>
+                  by {book.author || "Unknown"}
+                </p>
               </div>
             </div>
+
+            <button
+              onClick={() => setSelectedBook(book)}
+              className='mt-auto w-full text-sm font-black uppercase tracking-wider bg-slate-900 text-white px-4 py-4 rounded-xl hover:bg-indigo-600 transition-colors shadow-lg'
+            >
+              View and Borrow
+            </button>
           </div>
         ))}
       </div>
