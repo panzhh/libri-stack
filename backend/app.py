@@ -1073,15 +1073,34 @@ def create_book_request():
     if not title:
         return jsonify({"error": "Please enter the book title."}), 400
 
+    raw_copies = data.get("copies")
+    try:
+        copies = 1 if raw_copies in (None, "") else int(raw_copies)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Copies must be a whole number."}), 400
+    if not 1 <= copies <= 100:
+        return jsonify({"error": "Please request between 1 and 100 copies."}), 400
+
     book_request = BookRequest(
         user_id=int(get_jwt_identity()),
         title=title,
         author=(data.get("author") or "").strip() or None,
+        copies=copies,
+        language=(data.get("language") or "").strip()[:100] or None,
         notes=(data.get("notes") or "").strip() or None,
     )
     db.session.add(book_request)
     db.session.commit()
     return jsonify(book_request.to_dict()), 201
+
+
+@app.route("/api/languages", methods=["GET"])
+def get_languages():
+    """Languages that appear in the catalog, for dropdowns."""
+    languages = sorted(
+        lang for (lang,) in db.session.query(Book.language).distinct() if lang
+    )
+    return jsonify(languages), 200
 
 
 @app.route("/api/user/book-requests", methods=["GET"])
@@ -1141,6 +1160,29 @@ def serve_frontend(path):
     return jsonify({"error": "Frontend not built. Run `npm run build`."}), 404
 
 
+def add_missing_columns():
+    """create_all() only creates missing tables; add columns introduced later.
+
+    (No migration tool is set up, so new columns on existing tables go here.)
+    """
+    from sqlalchemy import inspect, text
+
+    new_columns = {
+        "book_requests": {
+            "copies": "INTEGER NOT NULL DEFAULT 1",
+            "language": "VARCHAR(100)",
+        },
+    }
+    inspector = inspect(db.engine)
+    for table, columns in new_columns.items():
+        existing = {c["name"] for c in inspector.get_columns(table)}
+        for name, definition in columns.items():
+            if name not in existing:
+                db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {definition}"))
+                print(f"Added column {table}.{name}")
+    db.session.commit()
+
+
 def start_background_services():
     """Import the catalog on first run and start the daily overdue-reminder job.
 
@@ -1148,6 +1190,7 @@ def start_background_services():
     """
     with app.app_context():
         db.create_all()
+        add_missing_columns()
         seed_database()
 
     if os.getenv("RUN_SCHEDULER", "1") != "1":

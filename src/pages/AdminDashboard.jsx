@@ -1993,7 +1993,11 @@ export default function AdminDashboard() {
                           by {r.author}
                         </p>
                       )}
-                      <p className='text-slate-700 text-sm font-bold mt-2'>
+                      <p className='text-slate-900 text-base font-black mt-2'>
+                        {r.copies} {r.copies === 1 ? "copy" : "copies"} ·{" "}
+                        {r.language || "Any language"}
+                      </p>
+                      <p className='text-slate-700 text-sm font-bold mt-1'>
                         {r.requested_by} · {r.requester_email} · {r.date}
                       </p>
                     </div>

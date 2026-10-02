@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import { STATUS_STYLES } from "../utils/requestStatus";
 import { API_URL, authHeaders } from "../api";
 
-const emptyForm = { title: "", author: "", notes: "" };
+const emptyForm = { title: "", author: "", copies: 1, language: "", notes: "" };
 
 export default function OrderBooks() {
   const token = localStorage.getItem("token");
   const [formData, setFormData] = useState(emptyForm);
+  const [languages, setLanguages] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", msg: "" });
@@ -25,6 +26,10 @@ export default function OrderBooks() {
   };
 
   useEffect(() => {
+    fetch(`${API_URL}/api/languages`)
+      .then((res) => res.json())
+      .then((data) => setLanguages(Array.isArray(data) ? data : []))
+      .catch(() => {});
     if (token) fetchRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -138,11 +143,49 @@ export default function OrderBooks() {
               className={inputClass}
             />
           </div>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <div>
+              <label className={labelClass}>
+                Copies <span className='text-rose-700'>*</span>
+              </label>
+              <input
+                type='number'
+                required
+                min='1'
+                max='100'
+                step='1'
+                inputMode='numeric'
+                value={formData.copies}
+                onChange={(e) =>
+                  setFormData({ ...formData, copies: e.target.value })
+                }
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Language</label>
+              <select
+                value={formData.language}
+                onChange={(e) =>
+                  setFormData({ ...formData, language: e.target.value })
+                }
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value=''>Any language</option>
+                {languages.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {lang}
+                  </option>
+                ))}
+                <option value='Other'>Other (please explain in notes)</option>
+              </select>
+            </div>
+          </div>
           <div>
             <label className={labelClass}>Notes</label>
             <textarea
               rows='3'
-              placeholder='Language, edition, how many copies...'
+              placeholder='Edition, or anything else we should know...'
               value={formData.notes}
               onChange={(e) =>
                 setFormData({ ...formData, notes: e.target.value })
@@ -192,7 +235,11 @@ export default function OrderBooks() {
                     {r.status}
                   </span>
                 </div>
-                <p className='text-sm text-slate-800 mt-2'>
+                <p className='text-base font-bold text-slate-900 mt-2'>
+                  {r.copies} {r.copies === 1 ? "copy" : "copies"} ·{" "}
+                  {r.language || "Any language"}
+                </p>
+                <p className='text-sm text-slate-800 mt-1'>
                   Requested {r.date}
                 </p>
                 {r.admin_note && (

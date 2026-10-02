@@ -148,6 +148,8 @@ class BookRequest(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     title = db.Column(db.String(500), nullable=False)
     author = db.Column(db.String(255))
+    copies = db.Column(db.Integer, nullable=False, default=1, server_default="1")
+    language = db.Column(db.String(100))  # None means any language
     notes = db.Column(db.Text)
     status = db.Column(db.String(20), default="pending", nullable=False)
     admin_note = db.Column(db.Text)  # e.g. "Expected next month"
@@ -165,6 +167,8 @@ class BookRequest(db.Model):
             "id": self.id,
             "title": self.title,
             "author": self.author,
+            "copies": self.copies,
+            "language": self.language,
             "notes": self.notes,
             "status": self.status,
             "admin_note": self.admin_note,
