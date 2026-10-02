@@ -107,14 +107,28 @@ def compress_response(response):
 # --- 3. AUTHENTICATION & SECURITY ---
 
 
-def send_verification_email(email, role):
+LIBRARY_NAME = "Church in Dunn Loring Library"
+
+
+def send_verification_email(email, role, name):
+    """Email the link that activates a new account (sent at sign-up and on login)."""
     token = serializer.dumps(email, salt="email-confirm")
-    msg = Message(
-        "Verify Your Account",
-        sender=app.config["MAIL_USERNAME"],
-        recipients=[email],
-    )
-    msg.body = f"Click here to verify within 1 hour: {FRONTEND_URL}/verify/{token}?role={role}"
+    link = f"{FRONTEND_URL}/verify/{token}?role={role}"
+    # No sender= : MAIL_DEFAULT_SENDER shows the library's name, not a bare address
+    msg = Message(f"Please confirm your email - {LIBRARY_NAME}", recipients=[email])
+    msg.body = f"""Hi {name or "there"},
+
+Welcome to the {LIBRARY_NAME}! Please confirm your email address to activate your account:
+
+{link}
+
+This link expires in 1 hour. If it has expired, just try to log in and we will send you a new one.
+
+If you did not create this account, you can ignore this email.
+
+{LIBRARY_NAME}
+{FRONTEND_URL}
+"""
     mail.send(msg)
 
 
@@ -167,19 +181,9 @@ def register():
 
         db.session.add(new_user)
 
-        # --- EMAIL VERIFICATION LOGIC ---
-        token = serializer.dumps(email, salt="email-confirm")
-        # We add 'role' to the URL so the verify route knows which table to update!
-        verify_url = f"{FRONTEND_URL}/verify/{token}?role={role}"
+        # --- EMAIL VERIFICATION ---
         try:
-            msg = Message(
-                "Verify Your Account",
-                sender=app.config["MAIL_USERNAME"],
-                recipients=[email],
-            )
-            msg.body = f"Click here to verify within 1 hour: {verify_url}"
-            mail.send(msg)
-
+            send_verification_email(email, role, full_name)
             db.session.commit()
         except Exception as e:
             db.session.rollback()  # Crucial! Postgres requires a rollback after a fail
@@ -223,16 +227,20 @@ def forgot_password():
     user = User.query.filter_by(email=email).first()
     if user:
         token = serializer.dumps(email, salt="password-reset")
-        msg = Message(
-            "Reset Your Church In Dunn Loring Library Password",
-            sender=app.config["MAIL_USERNAME"],
-            recipients=[email],
-        )
-        msg.body = (
-            f"Click the following link to reset your password: "
-            f"{FRONTEND_URL}/reset-password/{token}\n\n"
-            "If you didn't request this, ignore this email."
-        )
+        msg = Message(f"Reset your password - {LIBRARY_NAME}", recipients=[email])
+        msg.body = f"""Hi {user.full_name or "there"},
+
+We received a request to reset the password for your {LIBRARY_NAME} account. To choose a new password, open this link:
+
+{FRONTEND_URL}/reset-password/{token}
+
+This link expires in 1 hour. If it has expired, you can request a new one from the "Forgot Password?" link on the login page.
+
+If you did not ask to reset your password, you can ignore this email. Your password will not change.
+
+{LIBRARY_NAME}
+{FRONTEND_URL}
+"""
         mail.send(msg)
     # Same answer either way, so the form can't be used to discover accounts
     return jsonify({"message": "If an account exists, a reset link has been sent"}), 200
@@ -268,7 +276,7 @@ def login():
     # user.check_password handles the complex math of comparing hashes
     if user and user.check_password(password):
         if not user.is_verified:
-            send_verification_email(email, user.role)
+            send_verification_email(email, user.role, user.full_name)
             return (
                 jsonify(
                     {
