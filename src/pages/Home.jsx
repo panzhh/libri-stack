@@ -331,15 +331,26 @@ export default function Home() {
             Showing {books.length.toLocaleString()} of {total.toLocaleString()}{" "}
             {total === 1 ? "book" : "books"}
           </p>
-          {hasMore && (
+          <div className='flex flex-col sm:flex-row gap-3 w-full sm:w-auto'>
+            {hasMore && (
+              <button
+                onClick={showMore}
+                disabled={loadingMore}
+                className='w-full sm:w-auto px-6 sm:px-10 py-4 bg-slate-900 border-2 border-slate-900 text-white text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-indigo-600 hover:border-indigo-600 transition-colors disabled:bg-slate-500 disabled:cursor-wait'
+              >
+                {loadingMore ? "Loading..." : "Show more books"}
+              </button>
+            )}
             <button
-              onClick={showMore}
-              disabled={loadingMore}
-              className='w-full sm:w-auto px-10 py-4 bg-slate-900 text-white text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-indigo-600 transition-colors disabled:bg-slate-500 disabled:cursor-wait'
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className='w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-slate-900 text-slate-900 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-slate-900 hover:text-white transition-colors'
             >
-              {loadingMore ? "Loading..." : "Show more books"}
+              <span aria-hidden='true' className='text-2xl leading-none'>
+                ↑
+              </span>
+              Back to top
             </button>
-          )}
+          </div>
         </div>
       )}
 
