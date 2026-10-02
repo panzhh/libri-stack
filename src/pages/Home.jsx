@@ -155,13 +155,21 @@ export default function Home() {
             Browse Books
           </button>
           <Link
-            to={localStorage.getItem("token") ? "/user-dashboard" : "/login"}
+            to={
+              localStorage.getItem("token")
+                ? "/user-dashboard"
+                : "/login?next=/user-dashboard"
+            }
             className='flex items-center justify-center px-4 py-5 bg-white text-slate-900 border-2 border-slate-900 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-slate-900 hover:text-white transition-colors text-center'
           >
             Return Books
           </Link>
           <Link
-            to='/order-books'
+            to={
+              localStorage.getItem("token")
+                ? "/order-books"
+                : "/login?next=/order-books&reason=order"
+            }
             className='flex items-center justify-center px-4 py-5 bg-white text-slate-900 border-2 border-slate-900 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-slate-900 hover:text-white transition-colors text-center'
           >
             Order Books
