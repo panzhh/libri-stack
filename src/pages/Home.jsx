@@ -175,19 +175,19 @@ export default function Home() {
                 .getElementById("catalog")
                 ?.scrollIntoView({ behavior: "smooth" })
             }
-            className='px-6 py-5 bg-slate-900 text-white border-2 border-slate-900 text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 hover:border-indigo-600 transition-colors shadow-lg text-center'
+            className='flex items-center justify-center px-4 py-5 bg-slate-900 text-white border-2 border-slate-900 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-indigo-600 hover:border-indigo-600 transition-colors shadow-lg text-center'
           >
             Browse Books
           </button>
           <Link
             to={localStorage.getItem("token") ? "/user-dashboard" : "/login"}
-            className='px-6 py-5 bg-white text-slate-900 border-2 border-slate-900 text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-slate-900 hover:text-white transition-colors text-center'
+            className='flex items-center justify-center px-4 py-5 bg-white text-slate-900 border-2 border-slate-900 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-slate-900 hover:text-white transition-colors text-center'
           >
             Return Books
           </Link>
           <Link
             to='/order-books'
-            className='px-6 py-5 bg-white text-slate-900 border-2 border-slate-900 text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-slate-900 hover:text-white transition-colors text-center'
+            className='flex items-center justify-center px-4 py-5 bg-white text-slate-900 border-2 border-slate-900 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-slate-900 hover:text-white transition-colors text-center'
           >
             Order Books
           </Link>
@@ -207,7 +207,7 @@ export default function Home() {
 
       {/* FILTER CONTROLS (Your Original Section) */}
 
-      <div className='mb-8 flex flex-col sm:flex-row gap-4 items-center bg-slate-200 p-5 rounded-[2rem] border-2 border-slate-400 shadow-sm'>
+      <div className='mb-8 flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 items-center bg-slate-200 p-5 rounded-[2rem] border-2 border-slate-400 shadow-sm'>
         <div className='flex flex-col w-full sm:w-auto'>
           <label className='text-xs font-black uppercase tracking-[0.2em] text-slate-900 mb-1 ml-2'>
             Language
@@ -260,7 +260,7 @@ export default function Home() {
             <option value='all'>All</option>
           </select>
         </div>
-        <div className='flex flex-col w-full sm:flex-1 sm:min-w-[300px] sm:ml-4'>
+        <div className='flex flex-col w-full lg:w-auto lg:flex-1 lg:min-w-[300px] lg:ml-4'>
           <label className='text-xs font-black uppercase tracking-[0.2em] text-slate-900 mb-1 ml-2'>
             Search Books
           </label>
