@@ -1,5 +1,4 @@
-from app import db, app, User
-from datetime import datetime, timezone
+from app import db, app
 
 def rebuild_database():
     with app.app_context():
@@ -13,19 +12,6 @@ def rebuild_database():
         db.create_all()
         print("Tables created.")
 
-        # # 3. Seed: Create a Default Admin
-        # admin = User(
-        #     full_name="Library Admin",
-        #     email="admin@example.com",
-        #     role="admin",
-        #     is_verified=True,
-        #     own_invite_code="ADMIN"
-        # )
-        # admin.set_password("admin123") # Use a better password later!
-        
-        # db.session.add(admin)
-        # db.session.commit()
-        
         print("✅ Database reset!")
 
 if __name__ == "__main__":

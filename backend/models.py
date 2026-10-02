@@ -2,7 +2,7 @@ import random
 import string
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
@@ -125,7 +125,6 @@ class Book(db.Model):
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
-    # --- ADD THIS TO app.py ---
 
 
 class BorrowRecord(db.Model):
@@ -149,12 +148,9 @@ class BorrowRecord(db.Model):
 
     # Optional: Relationship helper to make querying easier
     book = db.relationship("Book", backref="borrow_history")
-    renewed = db.Column(db.Boolean, default=False)  # Add this line
+    user = db.relationship("User")
+    renewed = db.Column(db.Boolean, default=False)
 
-    
-
-
-from datetime import datetime, timezone
 
 class ContactMessage(db.Model):
     __tablename__ = "contact_messages"
@@ -172,4 +168,41 @@ class ContactMessage(db.Model):
             "email": self.email,
             "message": self.message,
             "date": self.created_at.strftime("%Y-%m-%d %H:%M")
+        }
+
+
+class BookRequest(db.Model):
+    """A member's request for the library to order a book it doesn't have."""
+
+    __tablename__ = "book_requests"
+
+    STATUSES = ("pending", "ordered", "arrived", "declined")
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    title = db.Column(db.String(500), nullable=False)
+    author = db.Column(db.String(255))
+    notes = db.Column(db.Text)
+    status = db.Column(db.String(20), default="pending", nullable=False)
+    admin_note = db.Column(db.Text)  # e.g. "Expected next month"
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    user = db.relationship("User", backref="book_requests")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "author": self.author,
+            "notes": self.notes,
+            "status": self.status,
+            "admin_note": self.admin_note,
+            "requested_by": self.user.full_name if self.user else None,
+            "requester_email": self.user.email if self.user else None,
+            "date": self.created_at.strftime("%Y-%m-%d") if self.created_at else None,
         }
