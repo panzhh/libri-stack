@@ -1,0 +1,2 @@
+# Heroku installs Python packages from the repo root
+-r backend/requirements.txt
