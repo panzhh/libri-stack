@@ -4,7 +4,7 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Mail, Message
 from models import db, User, Book, BorrowRecord, ContactMessage, BookRequest
 from dotenv import load_dotenv
@@ -21,7 +21,7 @@ load_dotenv(os.path.join(basedir, "../.env"))
 DIST_DIR = os.path.abspath(os.path.join(basedir, "..", "dist"))
 
 app = Flask(__name__, static_folder=None)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # --- 1. FULL CONFIGURATION ---
 
@@ -107,11 +107,22 @@ def compress_response(response):
 # --- 3. AUTHENTICATION & SECURITY ---
 
 
+def send_verification_email(email, role):
+    token = serializer.dumps(email, salt="email-confirm")
+    msg = Message(
+        "Verify Your Account",
+        sender=app.config["MAIL_USERNAME"],
+        recipients=[email],
+    )
+    msg.body = f"Click here to verify within 1 hour: {FRONTEND_URL}/verify/{token}?role={role}"
+    mail.send(msg)
+
+
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.get_json()
     full_name = data.get("full_name")
-    email = data.get("email")
+    email = (data.get("email") or "").strip().lower()
     passwd = data.get("password")
 
     role = data.get("role", "user")
@@ -157,16 +168,16 @@ def register():
         db.session.add(new_user)
 
         # --- EMAIL VERIFICATION LOGIC ---
-        token = serializer.dumps(data.get("email"), salt="email-confirm")
+        token = serializer.dumps(email, salt="email-confirm")
         # We add 'role' to the URL so the verify route knows which table to update!
         verify_url = f"{FRONTEND_URL}/verify/{token}?role={role}"
         try:
             msg = Message(
                 "Verify Your Account",
                 sender=app.config["MAIL_USERNAME"],
-                recipients=[data.get("email")],
+                recipients=[email],
             )
-            msg.body = f"Click here to verify in 15 mins: {verify_url}"
+            msg.body = f"Click here to verify within 1 hour: {verify_url}"
             mail.send(msg)
 
             db.session.commit()
@@ -177,7 +188,7 @@ def register():
         return (
             jsonify(
                 {
-                    "message": "Registration Successful > A verification link has been sent to your email address. Please click the link within 15 minutes to activate your account."
+                    "message": "Registration Successful. A verification link has been sent to your email address. Please click the link within 1 hour to activate your account."
                 }
             ),
             201,
@@ -201,14 +212,54 @@ def verify_email(token):
         user.is_verified = True
         db.session.commit()
         return jsonify({"msg": "Email verified successfully!"}), 200
-    except (SignatureExpired, BadTimeSignature):
+    except BadSignature:  # also covers expired links
         return jsonify({"msg": "The link is invalid or has expired"}), 400
+
+
+@app.route("/api/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.get_json() or {}
+    email = (data.get("email") or "").strip().lower()
+    user = User.query.filter_by(email=email).first()
+    if user:
+        token = serializer.dumps(email, salt="password-reset")
+        msg = Message(
+            "Reset Your Church In Dunn Loring Library Password",
+            sender=app.config["MAIL_USERNAME"],
+            recipients=[email],
+        )
+        msg.body = (
+            f"Click the following link to reset your password: "
+            f"{FRONTEND_URL}/reset-password/{token}\n\n"
+            "If you didn't request this, ignore this email."
+        )
+        mail.send(msg)
+    # Same answer either way, so the form can't be used to discover accounts
+    return jsonify({"message": "If an account exists, a reset link has been sent"}), 200
+
+
+@app.route("/api/reset-password", methods=["POST"])
+def reset_password():
+    data = request.get_json() or {}
+    try:
+        email = serializer.loads(data.get("token"), salt="password-reset", max_age=3600)
+    except SignatureExpired:
+        return jsonify({"error": "The reset link has expired."}), 400
+    except BadSignature:
+        return jsonify({"error": "Invalid reset link."}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "User no longer exists."}), 404
+    user.set_password(data.get("password"))
+    db.session.commit()
+    return jsonify({"message": "Password updated successfully!"}), 200
 
 
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
-    email = data.get("email")
+    email = (data.get("email") or "").strip().lower()
     password = data.get("password")  # The plain text from the form
     role = data.get("role")  # The role from the form
 
@@ -217,10 +268,18 @@ def login():
     # user.check_password handles the complex math of comparing hashes
     if user and user.check_password(password):
         if not user.is_verified:
-            return jsonify({"msg": "Please verify your email first"}), 401
+            send_verification_email(email, user.role)
+            return (
+                jsonify(
+                    {
+                        "msg": "Please verify your email first. We just sent you a new verification link."
+                    }
+                ),
+                401,
+            )
 
         if role != user.role:
-            return jsonify({"msg": "You input Invalid email or password"}), 401
+            return jsonify({"msg": f"You are trying to log in as {role}, but the email or password is invalid."}), 401
 
         access_token = create_access_token(
             identity=str(user.id)
@@ -476,18 +535,15 @@ def get_my_borrowed_books():
                 "due_date": record.due_date.strftime("%Y-%m-%d"),
                 "uploadedImageUrl": book.uploadedImageUrl,
                 "status": record.status,
-                # --- ADDED: ALL EXTRA FIELDS FOR THE MODAL ---
                 "series": book.series,
                 "volume": book.volume,
                 "publisher": book.publisher,
-                "datePublished": book.datePublished,
                 "genre": book.genre,
                 "language": book.language,
                 "isbn": book.isbn,
                 "numberOfPages": book.numberOfPages,
                 "listPrice": book.listPriceUsd,  # Matches the price display
                 "summary": book.summary,
-                "notes": book.notes,
             }
         )
 
@@ -548,10 +604,10 @@ scheduler = APScheduler()
 
 
 def check_overdue_tasks():
-    """Daily job: email members whose books are due within a day or already overdue."""
+    """Daily job: email members whose books are past their due date."""
     with app.app_context():
         print("Running overdue check...")
-        cutoff = datetime.now(timezone.utc) + timedelta(days=1)
+        cutoff = datetime.now(timezone.utc)
         records = (
             BorrowRecord.query.options(
                 joinedload(BorrowRecord.user), joinedload(BorrowRecord.book)
@@ -576,10 +632,10 @@ def send_reminder_email(record):
         return
     mail.send(
         Message(
-            subject="Reminder: Library Book Due",
+            subject="Reminder: Library Book Overdue",
             recipients=[user.email],
             body=(
-                f"Hi {user.full_name}, the book '{record.book.title}' is due on "
+                f"Hi {user.full_name}, the book '{record.book.title}' was due on "
                 f"{record.due_date:%Y-%m-%d}. Please return or renew it soon!"
             ),
         )
@@ -663,77 +719,72 @@ def get_admin_profile():
         return jsonify({"error": str(e)}), 500
 
 
+# Uploaded cover images, saved as <book id>.png.
+# Heroku's disk is reset on every deploy/restart, so uploads there are temporary.
+COVERS_DIR = os.path.join(basedir, "public", "covers")
+os.makedirs(COVERS_DIR, exist_ok=True)
+
+
+def _parse_count(value, label):
+    """Form fields arrive as strings; "" means "not provided"."""
+    if value in (None, ""):
+        return None
+    try:
+        number = int(value)
+    except (ValueError, TypeError):
+        raise ValueError(f"{label} must be a whole number")
+    if number < 0:
+        raise ValueError(f"{label} cannot be negative")
+    return number
+
+
 @app.route("/api/books/<int:id>", methods=["PUT"])
 def update_book(id):
     book = db.session.get(Book, id)
-
     if not book:
         return jsonify({"error": "Book not found"}), 404
 
-    data = request.get_json()
+    # The admin form sends multipart form data (so it can include a cover image)
+    data = request.form if (request.form or request.files) else (request.get_json(silent=True) or {})
 
     try:
-        # --- TITLE VALIDATION (NEW) ---
         title = data.get("title")
-        if title is not None:  # If the title field is being updated
-            if not title.strip():  # Check if it's empty or just spaces
+        if title is not None:
+            if not title.strip():
                 return jsonify({"error": "Book title cannot be empty"}), 400
             book.title = title.strip()
 
-        # --- PRICE VALIDATION (Positive) ---
-        if "listPriceUsd" in data:
+        if data.get("listPriceUsd") not in (None, ""):
             try:
-                clean_price = str(data.get("listPriceUsd", 0)).replace("$", "").strip()
-                price = float(clean_price)
-                if price <= 0:
-                    return jsonify({"error": "Price must be a positive number"}), 400
-                book.listPriceUsd = price
+                price = float(str(data.get("listPriceUsd")).replace("$", "").strip())
             except (ValueError, TypeError):
                 return jsonify({"error": "Invalid price format"}), 400
+            if price <= 0:
+                return jsonify({"error": "Price must be a positive number"}), 400
+            book.listPriceUsd = price
 
-        # --- STOCK VALIDATION (Non-negative) ---
-        if "copies" in data:
-            try:
-                num_copies = int(data.get("copies", 0))
-                if num_copies < 0:
-                    return jsonify({"error": "Total copies cannot be negative"}), 400
-                book.copies = num_copies
-            except (ValueError, TypeError):
-                return jsonify({"error": "Copies must be a whole number"}), 400
+        try:
+            copies = _parse_count(data.get("copies"), "Total copies")
+            available = _parse_count(data.get("availableCopies"), "Available copies")
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        if copies is not None:
+            book.copies = copies
+        if available is not None:
+            if available > (book.copies or 0):
+                return jsonify({"error": "Available stock cannot exceed total stock"}), 400
+            book.availableCopies = available
 
-        if "availableCopies" in data:
-            try:
-                available = int(data.get("availableCopies", 0))
-                if available < 0:
-                    return (
-                        jsonify({"error": "Available copies cannot be negative"}),
-                        400,
-                    )
-                if available > int(data.get("copies", book.copies)):
-                    return (
-                        jsonify({"error": "Available stock cannot exceed total stock"}),
-                        400,
-                    )
-                book.availableCopies = available
-            except (ValueError, TypeError):
-                return (
-                    jsonify({"error": "Available copies must be a whole number"}),
-                    400,
-                )
+        for field in ("author", "series", "volume", "publisher", "genre", "language", "isbn", "summary"):
+            if field in data:
+                setattr(book, field, data.get(field))
+        if data.get("numberOfPages") not in (None, ""):
+            book.numberOfPages = int(data.get("numberOfPages"))
 
-        # --- UPDATE REMAINING FIELDS ---
-        book.author = data.get("author", book.author)
-        book.series = data.get("series", book.series)
-        book.volume = data.get("volume", book.volume)
-        book.publisher = data.get("publisher", book.publisher)
-        book.datePublished = data.get("datePublished", book.datePublished)
-        book.genre = data.get("genre", book.genre)
-        book.language = data.get("language", book.language)
-        book.isbn = data.get("isbn", book.isbn)
-        book.numberOfPages = data.get("numberOfPages", book.numberOfPages)
-        book.summary = data.get("summary", book.summary)
-        book.notes = data.get("notes", book.notes)
-        book.uploadedImageUrl = data.get("uploadedImageUrl", book.uploadedImageUrl)
+        cover = request.files.get("coverImage")
+        if cover and cover.filename:
+            cover.save(os.path.join(COVERS_DIR, f"{id}.png"))
+            book.uploadedImageUrl = f"/covers/{id}.png"
 
         db.session.commit()
         return jsonify({"message": "Book updated successfully"}), 200
@@ -741,6 +792,11 @@ def update_book(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/covers/<path:filename>")
+def serve_covers(filename):
+    return send_from_directory(COVERS_DIR, filename)
 
 
 # ... (existing imports)

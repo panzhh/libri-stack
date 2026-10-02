@@ -3,10 +3,7 @@ import { useParams, useSearchParams, Link } from "react-router-dom";
 import { API_URL } from "../api";
 
 export default function VerifyEmail() {
-  // 1. Get the token from the URL path /verify/:token
   const { token } = useParams();
-
-  // 2. Get the role from the query string ?role=admin
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role");
 

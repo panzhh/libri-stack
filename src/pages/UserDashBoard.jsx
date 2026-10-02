@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Added useState and useEffect
+import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { API_URL, authHeaders } from "../api";
 
@@ -7,8 +7,8 @@ export default function UserDashboard() {
   const userEmail = localStorage.getItem("userEmail") || "Verified User";
   const location = useLocation();
 
-  // --- NEW: Stats State ---
   const [stats, setStats] = useState({ active: 0, total: 0 });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // --- NEW: Fetch Stats from Backend ---
   useEffect(() => {
@@ -43,13 +43,32 @@ export default function UserDashboard() {
 
   return (
     <div className='flex min-h-[calc(100vh-116px)]'>
-      {/* --- USER SIDEBAR --- */}
-      <aside className='w-64 bg-slate-200 border-r border-slate-400 p-8 flex flex-col hidden lg:flex'>
+      {/* --- MOBILE MENU BUTTON --- */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+        className='lg:hidden fixed bottom-6 right-6 z-[60] w-16 h-16 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl'
+      >
+        {mobileMenuOpen ? "✕" : "☰"}
+      </button>
+      {mobileMenuOpen && (
+        <div
+          className='fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden'
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* --- USER SIDEBAR (slides in on mobile) --- */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-200 border-r border-slate-400 p-8 flex flex-col transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 lg:static lg:w-64`}
+      >
         <div className='mb-10'>
           <p className='text-slate-800 font-black text-xs uppercase tracking-[0.2em] mb-4'>
             Library Menu
           </p>
-          <nav className='space-y-2'>
+          <nav className='space-y-2' onClick={() => setMobileMenuOpen(false)}>
             <Link
               to='/user-dashboard'
               className={`block w-full p-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
@@ -94,18 +113,18 @@ export default function UserDashboard() {
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <main className='flex-1 p-8 lg:p-12 overflow-y-auto bg-slate-300'>
+      <main className='flex-1 p-6 lg:p-12 overflow-y-auto bg-slate-300 w-full'>
         {/* Welcome Hero */}
-        <div className='max-w-5xl bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-100 mb-10 relative overflow-hidden'>
+        <div className='max-w-5xl bg-indigo-600 rounded-[2.5rem] lg:rounded-[3rem] p-8 lg:p-10 text-white shadow-2xl shadow-indigo-100 mb-10 relative overflow-hidden'>
           <div className='relative z-10'>
-            <h2 className='text-4xl font-black mb-2 tracking-tighter text-white'>
+            <h2 className='text-3xl lg:text-4xl font-black mb-2 tracking-tighter text-white'>
               Welcome back, {userName}!
             </h2>
             <p className='text-indigo-100 font-bold uppercase text-xs tracking-widest'>
               {userEmail}
             </p>
           </div>
-          <div className='absolute -right-10 -top-10 w-48 h-48 bg-indigo-500 rounded-full opacity-30'></div>
+          <div className='absolute -right-10 -top-10 w-32 h-32 lg:w-48 lg:h-48 bg-indigo-500 rounded-full opacity-30'></div>
         </div>
 
         {/* Stats Grid */}
@@ -151,7 +170,7 @@ export default function UserDashboard() {
         </div>
 
         {/* --- DYNAMIC CONTENT AREA --- */}
-        <section className='max-w-5xl bg-slate-200 rounded-[2.5rem] p-8 border border-slate-400 shadow-sm'>
+        <section className='max-w-5xl bg-slate-200 rounded-[2rem] lg:rounded-[2.5rem] p-6 lg:p-8 border border-slate-400 shadow-sm'>
           <Outlet />
         </section>
       </main>

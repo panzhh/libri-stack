@@ -1,4 +1,4 @@
-from app import db, app
+from app import db, app, seed_database
 
 def rebuild_database():
     with app.app_context():
@@ -7,11 +7,9 @@ def rebuild_database():
         # 1. Clear everything
         db.drop_all()
         print("Tables dropped.")
-        
-        # 2. Re-create with new limits (VARCHAR 512, etc.)
         db.create_all()
         print("Tables created.")
-
+        seed_database()
         print("✅ Database reset!")
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { API_URL, authHeaders } from "../api";
+import { API_URL, authHeaders, coverUrl, showFallbackCover } from "../api";
 
 export default function BorrowedBooks() {
   const [books, setBooks] = useState([]);
@@ -154,9 +154,10 @@ export default function BorrowedBooks() {
               <div className='w-16 h-20 bg-slate-300 rounded-2xl flex items-center justify-center text-3xl mr-5 overflow-hidden'>
                 {book.uploadedImageUrl ? (
                   <img
-                    src={book.uploadedImageUrl}
+                    src={coverUrl(book.book_id)}
                     className='w-full h-full object-cover'
-                    alt='cover'
+                    alt=''
+                    onError={showFallbackCover}
                   />
                 ) : (
                   "📖"
@@ -225,9 +226,10 @@ export default function BorrowedBooks() {
               <div className='w-32 h-44 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 flex-shrink-0 overflow-hidden flex items-center justify-center'>
                 {selectedBook.uploadedImageUrl ? (
                   <img
-                    src={selectedBook.uploadedImageUrl}
+                    src={coverUrl(selectedBook.book_id)}
                     className='w-full h-full object-cover'
-                    alt='Book Cover'
+                    alt=''
+                    onError={showFallbackCover}
                   />
                 ) : (
                   <span className='text-5xl opacity-30'>📖</span>
@@ -270,7 +272,6 @@ export default function BorrowedBooks() {
                   { label: "Series", key: "series" },
                   { label: "Volume", key: "volume" },
                   { label: "Publisher", key: "publisher" },
-                  { label: "Date Published", key: "datePublished" },
                   { label: "Genre", key: "genre" },
                   { label: "Language", key: "language" },
                   { label: "ISBN", key: "isbn" },

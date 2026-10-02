@@ -17,6 +17,8 @@ import BorrowedBooks from "./pages/BorrowedBooks";
 import BorrowHistory from "./pages/BorrowHistory";
 import AdminDashboard from "./pages/AdminDashboard";
 import OrderBooks from "./pages/OrderBooks";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import backgroundImage from "./assets/background.jpg";
 
 export default function App() {
@@ -39,6 +41,8 @@ export default function App() {
           {/* Auth Pages */}
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Register />} />
+          <Route path='/forgot-password' element={<ForgotPassword />} />
+          <Route path='/reset-password/:token' element={<ResetPassword />} />
 
           {/* Info Pages */}
           <Route path='/about' element={<About />} />

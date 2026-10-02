@@ -138,7 +138,7 @@ export default function Register() {
           {/* FULL NAME */}
           <div>
             <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
-              Full Name *
+              Full Name (First and Last Name) *
             </label>
             <input
               type='text'

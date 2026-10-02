@@ -12,7 +12,8 @@ export default function Footer() {
               to='/'
               className='text-2xl font-black italic tracking-tighter uppercase inline-block mb-6'
             >
-              Dunn Loring <span className='text-indigo-300'>Library</span>
+              Church in Dunn Loring{" "}
+              <span className='text-indigo-300'>Library</span>
             </Link>
             <p className='text-slate-300 text-lg leading-relaxed'>
               Equipping the community with spiritual resources and historical

@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -14,27 +15,26 @@ export default function Navbar() {
     navigate("/login"); // Redirects to login
   };
 
-  // Increased font weight and set base size to text-sm
   const linkStyles = ({ isActive }) =>
     `transition-all hover:text-indigo-600 text-sm tracking-wide ${
       isActive ? "text-indigo-600 font-black" : "text-slate-700 font-bold"
     }`;
 
   return (
-    <nav className='max-w-7xl mx-auto p-8 flex justify-between items-center bg-slate-200 mb-4 rounded-b-[2rem] shadow-sm border-b border-slate-400'>
+    <nav className='w-[95%] xl:w-full max-w-7xl mx-auto p-6 lg:p-8 flex flex-wrap justify-between items-center bg-slate-200 mb-4 rounded-b-[2rem] shadow-sm border-b border-slate-400'>
+      {/* Branding - Shrinks slightly on tiny screens */}
       <Link
         to='/'
-        className='text-2xl font-black italic tracking-tighter uppercase'
+        className='text-lg sm:text-2xl font-black italic tracking-tighter uppercase whitespace-nowrap'
       >
         Church in Dunn Loring <span className='text-indigo-600'>Library</span>
       </Link>
 
-      {/* Changed text-xs to text-sm and increased gap for better legibility */}
-      <div className='flex items-center gap-8 text-sm uppercase tracking-wider'>
+      {/* Navigation Links - Automatically wraps if space runs out */}
+      <div className='flex flex-wrap items-center gap-4 lg:gap-8 text-sm uppercase tracking-wider'>
         <NavLink title='Home' to='/' className={linkStyles}>
           Home
         </NavLink>
-
         <NavLink title='About' to='/about' className={linkStyles}>
           About
         </NavLink>
@@ -43,19 +43,15 @@ export default function Navbar() {
           Contact
         </NavLink>
 
-        {/* --- CONDITIONAL RENDERING --- */}
-
-        {/* --- CONDITIONAL RENDERING --- */}
         {!token ? (
-          <>
+          <div className='flex items-center gap-3'>
             <NavLink title='Register' to='/register' className={linkStyles}>
               Register
             </NavLink>
-
             <NavLink
               to='/login'
               className={({ isActive }) =>
-                `px-6 py-2.5 rounded-full font-black transition-all text-sm ${
+                `px-5 py-2 rounded-full font-black transition-all text-sm ${
                   isActive
                     ? "bg-indigo-600 text-white"
                     : "bg-slate-900 text-white hover:bg-indigo-600"
@@ -64,33 +60,31 @@ export default function Navbar() {
             >
               Login
             </NavLink>
-          </>
+          </div>
         ) : (
-          <>
-            {/* 1. Show Admin Panel ONLY if user is admin */}
+          <div className='flex flex-wrap items-center gap-4 lg:gap-6'>
             {role === "admin" && (
               <NavLink to='/admin-dashboard' className={linkStyles}>
                 Admin Panel
               </NavLink>
             )}
 
-            {/* 2. Show My Borrows (User Dashboard) for BOTH admin and regular users */}
             <NavLink to='/user-dashboard' className={linkStyles}>
               {role === "admin" ? "My Borrows" : "Dashboard"}
             </NavLink>
 
-            <div className='flex items-center gap-6 ml-4 pl-6 border-l-2 border-slate-100'>
-              <span className='text-slate-700 font-bold tracking-tight italic normal-case text-base'>
-                Hi, {userName || "User"}
+            <div className='flex items-center gap-4 lg:gap-6 lg:ml-4 lg:pl-6 border-l-2 border-slate-100'>
+              <span className='hidden sm:inline text-slate-700 font-bold tracking-tight italic normal-case text-base'>
+                Hi, {userName?.split(" ")[0] || "User"}
               </span>
               <button
                 onClick={handleLogout}
-                className='px-6 py-2.5 rounded-full bg-rose-50 text-rose-700 font-black text-sm hover:bg-rose-600 hover:text-white transition-all border border-rose-100 shadow-sm'
+                className='px-5 py-2 rounded-full bg-rose-50 text-rose-700 font-black text-sm hover:bg-rose-600 hover:text-white transition-all border border-rose-100 shadow-sm'
               >
                 Logout
               </button>
             </div>
-          </>
+          </div>
         )}
 
       </div>
