@@ -1,32 +1,75 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_URL, authHeaders, coverUrl, showFallbackCover } from "../api";
 
-const ITEMS_PER_PAGE = 20;
+const BOOKS_PER_PAGE = 20;
 
 export default function Home() {
   const navigate = useNavigate(); // Initialize the redirect tool
-  const [bookData, setBookData] = useState([]);
+  const [books, setBooks] = useState([]); // the pages loaded so far
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [languages, setLanguages] = useState(["All"]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedLang, setSelectedLang] = useState("All");
   const [availability, setAvailability] = useState("in-stock");
   const [sortBy, setSortBy] = useState("title");
   const [selectedBook, setSelectedBook] = useState(null);
+  const latestRequest = useRef(0); // ignore responses that arrive out of order
 
+  // Wait until the user pauses typing before searching
   useEffect(() => {
-    fetch(`${API_URL}/api/books`)
-      .then((res) => res.json())
-      .then((data) => {
-        setBookData(Array.isArray(data) ? data : []);
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Load one page of the catalog from the server (filtered and sorted there)
+  const loadPage = async (pageNumber) => {
+    const requestId = ++latestRequest.current;
+    const params = new URLSearchParams({
+      page: pageNumber,
+      per_page: BOOKS_PER_PAGE,
+      search: debouncedSearch,
+      language: selectedLang,
+      availability,
+      sort: sortBy,
+    });
+    try {
+      const response = await fetch(`${API_URL}/api/catalog?${params}`);
+      const data = await response.json();
+      if (requestId !== latestRequest.current) return;
+      setBooks((prev) =>
+        pageNumber === 1 ? data.books : [...prev, ...data.books],
+      );
+      setTotal(data.total);
+      setHasMore(data.has_more);
+      setPage(pageNumber);
+      setLanguages(["All", ...data.languages]);
+    } catch (err) {
+      console.error("Error loading books:", err);
+    } finally {
+      if (requestId === latestRequest.current) {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error connecting to database:", err);
-        setLoading(false);
-      });
-  }, []);
+        setLoadingMore(false);
+      }
+    }
+  };
+
+  // Start again from page 1 whenever a filter changes
+  useEffect(() => {
+    setLoading(true);
+    loadPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, selectedLang, availability, sortBy]);
+
+  const showMore = () => {
+    setLoadingMore(true);
+    loadPage(page + 1);
+  };
 
   const handleBorrow = async (bookId) => {
     // 1. Check if user is logged in
@@ -60,7 +103,7 @@ export default function Home() {
 
       if (response.ok) {
         // Update the UI locally so the stock number drops immediately
-        setBookData((prev) =>
+        setBooks((prev) =>
           prev.map((b) => {
             if (b.id === bookId) {
               return {
@@ -87,74 +130,6 @@ export default function Home() {
       console.error("Connection error:", err);
     }
   };
-
-  const languages = useMemo(
-    () =>
-      [
-        "All",
-        ...new Set(bookData.map((book) => book.language || "Unknown")),
-      ].sort(),
-    [bookData],
-  );
-
-  const filteredBooks = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
-    const filtered = bookData.filter((book) => {
-      const matchesSearch =
-        book.title?.toLowerCase().includes(search) ||
-        book.author?.toLowerCase().includes(search);
-      const matchesLang =
-        selectedLang === "All" || book.language === selectedLang;
-      const inStock = (book.copies || 0) > 0;
-      const matchesStock =
-        availability === "all" ||
-        (availability === "in-stock" ? inStock : !inStock);
-      return matchesSearch && matchesLang && matchesStock;
-    });
-
-    // Sections look like "07 - Concerning Life": order by the number, then the name
-    const sectionNumber = (book) => {
-      const n = parseInt(book.category, 10);
-      return Number.isNaN(n) ? Infinity : n;
-    };
-    const byTitle = (a, b) => (a.title || "").localeCompare(b.title || "");
-
-    return filtered.sort((a, b) => {
-      if (sortBy === "section") {
-        return (
-          sectionNumber(a) - sectionNumber(b) ||
-          (a.category || "").localeCompare(b.category || "") ||
-          byTitle(a, b)
-        );
-      }
-      return byTitle(a, b);
-    });
-  }, [searchTerm, selectedLang, availability, sortBy, bookData]);
-
-  const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE) || 1;
-  const goToPage = (page) => {
-    setCurrentPage(page);
-    document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentBooks = filteredBooks.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
-  );
-
-  if (loading) {
-    return (
-      <div className='flex items-center justify-center min-h-[60vh]'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4'></div>
-          <p className='text-slate-900 font-black text-sm uppercase tracking-widest'>
-            Loading Library...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className='max-w-7xl mx-auto px-6 pt-12 sm:pt-16 pb-12 font-sans'>
@@ -200,8 +175,9 @@ export default function Home() {
           The <span className='text-indigo-300'>Collection</span>
         </h2>
         <p className='text-lg font-bold text-white mt-1 drop-shadow'>
-          {filteredBooks.length.toLocaleString()} matching{" "}
-          {filteredBooks.length === 1 ? "book" : "books"}
+          {loading
+            ? "Loading books..."
+            : `${total.toLocaleString()} matching ${total === 1 ? "book" : "books"}`}
         </p>
       </div>
 
@@ -216,7 +192,6 @@ export default function Home() {
             value={selectedLang}
             onChange={(e) => {
               setSelectedLang(e.target.value);
-              setCurrentPage(1);
             }}
             className='bg-white border-2 border-slate-500 text-slate-900 focus:border-indigo-700 px-4 py-3 rounded-xl font-bold text-base outline-none cursor-pointer transition-all'
           >
@@ -235,7 +210,6 @@ export default function Home() {
             value={sortBy}
             onChange={(e) => {
               setSortBy(e.target.value);
-              setCurrentPage(1);
             }}
             className='bg-white border-2 border-slate-500 text-slate-900 focus:border-indigo-700 px-4 py-3 rounded-xl font-bold text-base outline-none cursor-pointer transition-all'
           >
@@ -251,7 +225,6 @@ export default function Home() {
             value={availability}
             onChange={(e) => {
               setAvailability(e.target.value);
-              setCurrentPage(1);
             }}
             className='bg-white border-2 border-slate-500 text-slate-900 focus:border-indigo-700 px-4 py-3 rounded-xl font-bold text-base outline-none cursor-pointer transition-all'
           >
@@ -271,7 +244,6 @@ export default function Home() {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1);
               }}
               className='w-full bg-white border-2 border-slate-500 text-slate-900 placeholder:text-slate-600 focus:border-indigo-700 px-5 py-3 rounded-xl font-bold text-lg outline-none transition-all pr-14'
             />
@@ -282,9 +254,27 @@ export default function Home() {
         </div>
       </div>
 
+      {/* LOADING / NO RESULTS */}
+      {loading && books.length === 0 && (
+        <div className='flex flex-col items-center py-16'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4'></div>
+          <p className='text-white font-black text-lg uppercase tracking-widest drop-shadow'>
+            Loading books...
+          </p>
+        </div>
+      )}
+      {!loading && books.length === 0 && (
+        <div className='bg-slate-200 border-2 border-slate-400 rounded-[2rem] p-10 text-center'>
+          <p className='text-xl font-black text-slate-900'>No books found.</p>
+          <p className='text-lg text-slate-800 mt-2'>
+            Try a different search, language or availability.
+          </p>
+        </div>
+      )}
+
       {/* BOOK GRID */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8'>
-        {currentBooks.map((book) => (
+        {books.map((book) => (
           <div
             key={book.id}
             className='bg-slate-200 border-2 border-slate-400 p-6 rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all group'
@@ -334,27 +324,23 @@ export default function Home() {
         ))}
       </div>
 
-      {/* PAGINATION */}
-      {totalPages > 1 && (
-        <nav className='mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 bg-slate-200 border-2 border-slate-400 p-5 rounded-[2rem] shadow-sm'>
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className='w-full sm:w-48 px-6 py-4 bg-slate-900 text-white text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed'
-          >
-            ← Previous
-          </button>
-          <p className='text-xl font-black text-slate-900 px-4 whitespace-nowrap'>
-            Page {currentPage} of {totalPages}
+      {/* SHOW MORE */}
+      {!loading && books.length > 0 && (
+        <div className='mt-12 flex flex-col items-center gap-4 bg-slate-200 border-2 border-slate-400 p-6 rounded-[2rem] shadow-sm'>
+          <p className='text-lg font-black text-slate-900'>
+            Showing {books.length.toLocaleString()} of {total.toLocaleString()}{" "}
+            {total === 1 ? "book" : "books"}
           </p>
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className='w-full sm:w-48 px-6 py-4 bg-slate-900 text-white text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed'
-          >
-            Next →
-          </button>
-        </nav>
+          {hasMore && (
+            <button
+              onClick={showMore}
+              disabled={loadingMore}
+              className='w-full sm:w-auto px-10 py-4 bg-slate-900 text-white text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-indigo-600 transition-colors disabled:bg-slate-500 disabled:cursor-wait'
+            >
+              {loadingMore ? "Loading..." : "Show more books"}
+            </button>
+          )}
+        </div>
       )}
 
       {/* MODAL (Restored all fields) */}

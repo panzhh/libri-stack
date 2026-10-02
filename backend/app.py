@@ -309,6 +309,62 @@ def get_books():
     return jsonify([book.to_dict() for book in all_books])
 
 
+def _section_sort_key(row):
+    """Sections look like "07 - Concerning Life": order by number, then name, then title."""
+    category = row.category or ""
+    prefix = category.split(" ", 1)[0]
+    number = int(prefix) if prefix.isdigit() else float("inf")
+    return (number, category.casefold(), (row.title or "").casefold())
+
+
+@app.route("/api/catalog", methods=["GET"])
+def get_catalog():
+    """One page of the catalog for the home page, filtered and sorted on the server.
+
+    Query params: page (1-based), per_page (max 100), search, language,
+    availability (in-stock | out-of-stock | all), sort (title | section).
+    """
+    page = max(request.args.get("page", 1, type=int), 1)
+    per_page = min(max(request.args.get("per_page", 20, type=int), 1), 100)
+    search = (request.args.get("search") or "").strip()
+    language = request.args.get("language") or "All"
+    availability = request.args.get("availability") or "in-stock"
+    sort = request.args.get("sort") or "title"
+
+    query = db.session.query(Book.id, Book.title, Book.category)
+    if search:
+        pattern = f"%{search}%"
+        query = query.filter(Book.title.ilike(pattern) | Book.author.ilike(pattern))
+    if language != "All":
+        query = query.filter(Book.language == language)
+    if availability == "in-stock":
+        query = query.filter(Book.copies > 0)
+    elif availability == "out-of-stock":
+        query = query.filter((Book.copies == None) | (Book.copies <= 0))  # noqa: E711
+
+    # Sort the light (id, title, category) rows, then load full rows for one page only
+    rows = query.all()
+    if sort == "section":
+        rows.sort(key=_section_sort_key)
+    else:
+        rows.sort(key=lambda r: (r.title or "").casefold())
+    page_ids = [r.id for r in rows[(page - 1) * per_page : page * per_page]]
+    books_by_id = {b.id: b for b in Book.query.filter(Book.id.in_(page_ids)).all()}
+
+    languages = sorted(
+        lang for (lang,) in db.session.query(Book.language).distinct() if lang
+    )
+    return jsonify(
+        {
+            "books": [books_by_id[i].to_dict() for i in page_ids],
+            "total": len(rows),
+            "page": page,
+            "has_more": page * per_page < len(rows),
+            "languages": languages,
+        }
+    )
+
+
 @app.route("/api/debug/users", methods=["GET"])
 def get_all_users():
     # Optional filter: /api/debug/users?role=admin
