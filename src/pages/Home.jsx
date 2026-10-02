@@ -150,7 +150,7 @@ export default function Home() {
                 .getElementById("catalog")
                 ?.scrollIntoView({ behavior: "smooth" })
             }
-            className='flex items-center justify-center px-4 py-5 bg-slate-900 text-white border-2 border-slate-900 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-indigo-600 hover:border-indigo-600 transition-colors shadow-lg text-center'
+            className='flex items-center justify-center px-4 py-5 bg-blue-700 text-white border-2 border-blue-700 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-blue-800 hover:border-blue-800 transition-colors shadow-lg text-center'
           >
             Browse Books
           </button>
