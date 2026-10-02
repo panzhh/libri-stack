@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_URL, authHeaders } from "../api";
+import { API_URL, authHeaders, coverUrl, showFallbackCover } from "../api";
 import { STATUS_STYLES } from "../utils/requestStatus";
 
 export default function AdminDashboard() {
@@ -74,9 +74,7 @@ export default function AdminDashboard() {
       isImage: true, // New flag for our logic
       fullWidth: true,
     },
-    //{ label: "Image URL", key: "uploadedImageUrl" },
     { label: "Summary", key: "summary", fullWidth: true, isTextArea: true },
-    { label: "Notes", key: "notes", fullWidth: true, isTextArea: true },
   ];
 
   // --- FETCH: CONTACT MESSAGES ---
@@ -339,7 +337,7 @@ export default function AdminDashboard() {
       if (key === "listPriceUsd") {
         formData.append(key, cleanPrice);
       } else if (key !== "imageFile" && key !== "uploadedImageUrl") {
-        formData.append(key, editFormData[key] || "");
+        formData.append(key, editFormData[key] ?? ""); // ?? keeps a stock of 0
       }
     });
 
@@ -1397,67 +1395,86 @@ export default function AdminDashboard() {
         {/* VIEW BOOK MODAL */}
         {selectedBook && !isEditing && (
           <div className='fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in'>
-            <div className='bg-slate-200 w-full max-w-5xl max-h-[90vh] rounded-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col'>
-              <div className='p-6 md:p-8 border-b-2 border-slate-400 flex gap-6 md:gap-8 items-start bg-slate-300'>
-                <div className='w-28 h-40 md:w-32 md:h-44 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 overflow-hidden flex items-center justify-center'>
+            <div className='bg-slate-200 w-full max-w-2xl max-h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col'>
+              <div className='p-6 border-b-2 border-slate-400 flex gap-5 items-start bg-slate-300'>
+                <div className='w-24 h-32 shrink-0 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 overflow-hidden flex items-center justify-center'>
                   {selectedBook.uploadedImageUrl ? (
                     <img
-                      src={`${API_URL}/api/covers/${selectedBook.id}.png`}
+                      src={coverUrl(selectedBook.id)}
                       className='w-full h-full object-cover'
                       alt=''
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "book-icon.png";
-                        e.target.className =
-                          "w-full h-full object-contain p-8 opacity-20";
-                      }}
+                      onError={showFallbackCover}
                     />
                   ) : (
-                    <span className='text-5xl opacity-30'>📖</span>
+                    <span className='text-5xl'>📖</span>
                   )}
                 </div>
-                <div className='flex-1 flex justify-between items-start gap-4'>
+                <div className='flex-1 min-w-0 flex justify-between items-start gap-4'>
                   <div className='min-w-0'>
-                    <h2 className='text-2xl md:text-4xl font-black text-slate-900 leading-tight break-words'>
+                    <h2 className='text-2xl sm:text-3xl font-black text-slate-900 leading-tight break-words'>
                       {selectedBook.title}
                     </h2>
-                    <p className='text-indigo-600 font-black uppercase tracking-[0.2em] text-xs md:text-sm mt-2'>
+                    <p className='text-indigo-700 font-black text-base mt-2'>
                       by {selectedBook.author}
                     </p>
                   </div>
                   <button
                     onClick={() => setSelectedBook(null)}
-                    className='w-12 h-12 flex items-center justify-center rounded-full bg-slate-900 text-white text-2xl font-black'
+                    aria-label='Close'
+                    className='w-12 h-12 shrink-0 flex items-center justify-center rounded-full bg-slate-900 text-white text-2xl font-black'
                   >
                     ✕
                   </button>
                 </div>
               </div>
 
-              <div className='p-6 md:p-10 overflow-y-auto bg-slate-200 flex-1'>
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6'>
-                  {bookFields.map((field) => (
-                    <div
-                      key={field.key}
-                      className={`border-b border-slate-50 pb-2 ${
-                        field.fullWidth ? "md:col-span-2 lg:col-span-3" : ""
-                      }`}
-                    >
-                      <p className='text-xs font-black uppercase tracking-widest text-slate-800 mb-1'>
-                        {field.label}
-                      </p>
-                      <p className='text-sm font-bold text-slate-800 leading-relaxed break-words'>
-                        {selectedBook[field.key] ?? "---"}
-                      </p>
-                    </div>
-                  ))}
+              <div className='p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5'>
+                  {bookFields
+                    // title/author/cover are in the header; skip empty fields
+                    .filter(
+                      (field) =>
+                        !["title", "author"].includes(field.key) &&
+                        !field.isImage &&
+                        selectedBook[field.key] !== null &&
+                        selectedBook[field.key] !== undefined &&
+                        selectedBook[field.key] !== "",
+                    )
+                    .map((field) => {
+                      let value = selectedBook[field.key];
+                      if (field.key === "listPriceUsd")
+                        value = `$${Number(value).toFixed(2)}`;
+                      if (typeof value === "string")
+                        value = value.replace(/^https?:\/\/(www\.)?/, "");
+                      return (
+                        <div
+                          key={field.key}
+                          className={`border-b-2 border-slate-300 pb-3 ${
+                            field.fullWidth ? "sm:col-span-2" : ""
+                          }`}
+                        >
+                          <p className='text-sm font-black uppercase tracking-widest text-slate-800 mb-1'>
+                            {field.label}
+                          </p>
+                          <p className='text-lg font-bold text-slate-900 leading-relaxed break-words'>
+                            {value}
+                          </p>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
 
-              <div className='p-6 md:p-8 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-4'>
+              <div className='p-5 sm:p-6 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-3'>
+                <button
+                  onClick={() => setSelectedBook(null)}
+                  className='px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider'
+                >
+                  Close
+                </button>
                 <button
                   onClick={() => startEditing(selectedBook)}
-                  className='px-8 md:px-10 py-4 md:py-5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl'
+                  className='px-8 py-4 bg-indigo-600 text-white rounded-2xl text-base font-black uppercase tracking-wider shadow-xl hover:bg-slate-900 transition-all'
                 >
                   Edit Record
                 </button>
@@ -1471,38 +1488,33 @@ export default function AdminDashboard() {
           <div className='fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in'>
             <form
               onSubmit={handleUpdateBook}
-              className='bg-slate-200 w-full max-w-5xl max-h-[90vh] rounded-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col'
+              className='bg-slate-200 w-full max-w-2xl max-h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col'
             >
-              <div className='p-6 md:p-10 overflow-y-auto bg-slate-200 flex-1'>
-                <h2 className='text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tighter mb-6 md:mb-8'>
+              <div className='p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1'>
+                <h2 className='text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tighter mb-6'>
                   Editing Full Record
                 </h2>
 
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5'>
                   {bookFields.map((field) => (
                     <div
                       key={field.key}
-                      className={`${field.fullWidth ? "md:col-span-2 lg:col-span-3" : ""}`}
+                      className={`${field.fullWidth ? "sm:col-span-2" : ""}`}
                     >
-                      <label className='text-xs font-black uppercase text-slate-800 mb-1 block ml-2'>
+                      <label className='text-sm font-black uppercase text-slate-800 mb-1 block ml-2'>
                         {field.label}
                       </label>
 
                       {field.key === "uploadedImageUrl" ? (
                         <div className='flex items-center gap-6 p-4 bg-slate-300 border-2 border-slate-400 rounded-2xl'>
                           {/* Preview: Calculated from ID or the new local file */}
-                          <div className='w-20 h-28 bg-slate-200 rounded-lg border-2 border-white shadow-sm overflow-hidden flex-shrink-0'>
+                          <div className='w-20 h-28 bg-slate-200 rounded-lg border-2 border-white shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center'>
                             {editFormData.uploadedImageUrl ? (
                               <img
-                                src={`${API_URL}/api/covers/${editFormData.id}.png`}
+                                src={coverUrl(editFormData.id)}
                                 className='w-full h-full object-cover'
                                 alt=''
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = "book-icon.png";
-                                  e.target.className =
-                                    "w-full h-full object-contain p-8 opacity-20";
-                                }}
+                                onError={showFallbackCover}
                               />
                             ) : (
                               <span className='text-5xl opacity-30'>📖</span>
@@ -1514,7 +1526,7 @@ export default function AdminDashboard() {
                               type='file'
                               accept='image/png, image/jpeg'
                               onChange={handleImageUpload}
-                              className='text-xs font-black text-slate-800 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-slate-900 file:text-white hover:file:bg-rose-600 cursor-pointer transition-all'
+                              className='text-sm font-black text-slate-800 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-slate-900 file:text-white hover:file:bg-rose-600 cursor-pointer transition-all'
                             />
                             <p className='text-xs font-bold text-slate-800 mt-2 uppercase tracking-tight'>
                               Filename will be:{" "}
@@ -1529,10 +1541,10 @@ export default function AdminDashboard() {
                           {field.isTextArea ? (
                             <textarea
                               name={field.key}
-                              value={editFormData[field.key] || ""}
+                              value={editFormData[field.key] ?? ""}
                               onChange={handleInputChange}
                               rows='4'
-                              className='w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl text-sm font-medium outline-none focus:border-indigo-600 focus:bg-white transition-all'
+                              className='w-full bg-white border-2 border-slate-400 text-slate-900 p-4 rounded-2xl text-lg font-medium outline-none focus:border-indigo-700 transition-all'
                             />
                           ) : (
                             <input
@@ -1545,10 +1557,10 @@ export default function AdminDashboard() {
                                       /[^\d.]/g,
                                       "",
                                     )
-                                  : editFormData[field.key] || ""
+                                  : (editFormData[field.key] ?? "")
                               }
                               onChange={handleInputChange}
-                              className='w-full bg-slate-50 border-2 border-slate-100 p-3 rounded-xl text-sm font-bold outline-none focus:border-indigo-600'
+                              className='w-full bg-white border-2 border-slate-400 text-slate-900 px-4 py-3 rounded-xl text-lg font-bold outline-none focus:border-indigo-700'
                               required={field.required}
                             />
                           )}
@@ -1559,17 +1571,17 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className='p-6 md:p-8 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-4'>
+              <div className='p-5 sm:p-6 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-3'>
                 <button
                   type='button'
                   onClick={() => setIsEditing(false)}
-                  className='px-8 md:px-10 py-4 md:py-5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-widest'
+                  className='px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider'
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
-                  className='px-10 md:px-14 py-4 md:py-5 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase shadow-xl'
+                  className='px-8 py-4 bg-emerald-700 text-white rounded-2xl text-base font-black uppercase tracking-wider shadow-xl hover:bg-emerald-800 transition-all'
                 >
                   Save Changes
                 </button>
