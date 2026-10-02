@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"; // Added useState and useEffect
 import { Outlet, Link, useLocation } from "react-router-dom";
+import { API_URL, authHeaders } from "../api";
 
 export default function UserDashboard() {
   const userName = localStorage.getItem("userName") || "Member";
@@ -16,9 +17,9 @@ export default function UserDashboard() {
       if (!userData?.token) return;
 
       try {
-        const response = await fetch("http://localhost:5000/api/user/stats", {
+        const response = await fetch(`${API_URL}/api/user/stats`, {
           headers: {
-            Authorization: `Bearer ${userData.token}`,
+            ...authHeaders(),
             "Content-Type": "application/json",
           },
         });
@@ -43,9 +44,9 @@ export default function UserDashboard() {
   return (
     <div className='flex min-h-[calc(100vh-116px)]'>
       {/* --- USER SIDEBAR --- */}
-      <aside className='w-64 bg-white border-r border-slate-100 p-8 flex flex-col hidden lg:flex'>
+      <aside className='w-64 bg-slate-200 border-r border-slate-400 p-8 flex flex-col hidden lg:flex'>
         <div className='mb-10'>
-          <p className='text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-4'>
+          <p className='text-slate-800 font-black text-xs uppercase tracking-[0.2em] mb-4'>
             Library Menu
           </p>
           <nav className='space-y-2'>
@@ -54,7 +55,7 @@ export default function UserDashboard() {
               className={`block w-full p-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
                 isActive("/user-dashboard")
                   ? "bg-indigo-50 text-indigo-600"
-                  : "text-slate-400 hover:bg-slate-50"
+                  : "text-slate-800 hover:bg-slate-50"
               }`}
             >
               🏠 My Borrows
@@ -66,7 +67,7 @@ export default function UserDashboard() {
               className={`block w-full p-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
                 isActive("/user-dashboard/history")
                   ? "bg-indigo-50 text-indigo-600"
-                  : "text-slate-400 hover:bg-slate-50"
+                  : "text-slate-800 hover:bg-slate-50"
               }`}
             >
               📜 Borrow History
@@ -75,32 +76,32 @@ export default function UserDashboard() {
 
             <Link
               to='/'
-              className='block w-full p-3 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 font-bold text-xs uppercase tracking-widest transition-all'
+              className='block w-full p-3 rounded-xl text-slate-800 hover:bg-slate-50 hover:text-slate-700 font-bold text-xs uppercase tracking-widest transition-all'
             >
               📖 Browse Book
             </Link>
           </nav>
         </div>
 
-        <div className='mt-auto p-6 bg-slate-50 rounded-[2rem] border border-slate-100'>
-          <p className='text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 text-center'>
+        <div className='mt-auto p-6 bg-slate-300 rounded-[2rem] border border-slate-400'>
+          <p className='text-xs font-black text-slate-800 uppercase tracking-widest mb-2 text-center'>
             Need Help?
           </p>
-          <button className='w-full py-2 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase tracking-tighter hover:bg-indigo-600 hover:text-white transition-all'>
+          <button className='w-full py-2 bg-white border border-slate-200 rounded-lg text-xs font-black uppercase tracking-tighter hover:bg-indigo-600 hover:text-white transition-all'>
             Contact Support
           </button>
         </div>
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <main className='flex-1 p-8 lg:p-12 overflow-y-auto bg-slate-50'>
+      <main className='flex-1 p-8 lg:p-12 overflow-y-auto bg-slate-300'>
         {/* Welcome Hero */}
         <div className='max-w-5xl bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-100 mb-10 relative overflow-hidden'>
           <div className='relative z-10'>
             <h2 className='text-4xl font-black mb-2 tracking-tighter text-white'>
               Welcome back, {userName}!
             </h2>
-            <p className='text-indigo-100 font-bold opacity-80 uppercase text-[10px] tracking-widest'>
+            <p className='text-indigo-100 font-bold uppercase text-xs tracking-widest'>
               {userEmail}
             </p>
           </div>
@@ -109,11 +110,11 @@ export default function UserDashboard() {
 
         {/* Stats Grid */}
         <div className='max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 mb-10'>
-          <div className='bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm'>
+          <div className='bg-slate-200 p-6 rounded-[2rem] border border-slate-400 shadow-sm'>
             <div className='w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-xl mb-4'>
               📚
             </div>
-            <h3 className='font-black uppercase tracking-widest text-[9px] text-slate-400'>
+            <h3 className='font-black uppercase tracking-widest text-xs text-slate-800'>
               History Borrows
             </h3>
             {/* REAL STAT: Replaced fixed 12 */}
@@ -122,11 +123,11 @@ export default function UserDashboard() {
             </p>
           </div>
 
-          <div className='bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm'>
+          <div className='bg-slate-200 p-6 rounded-[2rem] border border-slate-400 shadow-sm'>
             <div className='w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-xl mb-4'>
               ⏳
             </div>
-            <h3 className='font-black uppercase tracking-widest text-[9px] text-slate-400'>
+            <h3 className='font-black uppercase tracking-widest text-xs text-slate-800'>
               Active Borrows
             </h3>
             {/* REAL STAT: Replaced fixed 03 */}
@@ -142,7 +143,7 @@ export default function UserDashboard() {
             <div className='w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-lg mb-4 group-hover:scale-110 transition-transform'>
               ＋
             </div>
-            <h3 className='font-black uppercase tracking-widest text-[9px] text-indigo-600'>
+            <h3 className='font-black uppercase tracking-widest text-xs text-indigo-600'>
               Quick Action
             </h3>
             <p className='text-sm font-bold text-slate-800'>Borrow More</p>
@@ -150,7 +151,7 @@ export default function UserDashboard() {
         </div>
 
         {/* --- DYNAMIC CONTENT AREA --- */}
-        <section className='max-w-5xl bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm'>
+        <section className='max-w-5xl bg-slate-200 rounded-[2.5rem] p-8 border border-slate-400 shadow-sm'>
           <Outlet />
         </section>
       </main>

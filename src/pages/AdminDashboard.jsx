@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { STATUS_STYLES } from "../utils/requestStatus";
 import { useNavigate } from "react-router-dom";
+import { API_URL, authHeaders } from "../api";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -11,7 +13,6 @@ export default function AdminDashboard() {
   const [userSubTab, setUserSubTab] = useState("user");
   const [users, setUsers] = useState([]);
   const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [adminProfile, setAdminProfile] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBook, setSelectedBook] = useState(null);
@@ -45,12 +46,11 @@ export default function AdminDashboard() {
   const [contactMessages, setContactMessages] = useState([]);
 
   const fetchMessages = async () => {
-    const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        "http://localhost:5000/api/admin/contact_messages",
+        `${API_URL}/api/admin/contact_messages`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: authHeaders(),
         },
       );
       const data = await response.json();
@@ -60,9 +60,75 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteMessage = async (msgId) => {
+    if (!window.confirm("Delete this message?")) return;
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/delete-message/${msgId}`,
+        {
+          method: "DELETE",
+          headers: authHeaders(),
+        },
+      );
+      if (response.ok) {
+        setContactMessages((prev) => prev.filter((m) => m.id !== msgId));
+      } else {
+        alert("Error deleting message.");
+      }
+    } catch {
+      alert("Error deleting message.");
+    }
+  };
+
   // Call this inside your existing useEffect when the tab changes
   useEffect(() => {
     if (activeTab === "messages") fetchMessages();
+  }, [activeTab]);
+
+  // --- BOOK REQUESTS ---
+  const [bookRequests, setBookRequests] = useState([]);
+  const [requestNotes, setRequestNotes] = useState({}); // unsaved admin notes by request id
+
+  const fetchBookRequests = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/book-requests`,
+        { headers: authHeaders() },
+      );
+      if (response.ok) setBookRequests(await response.json());
+    } catch (error) {
+      console.error("Error fetching book requests:", error);
+    }
+  };
+
+  const updateBookRequest = async (id, changes) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/book-requests/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders(),
+          },
+          body: JSON.stringify(changes),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) return alert(data.error || "Update failed");
+      setBookRequests((prev) => prev.map((r) => (r.id === id ? data : r)));
+      setRequestNotes((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    } catch (error) {
+      console.error("Error updating book request:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "requests") fetchBookRequests();
   }, [activeTab]);
 
   // --- FIELD DEFINITIONS ---
@@ -88,10 +154,9 @@ export default function AdminDashboard() {
   const [borrowRecords, setBorrowRecords] = useState([]);
   // --- FETCH FUNCTIONS ---
   const fetchAdminProfile = async () => {
-    const token = localStorage.getItem("token");
     try {
-      const response = await fetch("http://localhost:5000/api/users/profile", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`${API_URL}/api/users/profile`, {
+        headers: authHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -105,15 +170,14 @@ export default function AdminDashboard() {
   const handleReturnBook = async (recordId) => {
     if (!window.confirm("Confirm this book has been returned?")) return;
 
-    const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        `http://localhost:5000/api/admin/return-book/${recordId}`,
+        `${API_URL}/api/admin/return-book/${recordId}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(),
           },
         },
       );
@@ -133,12 +197,11 @@ export default function AdminDashboard() {
   };
 
   const fetchBorrowRecords = async () => {
-    const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        "http://localhost:5000/api/admin/borrow-records",
+        `${API_URL}/api/admin/borrow-records`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: authHeaders(),
         },
       );
       const data = await response.json();
@@ -151,7 +214,6 @@ export default function AdminDashboard() {
   // --- HANDLERS ---
   const handleAddBookSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
 
     const payload = {
       ...newBook,
@@ -161,15 +223,14 @@ export default function AdminDashboard() {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/add-book", {
+      const response = await fetch(`${API_URL}/api/admin/add-book`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...authHeaders(),
         },
         body: JSON.stringify(payload),
       });
-      console.log(response);
 
       if (response.ok) {
         alert("✨ Book added to LibriStack!");
@@ -200,20 +261,17 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchSystemData = async () => {
-    const token = localStorage.getItem("token");
     try {
-      const userRes = await fetch("http://localhost:5000/api/debug/users", {
-        headers: { Authorization: `Bearer ${token}` },
+      const userRes = await fetch(`${API_URL}/api/debug/users`, {
+        headers: authHeaders(),
       });
       const userData = await userRes.json();
-      const bookRes = await fetch("http://localhost:5000/api/books");
+      const bookRes = await fetch(`${API_URL}/api/books`);
       const bookData = await bookRes.json();
       setUsers(Array.isArray(userData) ? userData : []);
       setBooks(Array.isArray(bookData) ? bookData : []);
     } catch (err) {
       console.error("Dashboard sync error:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -231,16 +289,15 @@ export default function AdminDashboard() {
 
   const handleConfirmSendEmail = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
     setIsSendingEmail(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/admin/send-email",
+        `${API_URL}/api/admin/send-email`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(),
           },
           body: JSON.stringify({
             recipients: selectedEmails,
@@ -255,7 +312,7 @@ export default function AdminDashboard() {
         setSelectedEmails([]);
         setEmailContent({ subject: "", body: "" });
       }
-    } catch (err) {
+    } catch {
       alert("Server error sending email.");
     } finally {
       setIsSendingEmail(false);
@@ -283,7 +340,7 @@ export default function AdminDashboard() {
     }
     try {
       const response = await fetch(
-        `http://localhost:5000/api/books/${editFormData.id}`,
+        `${API_URL}/api/books/${editFormData.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -311,16 +368,22 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to delete ${targetEmail}?`))
-      return;
     if (!window.confirm(`Permanently delete user ${email}?`)) return;
     try {
       const response = await fetch(
-        `http://localhost:5000/api/debug/delete-user?email=${email}`,
-        { method: "DELETE" },
+        `${API_URL}/api/debug/delete-user?email=${encodeURIComponent(email)}`,
+        {
+          method: "DELETE",
+          headers: authHeaders(),
+        },
       );
-      if (response.ok) fetchSystemData();
-    } catch (err) {
+      if (response.ok) {
+        fetchSystemData();
+      } else {
+        const data = await response.json();
+        alert(data.error || data.msg || "Error deleting user.");
+      }
+    } catch {
       alert("Error deleting user.");
     }
   };
@@ -333,15 +396,14 @@ export default function AdminDashboard() {
 
     if (!confirmDelete) return;
 
-    const token = localStorage.getItem("token");
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/admin/delete-book/${bookId}`,
+        `${API_URL}/api/admin/delete-book/${bookId}`,
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(),
           },
         },
       );
@@ -375,12 +437,6 @@ export default function AdminDashboard() {
       u.email?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesRole && matchesSearch;
   });
-
-  const filteredBooks = books.filter(
-    (b) =>
-      b.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.author?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
 
   const filteredBorrowRecords = borrowRecords.filter((record) => {
     const matchesStatus =
@@ -418,11 +474,11 @@ export default function AdminDashboard() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/admin/promote-user/${userId}`,
+        `${API_URL}/api/admin/promote-user/${userId}`,
         {
           method: "PATCH",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            ...authHeaders(),
           },
         },
       );
@@ -442,10 +498,9 @@ export default function AdminDashboard() {
   const [myStats, setMyStats] = useState({ active: 0, total: 0 });
 
   const fetchMyAdminStats = async () => {
-    const token = localStorage.getItem("token");
     try {
-      const response = await fetch("http://localhost:5000/api/user/stats", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(`${API_URL}/api/user/stats`, {
+        headers: authHeaders(),
       });
       const data = await response.json();
       setMyStats(data);
@@ -468,20 +523,20 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   return (
-    <div className='min-h-screen bg-slate-50 flex'>
+    <div className='min-h-screen bg-slate-300 flex'>
       {/* Sidebar (ORIGINAL) */}
       <aside className='w-72 bg-slate-900 text-white p-8 flex flex-col sticky top-0 h-screen overflow-y-auto'>
         <div className='mb-12'>
           <h1 className='text-2xl font-black italic tracking-tighter'>
             Church in Dunn Loring<span className='text-rose-500'>Library</span>
           </h1>
-          <p className='text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]'>
+          <p className='text-slate-300 text-xs font-bold uppercase tracking-[0.2em]'>
             Control Panel
           </p>
         </div>
         <nav className='flex-1 space-y-6'>
           <div>
-            <p className='text-slate-500 text-[10px] font-black uppercase tracking-widest mb-4'>
+            <p className='text-slate-300 text-xs font-black uppercase tracking-widest mb-4'>
               Main Menu
             </p>
             <ul className='space-y-2'>
@@ -490,7 +545,7 @@ export default function AdminDashboard() {
                   setActiveTab("overview");
                   setSearchQuery("");
                 }}
-                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "overview" ? "bg-rose-500 text-white border-rose-500 shadow-lg" : "text-slate-400 hover:text-white border-transparent"}`}
+                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "overview" ? "bg-rose-500 text-white border-rose-500 shadow-lg" : "text-slate-300 hover:text-white border-transparent"}`}
               >
                 Dashboard Overview
               </li>
@@ -499,7 +554,7 @@ export default function AdminDashboard() {
                   setActiveTab("users");
                   setSearchQuery("");
                 }}
-                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "users" ? "bg-rose-500 text-white border-rose-500 shadow-lg" : "text-slate-400 hover:text-white border-transparent"}`}
+                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "users" ? "bg-rose-500 text-white border-rose-500 shadow-lg" : "text-slate-300 hover:text-white border-transparent"}`}
               >
                 User Management
               </li>
@@ -508,7 +563,7 @@ export default function AdminDashboard() {
                   setActiveTab("inventory");
                   setSearchQuery("");
                 }}
-                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "inventory" ? "bg-rose-500 text-white border-rose-500 shadow-lg" : "text-slate-400 hover:text-white border-transparent"}`}
+                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "inventory" ? "bg-rose-500 text-white border-rose-500 shadow-lg" : "text-slate-300 hover:text-white border-transparent"}`}
               >
                 Book Inventory
               </li>
@@ -521,7 +576,7 @@ export default function AdminDashboard() {
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "borrowed"
                     ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-400 hover:text-white border-transparent"
+                    : "text-slate-300 hover:text-white border-transparent"
                 }`}
               >
                 Borrowed Books
@@ -532,7 +587,7 @@ export default function AdminDashboard() {
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "add-book"
                     ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-400 hover:text-white border-transparent"
+                    : "text-slate-300 hover:text-white border-transparent"
                 }`}
               >
                 Add New Book
@@ -542,21 +597,31 @@ export default function AdminDashboard() {
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "messages"
                     ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-400 hover:text-white border-transparent"
+                    : "text-slate-300 hover:text-white border-transparent"
                 }`}
               >
                 Contact Messages
               </li>
+              <li
+                onClick={() => setActiveTab("requests")}
+                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
+                  activeTab === "requests"
+                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
+                    : "text-slate-300 hover:text-white border-transparent"
+                }`}
+              >
+                Book Requests
+              </li>
             </ul>
           </div>
           <div>
-            <p className='text-slate-500 text-[10px] font-black uppercase tracking-widest mb-4'>
+            <p className='text-slate-300 text-xs font-black uppercase tracking-widest mb-4'>
               Personal
             </p>
             <ul className='space-y-2'>
               <li
                 onClick={() => setActiveTab("profile")}
-                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "profile" ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/20" : "text-slate-400 hover:text-white border-transparent"}`}
+                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${activeTab === "profile" ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/20" : "text-slate-300 hover:text-white border-transparent"}`}
               >
                 My Profile
               </li>
@@ -580,13 +645,15 @@ export default function AdminDashboard() {
                 ? "System Dashboard"
                 : activeTab === "inventory"
                   ? "Book Inventory"
-                  : "User Management"}
+                  : activeTab === "requests"
+                    ? "Book Requests"
+                    : "User Management"}
           </h2>
         </header>
 
         {activeTab === "users" && (
           <div className='relative w-full max-w-md mb-10'>
-            <span className='absolute inset-y-0 left-4 flex items-center text-slate-400'>
+            <span className='absolute inset-y-0 left-4 flex items-center text-slate-800'>
               🔍
             </span>
             <input
@@ -602,22 +669,22 @@ export default function AdminDashboard() {
         {/* --- OVERVIEW (ORIGINAL) --- */}
         {activeTab === "overview" && (
           <div className='grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in'>
-            <div className='bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm'>
+            <div className='bg-slate-200 p-8 rounded-[2.5rem] border border-slate-400 shadow-sm'>
               <div className='w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl mb-6'>
                 👥
               </div>
-              <h3 className='text-slate-400 font-black text-[10px] uppercase mb-1'>
+              <h3 className='text-slate-800 font-black text-xs uppercase mb-1'>
                 Total Members
               </h3>
               <p className='text-4xl font-black text-slate-800'>
                 {users.length}
               </p>
             </div>
-            <div className='bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm'>
+            <div className='bg-slate-200 p-8 rounded-[2.5rem] border border-slate-400 shadow-sm'>
               <div className='w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl mb-6'>
                 📖
               </div>
-              <h3 className='text-slate-400 font-black text-[10px] uppercase mb-1'>
+              <h3 className='text-slate-800 font-black text-xs uppercase mb-1'>
                 Books in Catalog
               </h3>
               <p className='text-4xl font-black text-slate-800'>
@@ -632,13 +699,13 @@ export default function AdminDashboard() {
             {/* --- Personal Stats Bar (Reusing your /api/user/stats data) --- */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <div className='bg-emerald-500 p-8 rounded-[2.5rem] text-white shadow-xl shadow-emerald-100'>
-                <p className='text-[10px] font-black uppercase tracking-widest opacity-80'>
+                <p className='text-xs font-black uppercase tracking-widest'>
                   Active Borrows
                 </p>
                 <h4 className='text-4xl font-black mt-2'>{myStats.active}</h4>
               </div>
               <div className='bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl shadow-slate-200'>
-                <p className='text-[10px] font-black uppercase tracking-widest opacity-60'>
+                <p className='text-xs font-black uppercase tracking-widest'>
                   Lifetime Collection
                 </p>
                 <h4 className='text-4xl font-black mt-2'>{myStats.total}</h4>
@@ -649,7 +716,7 @@ export default function AdminDashboard() {
 
         {/* --- USERS TAB (ORIGINAL + EMAIL) --- */}
         {activeTab === "users" && (
-          <section className='bg-white rounded-[3rem] border border-slate-100 shadow-sm p-10 animate-in fade-in'>
+          <section className='bg-slate-200 rounded-[3rem] border border-slate-400 shadow-sm p-10 animate-in fade-in'>
             <div className='flex justify-between items-center mb-10'>
               <h3 className='text-xl font-black text-slate-800 uppercase italic'>
                 Database Records
@@ -657,20 +724,20 @@ export default function AdminDashboard() {
               <div className='flex gap-4'>
                 <button
                   onClick={() => setIsEmailModalOpen(true)}
-                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${selectedEmails.length > 0 ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${selectedEmails.length > 0 ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-800"}`}
                 >
                   Email Selected ({selectedEmails.length})
                 </button>
-                <div className='flex bg-slate-100 p-1.5 rounded-2xl'>
+                <div className='flex bg-slate-200 p-1.5 rounded-2xl'>
                   <button
                     onClick={() => setUserSubTab("user")}
-                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${userSubTab === "user" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500"}`}
+                    className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${userSubTab === "user" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-700"}`}
                   >
                     Members
                   </button>
                   <button
                     onClick={() => setUserSubTab("admin")}
-                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${userSubTab === "admin" ? "bg-white text-rose-500 shadow-sm" : "text-slate-500"}`}
+                    className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${userSubTab === "admin" ? "bg-white text-rose-700 shadow-sm" : "text-slate-700"}`}
                   >
                     Admins
                   </button>
@@ -679,7 +746,7 @@ export default function AdminDashboard() {
             </div>
             <table className='w-full text-left'>
               <thead>
-                <tr className='text-[10px] font-black text-slate-400 border-b uppercase'>
+                <tr className='text-xs font-black text-slate-800 border-b uppercase'>
                   <th className='pb-4'>Select</th>
                   <th className='pb-4'>Name</th>
                   <th className='pb-4'>Email</th>
@@ -706,8 +773,8 @@ export default function AdminDashboard() {
                     >
                       {u.full_name}
                     </td>
-                    <td className='py-5 text-sm text-slate-500'>{u.email}</td>
-                    <td className='py-5 text-[10px] font-black text-slate-400 uppercase'>
+                    <td className='py-5 text-sm text-slate-700'>{u.email}</td>
+                    <td className='py-5 text-xs font-black text-slate-800 uppercase'>
                       {u.registration_date || "Unknown"}
                     </td>
                     <td className='py-5 text-right'>
@@ -716,24 +783,18 @@ export default function AdminDashboard() {
                         {u.role === "user" && userSubTab === "user" && (
                           <button
                             onClick={() => handlePromoteUser(u.id, u.full_name)}
-                            className='text-[9px] font-black text-indigo-600 uppercase hover:underline'
+                            className='text-xs font-black text-indigo-600 uppercase hover:underline'
                           >
                             Promote
                           </button>
                         )}
                         <button
                           onClick={() => handleDeleteUser(u.email)}
-                          className='text-[9px] font-black text-rose-500 uppercase hover:underline'
+                          className='text-xs font-black text-rose-700 uppercase hover:underline'
                         >
                           Delete
                         </button>
                       </div>
-                      {/* <button
-                        onClick={() => handleDeleteUser(u.email)}
-                        className='text-[9px] font-black text-rose-500 uppercase hover:underline'
-                      >
-                        Delete
-                      </button> */}
                     </td>
                   </tr>
                 ))}
@@ -746,10 +807,10 @@ export default function AdminDashboard() {
         {activeTab === "inventory" && (
           <div className='animate-in fade-in'>
             {/* --- FILTER BAR --- */}
-            <div className='flex flex-wrap items-center gap-4 mb-10 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm'>
+            <div className='flex flex-wrap items-center gap-4 mb-10 bg-slate-200 p-6 rounded-[2rem] border border-slate-400 shadow-sm'>
               {/* Search Input */}
               <div className='relative flex-1 min-w-[250px]'>
-                <span className='absolute inset-y-0 left-4 flex items-center text-slate-400'>
+                <span className='absolute inset-y-0 left-4 flex items-center text-slate-800'>
                   🔍
                 </span>
                 <input
@@ -765,7 +826,7 @@ export default function AdminDashboard() {
               <select
                 value={languageFilter}
                 onChange={(e) => setLanguageFilter(e.target.value)}
-                className='px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-black uppercase text-slate-600 focus:outline-none'
+                className='px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black uppercase text-slate-700 focus:outline-none'
               >
                 <option value='All'>All Languages</option>
                 <option value='English'>English</option>
@@ -774,15 +835,15 @@ export default function AdminDashboard() {
               </select>
 
               {/* Stock Filter */}
-              <div className='flex bg-slate-100 p-1 rounded-2xl'>
+              <div className='flex bg-slate-200 p-1 rounded-2xl'>
                 {["All", "In Stock", "Out of Stock"].map((s) => (
                   <button
                     key={s}
                     onClick={() => setStockFilter(s)}
-                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase transition-all ${
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${
                       stockFilter === s
-                        ? "bg-white text-rose-500 shadow-sm"
-                        : "text-slate-500 hover:text-slate-700"
+                        ? "bg-white text-rose-700 shadow-sm"
+                        : "text-slate-700 hover:text-slate-700"
                     }`}
                   >
                     {s}
@@ -796,9 +857,9 @@ export default function AdminDashboard() {
               {filteredInventory.map((book) => (
                 <div
                   key={book.id}
-                  className='bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group'
+                  className='bg-slate-200 p-6 rounded-[2.5rem] border border-slate-400 shadow-sm hover:shadow-xl transition-all group'
                 >
-                  <div className='aspect-square bg-slate-50 rounded-[2rem] mb-4 flex items-center justify-center text-5xl border border-slate-100 overflow-hidden relative'>
+                  <div className='aspect-square bg-slate-300 rounded-[2rem] mb-4 flex items-center justify-center text-5xl border border-slate-400 overflow-hidden relative'>
                     {book.uploadedImageUrl ? (
                       <img
                         src={book.uploadedImageUrl}
@@ -810,7 +871,7 @@ export default function AdminDashboard() {
                     )}
                     {/* Quick Stock Badge */}
                     <div
-                      className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] font-black uppercase ${
+                      className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-black uppercase ${
                         book.availableCopies > 0
                           ? "bg-emerald-500 text-white"
                           : "bg-rose-500 text-white"
@@ -825,27 +886,27 @@ export default function AdminDashboard() {
                   <h4 className='font-black text-slate-900 truncate uppercase text-sm'>
                     {book.title}
                   </h4>
-                  <p className='text-slate-500 text-[10px] font-bold italic mb-6'>
+                  <p className='text-slate-700 text-xs font-bold italic mb-6'>
                     by {book.author || "Unknown"}
                   </p>
 
                   <div className='space-y-2'>
                     <button
                       onClick={() => setSelectedBook(book)}
-                      className='w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-indigo-600 transition-all shadow-md'
+                      className='w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase hover:bg-indigo-600 transition-all shadow-md'
                     >
                       View Details
                     </button>
                     <div className='flex gap-2'>
                       <button
                         onClick={() => startEditing(book)}
-                        className='flex-1 py-3 border-2 border-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-all'
+                        className='flex-1 py-3 border-2 border-slate-100 text-slate-700 rounded-xl text-xs font-black uppercase hover:bg-slate-50 transition-all'
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteBook(book.id, book.title)}
-                        className='px-4 py-3 border-2 border-slate-100 text-rose-500 rounded-xl text-[10px] font-black uppercase hover:bg-rose-50 transition-all'
+                        className='px-4 py-3 border-2 border-slate-100 text-rose-700 rounded-xl text-xs font-black uppercase hover:bg-rose-50 transition-all'
                       >
                         Delete
                       </button>
@@ -857,8 +918,8 @@ export default function AdminDashboard() {
 
             {/* Empty State */}
             {filteredInventory.length === 0 && (
-              <div className='py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100'>
-                <p className='text-slate-400 font-black text-xs uppercase tracking-widest'>
+              <div className='py-20 text-center bg-slate-200 rounded-[3rem] border-2 border-dashed border-slate-400'>
+                <p className='text-slate-800 font-black text-xs uppercase tracking-widest'>
                   No books match those filters
                 </p>
               </div>
@@ -866,63 +927,13 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* {activeTab === "inventory" && (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in'>
-            {filteredBooks.map((book) => (
-              <div
-                key={book.id}
-                className='bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group'
-              >
-                <div className='aspect-square bg-slate-50 rounded-[2rem] mb-4 flex items-center justify-center text-5xl border border-slate-100 overflow-hidden'>
-                  {book.uploadedImageUrl ? (
-                    <img
-                      src={book.uploadedImageUrl}
-                      className='w-full h-full object-cover'
-                      alt='cover'
-                    />
-                  ) : (
-                    "📖"
-                  )}
-                </div>
-                <h4 className='font-black text-slate-900 truncate uppercase'>
-                  {book.title}
-                </h4>
-                <p className='text-slate-500 text-xs font-bold italic mb-6'>
-                  by {book.author || "Unknown"}
-                </p>
-                <div className='space-y-2'>
-                  <button
-                    onClick={() => setSelectedBook(book)}
-                    className='w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-indigo-600 transition-all shadow-md'
-                  >
-                    View Details
-                  </button>
-                  <div className='flex gap-2'>
-                    <button
-                      onClick={() => startEditing(book)}
-                      className='flex-1 py-3 border-2 border-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-all'
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteBook(book.id, book.title)}
-                      className='px-4 py-3 border-2 border-slate-100 text-rose-500 rounded-xl text-[10px] font-black uppercase hover:bg-rose-50 transition-all'
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )} */}
 
         {activeTab === "borrowed" && (
-          <section className='bg-white rounded-[3rem] border border-slate-100 shadow-sm p-10 animate-in fade-in'>
+          <section className='bg-slate-200 rounded-[3rem] border border-slate-400 shadow-sm p-10 animate-in fade-in'>
             {/* Header & Filters */}
             <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10'>
               <div>
-                <p className='text-[10px] text-slate-400 font-bold uppercase mt-2'>
+                <p className='text-xs text-slate-800 font-bold uppercase mt-2'>
                   Monitoring {filteredBorrowRecords.length} Records
                 </p>
               </div>
@@ -930,7 +941,7 @@ export default function AdminDashboard() {
               <div className='flex flex-wrap items-center gap-4 w-full lg:w-auto'>
                 {/* Search Bar */}
                 <div className='relative flex-1 lg:w-64'>
-                  <span className='absolute inset-y-0 left-4 flex items-center text-slate-400 text-xs'>
+                  <span className='absolute inset-y-0 left-4 flex items-center text-slate-800 text-xs'>
                     🔍
                   </span>
                   <input
@@ -938,20 +949,20 @@ export default function AdminDashboard() {
                     placeholder='Search borrower or book...'
                     value={borrowSearch}
                     onChange={(e) => setBorrowSearch(e.target.value)}
-                    className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-rose-500/20'
+                    className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-500/20'
                   />
                 </div>
 
                 {/* Status Toggle */}
-                <div className='flex bg-slate-100 p-1 rounded-xl'>
+                <div className='flex bg-slate-200 p-1 rounded-xl'>
                   {["all", "borrowed", "returned"].map((s) => (
                     <button
                       key={s}
                       onClick={() => setStatusFilter(s)}
-                      className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase transition-all ${
+                      className={`px-4 py-2 rounded-lg text-xs font-black uppercase transition-all ${
                         statusFilter === s
-                          ? "bg-white text-rose-500 shadow-sm"
-                          : "text-slate-500"
+                          ? "bg-white text-rose-700 shadow-sm"
+                          : "text-slate-700"
                       }`}
                     >
                       {s}
@@ -965,7 +976,7 @@ export default function AdminDashboard() {
             <div className='overflow-x-auto'>
               <table className='w-full text-left'>
                 <thead>
-                  <tr className='text-[10px] font-black text-slate-400 border-b uppercase'>
+                  <tr className='text-xs font-black text-slate-800 border-b uppercase'>
                     <th className='pb-4'>Borrower Details</th>
                     <th className='pb-4'>Book Information</th>
                     <th className='pb-4'>Timeline</th>
@@ -994,17 +1005,17 @@ export default function AdminDashboard() {
                           <p className='font-bold text-slate-800 text-sm'>
                             {record.user_name}
                           </p>
-                          <p className='text-[10px] text-indigo-500 font-black uppercase tracking-tighter'>
+                          <p className='text-xs text-indigo-700 font-black uppercase tracking-tighter'>
                             User ID: #{record.user_id}
                           </p>
                         </td>
 
                         {/* COLUMN: Book Information */}
                         <td className='py-5'>
-                          <p className='font-black text-slate-700 text-[11px] uppercase truncate max-w-[200px]'>
+                          <p className='font-black text-slate-700 text-xs uppercase truncate max-w-[200px]'>
                             {record.book_title}
                           </p>
-                          <p className='text-[9px] text-slate-400 font-bold'>
+                          <p className='text-xs text-slate-800 font-bold'>
                             Book ID: {record.book_id}
                           </p>
                         </td>
@@ -1012,12 +1023,12 @@ export default function AdminDashboard() {
                         {/* COLUMN: Timeline */}
                         <td className='py-5'>
                           <div className='flex flex-col gap-1'>
-                            <span className='text-[9px] font-bold text-slate-500 italic'>
+                            <span className='text-xs font-bold text-slate-700 italic'>
                               Out: {record.borrow_date}
                             </span>
                             <span
-                              className={`text-[9px] font-black uppercase flex items-center gap-1 ${
-                                isOverdue ? "text-rose-600" : "text-slate-400"
+                              className={`text-xs font-black uppercase flex items-center gap-1 ${
+                                isOverdue ? "text-rose-700" : "text-slate-800"
                               }`}
                             >
                               Due: {record.due_date}
@@ -1031,10 +1042,10 @@ export default function AdminDashboard() {
                         {/* COLUMN: Status Badge */}
                         <td className='py-5'>
                           <span
-                            className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase ${
+                            className={`px-3 py-1 rounded-lg text-xs font-black uppercase ${
                               record.status === "borrowed"
-                                ? "bg-amber-100 text-amber-600 shadow-sm border border-amber-200"
-                                : "bg-emerald-100 text-emerald-600 border border-emerald-200"
+                                ? "bg-amber-100 text-amber-700 shadow-sm border border-amber-200"
+                                : "bg-emerald-100 text-emerald-700 border border-emerald-200"
                             }`}
                           >
                             {record.status}
@@ -1046,7 +1057,7 @@ export default function AdminDashboard() {
                           {record.status === "borrowed" ? (
                             <button
                               onClick={() => handleReturnBook(record.id)}
-                              className={`text-[9px] font-black px-4 py-2 rounded-xl uppercase transition-all transform hover:scale-105 active:scale-95 shadow-sm ${
+                              className={`text-xs font-black px-4 py-2 rounded-xl uppercase transition-all transform hover:scale-105 active:scale-95 shadow-sm ${
                                 isOverdue
                                   ? "bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200"
                                   : "bg-slate-900 text-white hover:bg-indigo-600"
@@ -1056,10 +1067,10 @@ export default function AdminDashboard() {
                             </button>
                           ) : (
                             <div className='flex flex-col items-end'>
-                              <span className='text-[9px] font-black text-slate-300 uppercase tracking-widest'>
+                              <span className='text-xs font-black text-slate-800 uppercase tracking-widest'>
                                 Archived
                               </span>
-                              <span className='text-[8px] text-slate-400 italic'>
+                              <span className='text-xs text-slate-800 italic'>
                                 In: {record.return_date || "N/A"}
                               </span>
                             </div>
@@ -1075,7 +1086,7 @@ export default function AdminDashboard() {
             {/* Empty State */}
             {filteredBorrowRecords.length === 0 && (
               <div className='py-20 text-center'>
-                <p className='text-slate-400 font-black text-xs uppercase tracking-widest'>
+                <p className='text-slate-800 font-black text-xs uppercase tracking-widest'>
                   No records found matching your filters
                 </p>
               </div>
@@ -1085,7 +1096,7 @@ export default function AdminDashboard() {
 
         {/* --- PROFILE TAB (ENHANCED WITH ALL DATA) --- */}
         {activeTab === "profile" && adminProfile && (
-          <section className='bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden animate-in fade-in'>
+          <section className='bg-slate-200 rounded-[3rem] border border-slate-400 shadow-sm overflow-hidden animate-in fade-in'>
             <div className='bg-slate-900 p-12 text-white flex items-center gap-8'>
               <div className='w-24 h-24 bg-rose-500 rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-lg shadow-rose-500/20'>
                 {adminProfile.full_name?.charAt(0)}
@@ -1102,7 +1113,7 @@ export default function AdminDashboard() {
             <div className='p-12'>
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12'>
                 <div>
-                  <p className='text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1'>
+                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
                     Email
                   </p>
                   <p className='font-bold text-slate-800 text-lg'>
@@ -1110,7 +1121,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className='text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1'>
+                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
                     Phone
                   </p>
                   <p className='font-bold text-slate-800 text-lg'>
@@ -1118,7 +1129,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className='text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1'>
+                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
                     Invite Code
                   </p>
                   <p className='font-black text-indigo-600 text-3xl tabular-nums'>
@@ -1126,7 +1137,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className='text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1'>
+                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
                     Registered
                   </p>
                   <p className='font-bold text-slate-800 text-lg'>
@@ -1136,11 +1147,11 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className='text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1'>
+                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
                     Status
                   </p>
                   <p
-                    className={`font-black uppercase text-xs ${adminProfile.is_verified ? "text-emerald-500" : "text-amber-500"}`}
+                    className={`font-black uppercase text-xs ${adminProfile.is_verified ? "text-emerald-700" : "text-amber-700"}`}
                   >
                     {adminProfile.is_verified
                       ? "✓ Verified Admin"
@@ -1155,9 +1166,9 @@ export default function AdminDashboard() {
         {/* --- VIEW MODAL (ORIGINAL) --- */}
         {selectedBook && !isEditing && (
           <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in'>
-            <div className='bg-white w-full max-w-5xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col'>
-              <div className='p-8 border-b-2 border-slate-100 flex gap-8 items-start bg-slate-50'>
-                <div className='w-32 h-44 bg-white rounded-2xl shadow-md border-2 border-slate-200 overflow-hidden flex items-center justify-center'>
+            <div className='bg-slate-200 w-full max-w-5xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col'>
+              <div className='p-8 border-b-2 border-slate-400 flex gap-8 items-start bg-slate-300'>
+                <div className='w-32 h-44 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 overflow-hidden flex items-center justify-center'>
                   {selectedBook.uploadedImageUrl ? (
                     <img
                       src={selectedBook.uploadedImageUrl}
@@ -1185,14 +1196,14 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
-              <div className='p-10 overflow-y-auto bg-white flex-1'>
+              <div className='p-10 overflow-y-auto bg-slate-200 flex-1'>
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6'>
                   {bookFields.map((field) => (
                     <div
                       key={field.key}
                       className={`border-b border-slate-50 pb-2 ${field.fullWidth ? "md:col-span-2 lg:col-span-3" : ""}`}
                     >
-                      <p className='text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1'>
+                      <p className='text-xs font-black uppercase tracking-widest text-slate-800 mb-1'>
                         {field.label}
                       </p>
                       <p className='text-sm font-bold text-slate-800 leading-relaxed'>
@@ -1202,7 +1213,7 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
-              <div className='p-8 bg-slate-50 border-t-2 border-slate-100 flex justify-end gap-4'>
+              <div className='p-8 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-4'>
                 <button
                   onClick={() => startEditing(selectedBook)}
                   className='px-10 py-5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl'
@@ -1219,9 +1230,9 @@ export default function AdminDashboard() {
           <div className='fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in'>
             <form
               onSubmit={handleUpdateBook}
-              className='bg-white w-full max-w-5xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col'
+              className='bg-slate-200 w-full max-w-5xl max-h-[90vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col'
             >
-              <div className='p-10 overflow-y-auto bg-white flex-1'>
+              <div className='p-10 overflow-y-auto bg-slate-200 flex-1'>
                 <h2 className='text-3xl font-black text-slate-900 uppercase tracking-tighter mb-8'>
                   Editing Full Record
                 </h2>
@@ -1231,7 +1242,7 @@ export default function AdminDashboard() {
                       key={field.key}
                       className={`${field.fullWidth ? "md:col-span-2 lg:col-span-3" : ""}`}
                     >
-                      <label className='text-[10px] font-black uppercase text-slate-400 mb-1 block ml-2'>
+                      <label className='text-xs font-black uppercase text-slate-800 mb-1 block ml-2'>
                         {field.label}
                       </label>
                       {field.isTextArea ? (
@@ -1263,11 +1274,11 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
-              <div className='p-8 bg-slate-50 border-t-2 border-slate-100 flex justify-end gap-4'>
+              <div className='p-8 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-4'>
                 <button
                   type='button'
                   onClick={() => setIsEditing(false)}
-                  className='px-10 py-5 bg-white border-2 border-slate-300 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest'
+                  className='px-10 py-5 bg-white border-2 border-slate-300 text-slate-700 rounded-2xl text-xs font-black uppercase tracking-widest'
                 >
                   Cancel
                 </button>
@@ -1287,11 +1298,11 @@ export default function AdminDashboard() {
           <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in'>
             <form
               onSubmit={handleConfirmSendEmail}
-              className='bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden'
+              className='bg-slate-200 w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden'
             >
               <div className='p-8 bg-indigo-600 text-white'>
                 <h2 className='text-2xl font-black uppercase'>Server Mailer</h2>
-                <p className='text-indigo-200 text-[10px] font-bold uppercase'>
+                <p className='text-indigo-200 text-xs font-bold uppercase'>
                   Sending to {selectedEmails.length} Users
                 </p>
               </div>
@@ -1319,7 +1330,7 @@ export default function AdminDashboard() {
                   className='w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl text-sm outline-none resize-none'
                 />
               </div>
-              <div className='p-8 bg-slate-50 border-t flex gap-4'>
+              <div className='p-8 bg-slate-300 border-t flex gap-4'>
                 <button
                   type='button'
                   onClick={() => setIsEmailModalOpen(false)}
@@ -1341,7 +1352,7 @@ export default function AdminDashboard() {
         {/* --- USER DETAIL MODAL --- */}
         {selectedUser && (
           <div className='fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in'>
-            <div className='bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden'>
+            <div className='bg-slate-200 w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden'>
               {/* Header */}
               <div className='bg-slate-900 p-8 text-white flex justify-between items-center'>
                 <div className='flex items-center gap-4'>
@@ -1363,7 +1374,7 @@ export default function AdminDashboard() {
               {/* Grid Details */}
               <div className='p-10 grid grid-cols-2 gap-8'>
                 <div>
-                  <p className='text-[10px] font-black text-slate-400 uppercase mb-1'>
+                  <p className='text-xs font-black text-slate-800 uppercase mb-1'>
                     Email
                   </p>
                   <p className='font-bold text-slate-800'>
@@ -1371,7 +1382,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className='text-[10px] font-black text-slate-400 uppercase mb-1'>
+                  <p className='text-xs font-black text-slate-800 uppercase mb-1'>
                     Role
                   </p>
                   <p className='font-bold text-indigo-600 uppercase'>
@@ -1379,7 +1390,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className='text-[10px] font-black text-slate-400 uppercase mb-1'>
+                  <p className='text-xs font-black text-slate-800 uppercase mb-1'>
                     Phone
                   </p>
                   <p className='font-bold text-slate-800'>
@@ -1387,7 +1398,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className='text-[10px] font-black text-slate-400 uppercase mb-1'>
+                  <p className='text-xs font-black text-slate-800 uppercase mb-1'>
                     Invite Code
                   </p>
                   <p className='font-black text-slate-800'>
@@ -1396,10 +1407,10 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className='p-6 bg-slate-50 text-right'>
+              <div className='p-6 bg-slate-300 text-right'>
                 <button
                   onClick={() => setSelectedUser(null)}
-                  className='px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase'
+                  className='px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase'
                 >
                   Close
                 </button>
@@ -1410,13 +1421,13 @@ export default function AdminDashboard() {
 
         {/* 3. ADD NEW BOOK TAB */}
         {activeTab === "add-book" && (
-          <section className='bg-white rounded-[3rem] border border-slate-100 shadow-sm p-12 animate-in slide-in-from-bottom-6 duration-500'>
+          <section className='bg-slate-200 rounded-[3rem] border border-slate-400 shadow-sm p-12 animate-in slide-in-from-bottom-6 duration-500'>
             <div className='max-w-5xl mx-auto'>
               <header className='mb-12'>
                 <h3 className='text-3xl font-black text-slate-900 uppercase italic leading-none'>
                   Catalog New Title
                 </h3>
-                <p className='text-xs text-slate-400 font-bold uppercase mt-3 tracking-widest'>
+                <p className='text-xs text-slate-800 font-bold uppercase mt-3 tracking-widest'>
                   Database entry / Global Library System
                 </p>
               </header>
@@ -1429,7 +1440,7 @@ export default function AdminDashboard() {
                 <div className='lg:col-span-2 space-y-8'>
                   <div className='grid grid-cols-2 gap-6'>
                     <div className='col-span-2'>
-                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
                         Main Title
                       </label>
                       <input
@@ -1444,7 +1455,7 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div>
-                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
                         Primary Author
                       </label>
                       <input
@@ -1458,7 +1469,7 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div>
-                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
                         ISBN-13
                       </label>
                       <input
@@ -1473,8 +1484,8 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div>
-                    <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
-                      Language <span className='text-rose-500'>*</span>
+                    <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                      Language <span className='text-rose-700'>*</span>
                     </label>
                     <select
                       required
@@ -1482,7 +1493,7 @@ export default function AdminDashboard() {
                       onChange={(e) =>
                         setNewBook({ ...newBook, language: e.target.value })
                       }
-                      className='w-full mt-2 px-4 py-4 bg-white border border-slate-100 rounded-2xl text-[10px] font-black uppercase outline-none focus:ring-4 focus:ring-rose-500/5 transition-all cursor-pointer'
+                      className='w-full mt-2 px-4 py-4 bg-white border border-slate-100 rounded-2xl text-xs font-black uppercase outline-none focus:ring-4 focus:ring-rose-500/5 transition-all cursor-pointer'
                     >
                       <option value=''>Select Language</option>
                       <option value='English'>English</option>
@@ -1493,7 +1504,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                    <label className='text-xs font-black text-slate-800 uppercase ml-2'>
                       Book Summary
                     </label>
                     <textarea
@@ -1508,9 +1519,9 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Right Column: Financials & Media */}
-                <div className='space-y-8 bg-slate-50/50 p-10 rounded-[3rem] border border-slate-100'>
+                <div className='space-y-8 bg-slate-300 p-10 rounded-[3rem] border border-slate-400'>
                   <div>
-                    <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                    <label className='text-xs font-black text-slate-800 uppercase ml-2'>
                       Category / Genre
                     </label>
                     <input
@@ -1526,7 +1537,7 @@ export default function AdminDashboard() {
 
                   <div className='grid grid-cols-2 gap-4'>
                     <div>
-                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
                         Total Copies
                       </label>
                       <input
@@ -1544,7 +1555,7 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div>
-                      <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
                         Price (USD)
                       </label>
                       <input
@@ -1564,7 +1575,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className='text-[10px] font-black text-slate-400 uppercase ml-2'>
+                    <label className='text-xs font-black text-slate-800 uppercase ml-2'>
                       Cover Image URL
                     </label>
                     <input
@@ -1582,7 +1593,7 @@ export default function AdminDashboard() {
 
                   <button
                     type='submit'
-                    className='w-full py-6 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-rose-600 transition-all shadow-xl shadow-slate-200 active:scale-95'
+                    className='w-full py-6 bg-slate-900 text-white rounded-[2rem] text-xs font-black uppercase tracking-[0.2em] hover:bg-rose-600 transition-all shadow-xl shadow-slate-200 active:scale-95'
                   >
                     Confirm & Save Entry
                   </button>
@@ -1598,15 +1609,15 @@ export default function AdminDashboard() {
               <h3 className='text-2xl font-black text-slate-900 uppercase italic'>
                 Inbox
               </h3>
-              <span className='bg-indigo-100 text-indigo-600 px-4 py-1 rounded-full text-[10px] font-black uppercase'>
+              <span className='bg-indigo-100 text-indigo-600 px-4 py-1 rounded-full text-xs font-black uppercase'>
                 {contactMessages.length} Messages
               </span>
             </div>
 
             <div className='grid grid-cols-1 gap-4'>
               {contactMessages.length === 0 ? (
-                <div className='py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100'>
-                  <p className='text-slate-400 font-black text-xs uppercase'>
+                <div className='py-20 text-center bg-slate-200 rounded-[3rem] border-2 border-dashed border-slate-400'>
+                  <p className='text-slate-800 font-black text-xs uppercase'>
                     No messages yet
                   </p>
                 </div>
@@ -1614,34 +1625,28 @@ export default function AdminDashboard() {
                 contactMessages.map((msg) => (
                   <div
                     key={msg.id}
-                    className='bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all'
+                    className='bg-slate-200 p-8 rounded-[2.5rem] border border-slate-400 shadow-sm hover:shadow-md transition-all'
                   >
                     <div className='flex justify-between items-start mb-4'>
                       <div>
                         <h4 className='font-black text-slate-800 uppercase text-sm'>
                           {msg.name}
                         </h4>
-                        <p className='text-indigo-500 text-[10px] font-bold'>
+                        <p className='text-indigo-700 text-xs font-bold'>
                           {msg.email}
                         </p>
                       </div>
-                      <span className='text-[9px] font-black text-slate-400 uppercase bg-slate-50 px-3 py-1 rounded-lg'>
+                      <span className='text-xs font-black text-slate-800 uppercase bg-slate-300 px-3 py-1 rounded-lg'>
                         {msg.date}
                       </span>
                     </div>
-                    <p className='text-slate-600 text-sm leading-relaxed bg-slate-50 p-6 rounded-2xl border border-slate-100 italic'>
+                    <p className='text-slate-700 text-sm leading-relaxed bg-slate-300 p-6 rounded-2xl border border-slate-400 italic'>
                       "{msg.message}"
                     </p>
                     <div className='mt-6 flex gap-3'>
-                      {/* <a
-                        href={`mailto:${msg.email}`}
-                        className='text-[9px] font-black bg-slate-900 text-white px-6 py-3 rounded-xl uppercase hover:bg-rose-500 transition-all'
-                      >
-                        Reply via Email
-                      </a> */}
                       <button
                         onClick={() => handleDeleteMessage(msg.id)}
-                        className='text-[9px] font-black border-2 border-slate-100 text-slate-400 px-6 py-3 rounded-xl uppercase hover:text-rose-500 hover:border-rose-100 transition-all'
+                        className='text-xs font-black border-2 border-slate-100 text-slate-800 px-6 py-3 rounded-xl uppercase hover:text-rose-700 hover:border-rose-100 transition-all'
                       >
                         Delete
                       </button>
@@ -1650,6 +1655,94 @@ export default function AdminDashboard() {
                 ))
               )}
             </div>
+          </section>
+        )}
+        {activeTab === "requests" && (
+          <section className='animate-in fade-in space-y-6'>
+            <div className='flex justify-between items-center mb-8'>
+              <h3 className='text-2xl font-black text-slate-900 uppercase italic'>
+                Requests From Members
+              </h3>
+              <span className='bg-amber-100 text-amber-800 px-4 py-1 rounded-full text-sm font-black uppercase'>
+                {bookRequests.filter((r) => r.status === "pending").length}{" "}
+                Pending
+              </span>
+            </div>
+
+            {bookRequests.length === 0 ? (
+              <div className='py-20 text-center bg-slate-200 rounded-[3rem] border-2 border-dashed border-slate-400'>
+                <p className='text-slate-700 font-black text-base uppercase'>
+                  No book requests yet
+                </p>
+              </div>
+            ) : (
+              bookRequests.map((r) => (
+                <div
+                  key={r.id}
+                  className='bg-slate-200 p-8 rounded-[2.5rem] border border-slate-400 shadow-sm'
+                >
+                  <div className='flex flex-wrap justify-between items-start gap-4 mb-4'>
+                    <div>
+                      <h4 className='font-black text-slate-900 text-xl'>
+                        {r.title}
+                      </h4>
+                      {r.author && (
+                        <p className='text-slate-800 text-base italic'>
+                          by {r.author}
+                        </p>
+                      )}
+                      <p className='text-slate-700 text-sm font-bold mt-2'>
+                        {r.requested_by} · {r.requester_email} · {r.date}
+                      </p>
+                    </div>
+                    <select
+                      value={r.status}
+                      onChange={(e) =>
+                        updateBookRequest(r.id, { status: e.target.value })
+                      }
+                      className={`px-4 py-2 rounded-xl border-2 text-sm font-black uppercase cursor-pointer outline-none ${STATUS_STYLES[r.status]}`}
+                    >
+                      <option value='pending'>Pending</option>
+                      <option value='ordered'>Ordered</option>
+                      <option value='arrived'>Arrived</option>
+                      <option value='declined'>Declined</option>
+                    </select>
+                  </div>
+
+                  {r.notes && (
+                    <p className='text-slate-900 text-base leading-relaxed bg-slate-300 p-4 rounded-2xl border border-slate-400 italic mb-4'>
+                      "{r.notes}"
+                    </p>
+                  )}
+
+                  <div className='flex flex-col sm:flex-row gap-3'>
+                    <input
+                      type='text'
+                      placeholder='Note for the member, e.g. "Expected next month"'
+                      value={requestNotes[r.id] ?? r.admin_note ?? ""}
+                      onChange={(e) =>
+                        setRequestNotes({
+                          ...requestNotes,
+                          [r.id]: e.target.value,
+                        })
+                      }
+                      className='flex-1 px-4 py-3 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 placeholder:text-slate-500 outline-none focus:border-indigo-700'
+                    />
+                    <button
+                      disabled={requestNotes[r.id] === undefined}
+                      onClick={() =>
+                        updateBookRequest(r.id, {
+                          admin_note: requestNotes[r.id],
+                        })
+                      }
+                      className='px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-black uppercase hover:bg-indigo-600 transition-all disabled:opacity-40'
+                    >
+                      Save Note
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </section>
         )}
       </main>

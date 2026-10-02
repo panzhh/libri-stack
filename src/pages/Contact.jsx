@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_URL } from "../api";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -12,7 +13,7 @@ export default function Contact() {
 
     try {
       // 1. The POST request to your Flask backend
-      const response = await fetch("http://localhost:5000/api/contact", {
+      const response = await fetch(`${API_URL}/api/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,20 +41,20 @@ export default function Contact() {
   };
 
   return (
-    <div className='max-w-md mx-auto px-6 py-20'>
-      <div className='bg-white p-8 rounded-[3rem] border-2 border-slate-100 shadow-xl'>
-        <h2 className='text-3xl font-black uppercase italic tracking-tighter mb-2'>
+    <div className='max-w-xl mx-auto px-6 py-20'>
+      <div className='bg-slate-200 p-8 sm:p-12 rounded-[3rem] border-2 border-slate-400 shadow-xl'>
+        <h2 className='text-4xl font-black uppercase italic tracking-tighter mb-2'>
           Contact Us
         </h2>
-        <p className='text-slate-400 font-bold uppercase tracking-widest text-[9px] mb-8'>
+        <p className='text-slate-800 font-bold uppercase tracking-widest text-base mb-8'>
           Reach out to the Church in Dunn Loring Library Team
         </p>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
           {/* NAME FIELD - REQUIRED */}
           <div>
-            <label className='text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 block'>
-              Your Name <span className='text-rose-500'>*</span>
+            <label className='text-base font-black text-slate-800 uppercase ml-2 mb-1 block'>
+              Your Name <span className='text-rose-700'>*</span>
             </label>
             <input
               type='text'
@@ -63,14 +64,14 @@ export default function Contact() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none font-bold transition-all'
+              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none font-bold text-lg transition-all'
             />
           </div>
 
           {/* EMAIL FIELD - REQUIRED */}
           <div>
-            <label className='text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 block'>
-              Email Address <span className='text-rose-500'>*</span>
+            <label className='text-base font-black text-slate-800 uppercase ml-2 mb-1 block'>
+              Email Address <span className='text-rose-700'>*</span>
             </label>
             <input
               type='email'
@@ -80,14 +81,14 @@ export default function Contact() {
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none font-bold transition-all'
+              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none font-bold text-lg transition-all'
             />
           </div>
 
           {/* MESSAGE FIELD - REQUIRED */}
           <div>
-            <label className='text-[9px] font-black text-slate-400 uppercase ml-2 mb-1 block'>
-              Message <span className='text-rose-500'>*</span>
+            <label className='text-base font-black text-slate-800 uppercase ml-2 mb-1 block'>
+              Message <span className='text-rose-700'>*</span>
             </label>
             <textarea
               required
@@ -97,13 +98,13 @@ export default function Contact() {
               onChange={(e) =>
                 setFormData({ ...formData, message: e.target.value })
               }
-              className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none font-bold transition-all resize-none'
+              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none font-bold text-lg transition-all resize-none'
             ></textarea>
           </div>
 
           <button
             type='submit'
-            className='w-full py-5 bg-slate-900 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-200 transition-all transform active:scale-95 mt-4'
+            className='w-full py-5 bg-slate-900 text-white text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-200 transition-all transform active:scale-95 mt-4'
           >
             Send Message
           </button>

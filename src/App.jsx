@@ -16,6 +16,8 @@ import UserDashboard from "./pages/UserDashBoard";
 import BorrowedBooks from "./pages/BorrowedBooks";
 import BorrowHistory from "./pages/BorrowHistory";
 import AdminDashboard from "./pages/AdminDashboard";
+import OrderBooks from "./pages/OrderBooks";
+import backgroundImage from "./assets/background.jpg";
 
 export default function App() {
   return (
@@ -23,7 +25,13 @@ export default function App() {
       {/* The Navbar stays outside Routes so it shows on every page */}
       <Navbar />
 
-      <main className='min-h-screen bg-slate-50'>
+      <main
+        className='min-h-screen bg-slate-900 bg-cover bg-center bg-fixed'
+        style={{
+          // Dark tint keeps white text that sits directly on the photo readable
+          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.35)), url(${backgroundImage})`,
+        }}
+      >
         <Routes>
           {/* Main Library Page */}
           <Route path='/' element={<Home />} />
@@ -35,6 +43,7 @@ export default function App() {
           {/* Info Pages */}
           <Route path='/about' element={<About />} />
           <Route path='/contact' element={<Contact />} />
+          <Route path='/order-books' element={<OrderBooks />} />
           <Route path='/verify/:token' element={<VerifyEmail />} />
           <Route path='/admin-dashboard' element={<AdminDashboard />} />
           <Route path='/user-dashboard' element={<UserDashboard />}>
@@ -53,7 +62,7 @@ export default function App() {
                 <h1 className='text-6xl font-black italic text-slate-200'>
                   404
                 </h1>
-                <p className='font-bold uppercase tracking-widest text-slate-400'>
+                <p className='font-bold uppercase tracking-widest text-white'>
                   Page Not Found
                 </p>
               </div>

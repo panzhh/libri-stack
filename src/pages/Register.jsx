@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { API_URL } from "../api";
 
 export default function Register() {
   const [role, setRole] = useState("user");
@@ -16,7 +17,6 @@ export default function Register() {
     adminCode: "",
   });
 
-  const navigate = useNavigate();
 
   // --- PHONE FORMATTING LOGIC ---
   const handlePhoneChange = (e) => {
@@ -56,7 +56,7 @@ export default function Register() {
     setStatus({ type: "", msg: "" });
 
     try {
-      const response = await fetch("http://localhost:5000/api/register", {
+      const response = await fetch(`${API_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,12 +76,10 @@ export default function Register() {
           type: "success",
           msg: "Registration successful! Check your email for the link.",
         });
-        // Optionally navigate after a delay so they read the message
-        // setTimeout(() => navigate("/login"), 4000);
       } else {
         setStatus({ type: "error", msg: data.msg || "Registration failed" });
       }
-    } catch (err) {
+    } catch {
       setStatus({
         type: "error",
         msg: "Server is offline. Please try again later.",
@@ -93,14 +91,14 @@ export default function Register() {
 
   return (
     <div className='min-h-[90vh] flex items-center justify-center px-6 py-12'>
-      <div className='bg-white w-full max-w-md p-8 rounded-[3rem] border-2 border-slate-100 shadow-xl'>
+      <div className='bg-slate-200 w-full max-w-xl p-8 sm:p-12 rounded-[3rem] border-2 border-slate-400 shadow-xl'>
         {/* HEADER */}
         <div className='text-center mb-8'>
-          <h2 className='text-3xl font-black uppercase italic tracking-tighter'>
+          <h2 className='text-4xl font-black uppercase italic tracking-tighter'>
             Join the Church in Dunn Loring
             <span className='text-indigo-600'> Library</span>
           </h2>
-          <p className='text-slate-400 font-bold uppercase tracking-widest text-[9px] mt-2'>
+          <p className='text-slate-800 font-bold uppercase tracking-widest text-base mt-2'>
             Create your Church in Dunn Loring Library account
           </p>
         </div>
@@ -108,10 +106,10 @@ export default function Register() {
         {/* FEEDBACK UI */}
         {status.msg && (
           <div
-            className={`mb-6 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-center animate-in zoom-in-95 duration-200 ${
+            className={`mb-6 p-4 rounded-2xl text-base font-black uppercase tracking-widest text-center animate-in zoom-in-95 duration-200 ${
               status.type === "success"
-                ? "bg-green-50 text-green-600 border border-green-100"
-                : "bg-rose-50 text-rose-600 border border-rose-100"
+                ? "bg-green-50 text-green-700 border border-green-100"
+                : "bg-rose-50 text-rose-700 border border-rose-100"
             }`}
           >
             {status.msg}
@@ -119,18 +117,18 @@ export default function Register() {
         )}
 
         {/* ROLE SELECTOR */}
-        <div className='flex bg-slate-50 p-1.5 rounded-2xl mb-8'>
+        <div className='flex bg-slate-300 p-1.5 rounded-2xl mb-8'>
           <button
             type='button'
             onClick={() => setRole("user")}
-            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${role === "user" ? "bg-white shadow-sm text-indigo-600" : "text-slate-400"}`}
+            className={`flex-1 py-2 rounded-xl text-base font-black uppercase tracking-widest transition-all ${role === "user" ? "bg-white shadow-sm text-indigo-600" : "text-slate-800"}`}
           >
             User
           </button>
           <button
             type='button'
             onClick={() => setRole("admin")}
-            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${role === "admin" ? "bg-white shadow-sm text-rose-500" : "text-slate-400"}`}
+            className={`flex-1 py-2 rounded-xl text-base font-black uppercase tracking-widest transition-all ${role === "admin" ? "bg-white shadow-sm text-rose-700" : "text-slate-800"}`}
           >
             Admin
           </button>
@@ -139,14 +137,14 @@ export default function Register() {
         <form onSubmit={handleSubmit} className='space-y-4'>
           {/* FULL NAME */}
           <div>
-            <label className='text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block'>
+            <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
               Full Name *
             </label>
             <input
               type='text'
               required
               placeholder='Full Name'
-              className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-bold text-sm'
+              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none transition-all font-bold text-lg'
               onChange={(e) =>
                 setFormData({ ...formData, full_name: e.target.value })
               }
@@ -154,14 +152,14 @@ export default function Register() {
           </div>
           {/* EMAIL */}
           <div>
-            <label className='text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block'>
+            <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
               Email Address *
             </label>
             <input
               type='email'
               required
               placeholder='name@example.com'
-              className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-bold text-sm'
+              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none transition-all font-bold text-lg'
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
@@ -170,14 +168,14 @@ export default function Register() {
 
           {/* PASSWORD */}
           <div>
-            <label className='text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block'>
+            <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
               Password *
             </label>
             <input
               type='password'
               required
               placeholder='••••••••'
-              className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-bold text-sm'
+              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none transition-all font-bold text-lg'
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
@@ -186,14 +184,14 @@ export default function Register() {
 
           {/* CONFIRM PASSWORD */}
           <div>
-            <label className='text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block'>
+            <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
               Confirm Password *
             </label>
             <input
               type='password'
               required
               placeholder='••••••••'
-              className={`w-full px-5 py-4 bg-slate-50 border-2 rounded-2xl outline-none transition-all font-bold text-sm ${!passwordsMatch && formData.confirmPassword ? "border-rose-400 focus:border-rose-500" : "border-transparent focus:border-indigo-600 focus:bg-white"}`}
+              className={`w-full px-5 py-4 bg-white border-2 text-slate-900 placeholder:text-slate-500 rounded-2xl outline-none transition-all font-bold text-lg ${!passwordsMatch && formData.confirmPassword ? "border-rose-400 focus:border-rose-500" : "border-slate-400 focus:border-indigo-700"}`}
               onChange={(e) =>
                 setFormData({ ...formData, confirmPassword: e.target.value })
               }
@@ -203,10 +201,10 @@ export default function Register() {
           {/* PHONE */}
           <div>
             <div className='flex justify-between items-center ml-2 mb-1'>
-              <label className='text-[10px] font-black uppercase tracking-widest text-slate-400 block'>
+              <label className='text-base font-black uppercase tracking-widest text-slate-800 block'>
                 Phone Number
               </label>
-              <span className='text-[8px] font-bold text-slate-300 uppercase tracking-tighter italic'>
+              <span className='text-sm font-bold text-slate-800 uppercase tracking-tighter italic'>
                 Optional
               </span>
             </div>
@@ -215,21 +213,21 @@ export default function Register() {
               placeholder='(555) 555-5555'
               value={formData.phone}
               onChange={handlePhoneChange}
-              className='w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-bold text-sm'
+              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none transition-all font-bold text-lg'
             />
           </div>
 
           {/* ADMIN CODE */}
           {role === "admin" && (
             <div className='animate-in fade-in slide-in-from-top-2 duration-300'>
-              <label className='text-[10px] font-black uppercase tracking-widest text-rose-500 ml-2 mb-1 block'>
+              <label className='text-base font-black uppercase tracking-widest text-rose-700 ml-2 mb-1 block'>
                 Admin Code *
               </label>
               <input
                 type='text'
                 required
                 placeholder='Enter Secret Code'
-                className='w-full px-5 py-4 bg-rose-50 border-2 border-rose-100 focus:border-rose-500 rounded-2xl outline-none transition-all font-bold text-sm'
+                className='w-full px-5 py-4 bg-rose-50 border-2 border-rose-100 focus:border-rose-500 rounded-2xl outline-none transition-all font-bold text-lg'
                 onChange={(e) =>
                   setFormData({ ...formData, adminCode: e.target.value })
                 }
@@ -244,11 +242,11 @@ export default function Register() {
               id='agree'
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
-              className='mt-1 w-5 h-5 accent-indigo-600 cursor-pointer'
+              className='mt-1 w-6 h-6 accent-indigo-600 cursor-pointer'
             />
             <label
               htmlFor='agree'
-              className='text-[10px] font-bold text-slate-500 leading-tight cursor-pointer select-none'
+              className='text-base font-bold text-slate-700 leading-tight cursor-pointer select-none'
             >
               I agree to the{" "}
               <span className='text-indigo-600 underline'>Terms</span> and{" "}
@@ -259,9 +257,9 @@ export default function Register() {
           <button
             type='submit'
             disabled={!canSubmit}
-            className={`w-full py-4 mt-2 rounded-2xl text-white font-black uppercase tracking-widest transition-all shadow-lg ${
+            className={`w-full py-4 mt-2 rounded-2xl text-white text-lg font-black uppercase tracking-widest transition-all shadow-lg ${
               !canSubmit
-                ? "bg-slate-200 cursor-not-allowed text-slate-400 shadow-none"
+                ? "bg-slate-200 cursor-not-allowed text-slate-800 shadow-none"
                 : role === "admin"
                   ? "bg-rose-500 shadow-rose-200"
                   : "bg-indigo-600 shadow-indigo-200 hover:scale-[1.02]"
