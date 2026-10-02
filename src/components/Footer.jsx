@@ -10,9 +10,10 @@ export default function Footer() {
           <div className='col-span-1 md:col-span-1'>
             <Link
               to='/'
-              className='text-xl font-black italic tracking-tighter uppercase inline-block mb-6'
+              className='text-lg font-black italic tracking-tighter uppercase inline-block mb-6'
             >
-              Dunn Loring <span className='text-indigo-400'>Library</span>
+              Church in Dunn Loring{" "}
+              <span className='text-indigo-400'>Library</span>
             </Link>
             <p className='text-slate-400 text-sm leading-relaxed'>
               Equipping the community with spiritual resources and historical

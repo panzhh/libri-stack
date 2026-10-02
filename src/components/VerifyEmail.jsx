@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function VerifyEmail() {
-  // 1. Get the token from the URL path /verify/:token
   const { token } = useParams();
-
-  // 2. Get the role from the query string ?role=admin
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role");
-  console.log("role is", role);
 
   // 3. State to track the verification process
   const [status, setStatus] = useState("verifying"); // 'verifying', 'success', or 'error'
@@ -19,7 +16,7 @@ export default function VerifyEmail() {
       try {
         // Send the POST request to the Flask Backend (Port 5000)
         const response = await fetch(
-          `http://localhost:5000/api/verify/${token}?role=${role}`,
+          `${API_URL}/api/verify/${token}?role=${role}`,
           {
             method: "POST",
             headers: {

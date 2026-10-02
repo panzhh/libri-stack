@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function BorrowedBooks() {
   const [books, setBooks] = useState([]);
@@ -18,15 +19,12 @@ export default function BorrowedBooks() {
       }
 
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/user/borrowed-books",
-          {
-            headers: {
-              Authorization: `Bearer ${userData.token}`,
-              "Content-Type": "application/json",
-            },
+        const response = await fetch(`${API_URL}/api/user/borrowed-books`, {
+          headers: {
+            Authorization: `Bearer ${userData.token}`,
+            "Content-Type": "application/json",
           },
-        );
+        });
 
         if (response.status === 401) {
           alert("Your session has expired. Please log in again.");
@@ -54,13 +52,10 @@ export default function BorrowedBooks() {
   const handleReturn = async (recordId) => {
     const userData = JSON.parse(localStorage.getItem("user"));
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/return/${recordId}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${userData.token}` },
-        },
-      );
+      const response = await fetch(`${API_URL}/api/return/${recordId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${userData.token}` },
+      });
 
       if (response.ok) {
         setBooks((prev) => prev.filter((b) => b.record_id !== recordId));
@@ -74,16 +69,13 @@ export default function BorrowedBooks() {
   const handleRenew = async (recordId) => {
     const userData = JSON.parse(localStorage.getItem("user"));
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/renew/${recordId}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${userData.token}`,
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`${API_URL}/api/renew/${recordId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${userData.token}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
       const data = await response.json();
 
       if (response.ok) {
@@ -155,9 +147,15 @@ export default function BorrowedBooks() {
               <div className='w-16 h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-3xl mr-5 overflow-hidden'>
                 {book.uploadedImageUrl ? (
                   <img
-                    src={book.uploadedImageUrl}
+                    src={`${API_URL}/api/covers/${book.id}.png`}
                     className='w-full h-full object-cover'
-                    alt='cover'
+                    alt=''
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "book-icon.png";
+                      e.target.className =
+                        "w-full h-full object-contain p-8 opacity-20";
+                    }}
                   />
                 ) : (
                   "📖"
@@ -226,9 +224,15 @@ export default function BorrowedBooks() {
               <div className='w-32 h-44 bg-white rounded-2xl shadow-md border-2 border-slate-200 flex-shrink-0 overflow-hidden flex items-center justify-center'>
                 {selectedBook.uploadedImageUrl ? (
                   <img
-                    src={selectedBook.uploadedImageUrl}
+                    src={`${API_URL}/api/covers/${selectedBook.id}.png`}
                     className='w-full h-full object-cover'
-                    alt='Book Cover'
+                    alt=''
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "book-icon.png";
+                      e.target.className =
+                        "w-full h-full object-contain p-8 opacity-20";
+                    }}
                   />
                 ) : (
                   <span className='text-5xl opacity-30'>📖</span>
@@ -271,7 +275,6 @@ export default function BorrowedBooks() {
                   { label: "Series", key: "series" },
                   { label: "Volume", key: "volume" },
                   { label: "Publisher", key: "publisher" },
-                  { label: "Date Published", key: "datePublished" },
                   { label: "Genre", key: "genre" },
                   { label: "Language", key: "language" },
                   { label: "ISBN", key: "isbn" },

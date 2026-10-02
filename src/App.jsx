@@ -16,6 +16,8 @@ import UserDashboard from "./pages/UserDashBoard";
 import BorrowedBooks from "./pages/BorrowedBooks";
 import BorrowHistory from "./pages/BorrowHistory";
 import AdminDashboard from "./pages/AdminDashboard";
+import ForgotPassword from "./pages/ForgotPassword"; // Adjust path as needed
+import ResetPassword from "./pages/ResetPassword"; // Adjust path based on your folder structure
 
 export default function App() {
   return (
@@ -31,6 +33,8 @@ export default function App() {
           {/* Auth Pages */}
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Register />} />
+          <Route path='/forgot-password' element={<ForgotPassword />} />
+          <Route path='/reset-password/:token' element={<ResetPassword />} />
 
           {/* Info Pages */}
           <Route path='/about' element={<About />} />

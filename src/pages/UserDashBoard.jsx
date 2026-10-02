@@ -1,22 +1,25 @@
-import React, { useState, useEffect } from "react"; // Added useState and useEffect
+import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function UserDashboard() {
   const userName = localStorage.getItem("userName") || "Member";
   const userEmail = localStorage.getItem("userEmail") || "Verified User";
   const location = useLocation();
 
+  // --- NEW: Mobile Menu State ---
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   // --- NEW: Stats State ---
   const [stats, setStats] = useState({ active: 0, total: 0 });
 
-  // --- NEW: Fetch Stats from Backend ---
   useEffect(() => {
     const fetchStats = async () => {
       const userData = JSON.parse(localStorage.getItem("user"));
       if (!userData?.token) return;
 
       try {
-        const response = await fetch("http://localhost:5000/api/user/stats", {
+        const response = await fetch(`${API_URL}/api/user/stats`, {
           headers: {
             Authorization: `Bearer ${userData.token}`,
             "Content-Type": "application/json",
@@ -35,15 +38,38 @@ export default function UserDashboard() {
     };
 
     fetchStats();
-  }, [location.pathname]); // Refreshes stats when you navigate between Overview and History
+    // Close mobile menu whenever the path changes
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
-  // Helper to highlight the active link
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className='flex min-h-[calc(100vh-116px)]'>
+    <div className='flex min-h-[calc(100vh-116px)] relative'>
+      {/* --- MOBILE HAMBURGER BUTTON --- */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className='lg:hidden fixed bottom-6 right-6 z-[60] w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl'
+      >
+        {mobileMenuOpen ? "✕" : "☰"}
+      </button>
+
+      {/* --- MOBILE OVERLAY --- */}
+      {mobileMenuOpen && (
+        <div
+          className='fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden'
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* --- USER SIDEBAR --- */}
-      <aside className='w-64 bg-white border-r border-slate-100 p-8 flex flex-col hidden lg:flex'>
+      <aside
+        className={`
+        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 p-8 flex flex-col transition-transform duration-300 ease-in-out
+        ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:translate-x-0 lg:static lg:w-64
+      `}
+      >
         <div className='mb-10'>
           <p className='text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-4'>
             Library Menu
@@ -60,7 +86,6 @@ export default function UserDashboard() {
               🏠 My Borrows
             </Link>
 
-            {/* --- ADDED: BORROW HISTORY LINK --- */}
             <Link
               to='/user-dashboard/history'
               className={`block w-full p-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
@@ -71,7 +96,6 @@ export default function UserDashboard() {
             >
               📜 Borrow History
             </Link>
-            {/* ---------------------------------- */}
 
             <Link
               to='/'
@@ -93,18 +117,18 @@ export default function UserDashboard() {
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <main className='flex-1 p-8 lg:p-12 overflow-y-auto bg-slate-50'>
+      <main className='flex-1 p-6 lg:p-12 overflow-y-auto bg-slate-50 w-full'>
         {/* Welcome Hero */}
-        <div className='max-w-5xl bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-100 mb-10 relative overflow-hidden'>
+        <div className='max-w-5xl bg-indigo-600 rounded-[2.5rem] lg:rounded-[3rem] p-8 lg:p-10 text-white shadow-2xl shadow-indigo-100 mb-10 relative overflow-hidden'>
           <div className='relative z-10'>
-            <h2 className='text-4xl font-black mb-2 tracking-tighter text-white'>
+            <h2 className='text-2xl lg:text-4xl font-black mb-2 tracking-tighter text-white'>
               Welcome back, {userName}!
             </h2>
             <p className='text-indigo-100 font-bold opacity-80 uppercase text-[10px] tracking-widest'>
               {userEmail}
             </p>
           </div>
-          <div className='absolute -right-10 -top-10 w-48 h-48 bg-indigo-500 rounded-full opacity-30'></div>
+          <div className='absolute -right-10 -top-10 w-32 h-32 lg:w-48 lg:h-48 bg-indigo-500 rounded-full opacity-30'></div>
         </div>
 
         {/* Stats Grid */}
@@ -116,7 +140,6 @@ export default function UserDashboard() {
             <h3 className='font-black uppercase tracking-widest text-[9px] text-slate-400'>
               History Borrows
             </h3>
-            {/* REAL STAT: Replaced fixed 12 */}
             <p className='text-2xl font-black text-slate-800'>
               {stats.total.toString().padStart(2, "0")}
             </p>
@@ -129,7 +152,6 @@ export default function UserDashboard() {
             <h3 className='font-black uppercase tracking-widest text-[9px] text-slate-400'>
               Active Borrows
             </h3>
-            {/* REAL STAT: Replaced fixed 03 */}
             <p className='text-2xl font-black text-slate-800'>
               {stats.active.toString().padStart(2, "0")}
             </p>
@@ -150,7 +172,7 @@ export default function UserDashboard() {
         </div>
 
         {/* --- DYNAMIC CONTENT AREA --- */}
-        <section className='max-w-5xl bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm'>
+        <section className='max-w-5xl bg-white rounded-[2rem] lg:rounded-[2.5rem] p-6 lg:p-8 border border-slate-100 shadow-sm'>
           <Outlet />
         </section>
       </main>

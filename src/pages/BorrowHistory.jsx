@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function BorrowHistory() {
   const [history, setHistory] = useState([]);
@@ -8,7 +9,7 @@ export default function BorrowHistory() {
     const fetchHistory = async () => {
       const userData = JSON.parse(localStorage.getItem("user"));
       try {
-        const response = await fetch("http://localhost:5000/api/user/history", {
+        const response = await fetch(`${API_URL}/api/user/history`, {
           headers: { Authorization: `Bearer ${userData.token}` },
         });
 

@@ -12,23 +12,33 @@ from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_apscheduler import APScheduler
 from flask import request, jsonify
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from flask import send_from_directory
 
 # Points to the .env file one directory up
 basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, "../.env"))
+load_dotenv(os.path.join(basedir, ".env"))
 
+# Get the frontend URL from environment variables, fallback to localhost for development
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 
 app = Flask(__name__)
-CORS(app)
+# CORS(app, origins=[
+#     "http://localhost:5173", 
+#     "https://libri-stack-fe-3d05e08a80a4.herokuapp.com",
+#     "https://www.churchlibdl.org",
+#     "https://churchlibdl.org"
+# ])
 
-# --- 1. FULL CONFIGURATION ---
-# BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
-#     BASE_DIR, "libri.db"
-# )
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-very-secret-fallback-key-for-local')
 
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://library_admin:root@localhost:5432/libri_db'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+database_url = os.getenv('DATABASE_URL') or os.getenv('SQLALCHEMY_DATABASE_URI_LOCAL')
+
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
@@ -47,32 +57,87 @@ app.config["MAIL_DEFAULT_SENDER"] = (
 )
 
 
-# --- 2. INITIALIZATION ---
 db.init_app(app)
 jwt = JWTManager(app)
 mail = Mail(app)
-serializer = URLSafeTimedSerializer(app.config["JWT_SECRET_KEY"])
+serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 with app.app_context():
     db.create_all()
 
-# --- 3. AUTHENTICATION & SECURITY ---
+@app.route('/')
+def home():
+    return {
+        "message": "Library API is active",
+        "status": "success",
+        "version": "1.0.0"
+    }, 200
+
+
+
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json()
+    email = data.get('email').strip().lower()
+    user = User.query.filter_by(email=email).first()
+    
+    # We return 200 even if user doesn't exist for security (prevents "email fishing")
+    if user:
+        # Generate a token valid for 1 hour (reuse your existing itsdangerous/jwt logic)
+        token = serializer.dumps(email, salt="password-reset")
+        
+        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+        reset_link = f"{frontend_url}/reset-password/{token}"
+        
+        msg = Message(
+            "Reset Your Church In Dunn Loring Library Password",
+            sender=app.config["MAIL_USERNAME"],
+            recipients=[email],
+        )
+        msg.body = f"Click the following link to reset your password: {reset_link}\n\nIf you didn't request this, ignore this email."
+        mail.send(msg)
+        
+    return jsonify({"message": "If an account exists, a reset link has been sent"}), 200
+
+
+
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    data = request.get_json()
+    token = data.get('token')
+    new_password = data.get('password')
+
+    try:
+        # We check the salt and the max_age (1 hour)
+        email = serializer.loads(token, salt="password-reset", max_age=3600)
+    except SignatureExpired:
+        return jsonify({"error": "The reset link has expired."}), 400
+    except BadSignature:
+        return jsonify({"error": "Invalid reset link."}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "User no longer exists."}), 404
+
+    # Update and hash the new password
+    user.set_password(new_password)
+    db.session.commit()
+
+    return jsonify({"message": "Password updated successfully!"}), 200
+
 
 
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.get_json()
     full_name = data.get("full_name")
-    email = data.get("email")
+    email = data.get("email").strip().lower()
     passwd = data.get("password")
 
     role = data.get("role", "user")
     provided_code = data.get("adminCode")
-    print("data ", data)
     try:
-        print("1111")
         if User.query.filter_by(email=email).first():
-            print("1112")
             return jsonify({"msg": "Email already registered"}), 400
 
         inviter_email = None
@@ -109,30 +174,22 @@ def register():
         if role == "admin":
             new_user.own_invite_code = User.generate_unique_code()
 
-        print("1112")
         db.session.add(new_user)
-        print("1113")
 
         # --- EMAIL VERIFICATION LOGIC ---
-        token = serializer.dumps(data.get("email"), salt="email-confirm")
-        print("1114")
-        # We add 'role' to the URL so the verify route knows which table to update!
-        verify_url = f"http://localhost:5173/verify/{token}?role={role}"
-        print("1115")
+        token = serializer.dumps(email, salt="email-confirm")
+        verify_url = f"{FRONTEND_URL}/verify/{token}?role={role}"
 
         msg = Message(
             "Verify Your Account",
             sender=app.config["MAIL_USERNAME"],
-            recipients=[data.get("email")],
+            recipients=[email],
         )
-        msg.body = f"Click here to verify in 15 mins: {verify_url}"
-        print("1116")
+        msg.body = f"Click here to verify in 1 hour: {verify_url}"
         mail.send(msg)
-        print("1117")
 
         try:
             db.session.commit()
-            print("1118")
         except Exception as e:
             db.session.rollback() # Crucial! Postgres requires a rollback after a fail
             print(f"COMMIT FAILED: {e}")
@@ -140,7 +197,7 @@ def register():
         return (
             jsonify(
                 {
-                    "message": "Registration Successful > A verification link has been sent to your email address. Please click the link within 15 minutes to activate your account."
+                    "message": "Registration Successful. A verification link has been sent to your email address. Please click the link within 15 minutes to activate your account."
                 }
             ),
             201,
@@ -153,7 +210,6 @@ def register():
 @app.route("/api/verify/<token>", methods=["POST"])
 def verify_email(token):
     role = request.args.get("role")  # Get 'owner' or 'courier' from URL
-    print("role is: ", role)
     try:
         email = serializer.loads(token, salt="email-confirm", max_age=3600)
         user = User.query.filter_by(email=email).first()
@@ -172,31 +228,35 @@ def verify_email(token):
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
-    email = data.get("email")
+    email = data.get("email").strip().lower()
     password = data.get("password")  # The plain text from the form
     role = data.get("role")  # The role from the form
 
     user = User.query.filter_by(email=email).first()
-    print("data:", data)
-    print("role:", role)
 
     # user.check_password handles the complex math of comparing hashes
     if user and user.check_password(password):
-        print("come here")
         if not user.is_verified:
-            print("come here2")
-            return jsonify({"msg": "Please verify your email first"}), 401
+            # resend the verify email 
+            token = serializer.dumps(email, salt="email-confirm")
+            verify_url = f"{FRONTEND_URL}/verify/{token}?role={role}"
+
+            msg = Message(
+                "Verify Your Account",
+                sender=app.config["MAIL_USERNAME"],
+                recipients=[email],
+            )
+            msg.body = f"Click here to verify in 1 hour: {verify_url}"
+            mail.send(msg)
+            return jsonify({"msg": "You have not verified your email yet. Verify email resend, Please verify your email first"}), 401
 
         if role != user.role:
-            print("come here3")
-            return jsonify({"msg": "You input Invalid email or password"}), 401
+            return jsonify({"msg": f"Your are trying to login in as {role}, but you input Invalid email or password."}), 401
 
-        # access_token = create_access_token(identity={"id": user.id, "role": user.role})
         access_token = create_access_token(
             identity=str(user.id)
-        )  # Explicitly convert to string
+        ) 
 
-        print("come here4")
         return (
             jsonify(
                 {
@@ -217,7 +277,6 @@ def login():
 @app.route("/api/books", methods=["GET"])
 def get_books():
     all_books = Book.query.all()
-    # Returns all 5,000+ books as a JSON array
     return jsonify([book.to_dict() for book in all_books])
 
 
@@ -271,18 +330,17 @@ def seed_database():
         if Book.query.count() == 0:
             print("🚀 Database empty. Seeding from books.json...")
             try:
-                with open("../src/data/books.json", "r", encoding="utf-8") as f:
+                # Get the directory where the script is located
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                json_path = os.path.join(base_dir, 'books.json')
+                with open(json_path, "r", encoding="utf-8") as f:
                     books_data = json.load(f)
                     for item in books_data:
-                        # 1. Map existing JSON keys to model
                         book_args = {k: v for k, v in item.items() if hasattr(Book, k)}
 
-                        # 2. Logic: If copies is null/None, set to 0
-                        # Otherwise, use the value from JSON
                         raw_copies = item.get("copies")
                         num_copies = int(raw_copies) if raw_copies is not None else 0
 
-                        # 3. Apply to both fields to keep them identical
                         book_args["copies"] = num_copies
                         book_args["availableCopies"] = num_copies
 
@@ -334,7 +392,6 @@ def borrow_book_by_id(book_id):
             403,
         )  # 403 Forbidden is the correct status code here
 
-    # CHECK 2: Prevent duplicate borrowing of the SAME book
     already_has_book = BorrowRecord.query.filter_by(
         user_id=user_id, book_id=book_id, status="borrowed"
     ).first()
@@ -351,7 +408,6 @@ def borrow_book_by_id(book_id):
         )  # 400 Bad Request
 
     data = request.get_json()
-    # user_id = data.get("userId")
 
     if not user_id:
         return jsonify({"error": "User ID is required"}), 400
@@ -361,7 +417,6 @@ def borrow_book_by_id(book_id):
     if book.availableCopies <= 0:
         return jsonify({"error": "No copies available"}), 400
 
-    # --- THE FIX: Calculate Dates ---
     current_time = datetime.now(timezone.utc)
     # Defaulting to a 30-day borrow period
     calculated_due_date = current_time + timedelta(days=30)
@@ -394,7 +449,6 @@ def get_borrowed_books(user_id):
         db.session.query(Book, BorrowRecord)
         .join(BorrowRecord, Book.id == BorrowRecord.book_id)
         .filter(BorrowRecord.user_id == user_id)
-        # .filter(BorrowRecord.user_id == user_id, BorrowRecord.status == "borrowed")
         .all()
     )
 
@@ -413,16 +467,12 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 @app.route("/api/return/<int:record_id>", methods=["POST"])
 @jwt_required()
 def return_book(record_id):
-    # 1. Identify the user from the token
     user_id = int(get_jwt_identity())
 
-    # 2. Find the specific record AND verify it belongs to this user
-    # We only look for records with status 'borrowed'
     record = BorrowRecord.query.filter_by(
         id=record_id, user_id=user_id, status="borrowed"
     ).first_or_404()
 
-    # 3. Find the associated book to put it back in stock
     book = db.session.get(Book, record.book_id)
 
     try:
@@ -442,10 +492,8 @@ def return_book(record_id):
 @app.route("/api/user/borrowed-books", methods=["GET"])
 @jwt_required()
 def get_my_borrowed_books():
-    # Get the ID from the secure token
     user_id = int(get_jwt_identity())
 
-    # Query only "active" borrowed books
     records = (
         db.session.query(Book, BorrowRecord)
         .join(BorrowRecord, Book.id == BorrowRecord.book_id)
@@ -465,18 +513,15 @@ def get_my_borrowed_books():
                 "due_date": record.due_date.strftime("%Y-%m-%d"),
                 "uploadedImageUrl": book.uploadedImageUrl,
                 "status": record.status,
-                # --- ADDED: ALL EXTRA FIELDS FOR THE MODAL ---
                 "series": book.series,
                 "volume": book.volume,
                 "publisher": book.publisher,
-                "datePublished": book.datePublished,
                 "genre": book.genre,
                 "language": book.language,
                 "isbn": book.isbn,
                 "numberOfPages": book.numberOfPages,
-                "listPrice": book.listPriceUsd,  # Matches the price display
+                "listPrice": book.listPriceUsd, 
                 "summary": book.summary,
-                "notes": book.notes,
             }
         )
 
@@ -544,7 +589,7 @@ def check_overdue_tasks():
         print("Running overdue check...")
         now = datetime.now(timezone.utc)
         overdue_list = BorrowRecord.query.filter(
-            BorrowRecord.due_date < now + timedelta(days=1),
+            BorrowRecord.due_date < now,
             BorrowRecord.status == "borrowed",
         ).all()
 
@@ -557,7 +602,6 @@ def check_overdue_tasks():
         print(f"Scan complete: {len(overdue_list)} books marked as overdue.")
 
 
-# Helper function for the email
 def send_reminder_email(user_id, book_title):
     user = User.query.get(user_id)
     if user:
@@ -574,7 +618,6 @@ def send_reminder_email(user_id, book_title):
 def renew_book(record_id):
     user_id = int(get_jwt_identity())
 
-    # Find the record and ensure it belongs to the user and isn't returned
     record = BorrowRecord.query.filter_by(
         id=record_id, user_id=user_id, status="borrowed"
     ).first_or_404()
@@ -616,16 +659,12 @@ def renew_book(record_id):
 @jwt_required()
 def get_admin_profile():
     try:
-        # get_jwt_identity() returns the user.id as a string based on your login logic
         user_id = get_jwt_identity()
-
-        # Query the user from the database
         user = User.query.get(user_id)
 
         if not user:
             return jsonify({"msg": "User not found"}), 404
 
-        # Return the full model information
         return (
             jsonify(
                 {
@@ -645,6 +684,15 @@ def get_admin_profile():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+import os
+from flask import request, jsonify
+
+# Ensure this path is correct relative to where you run the script
+# Create the folder automatically if it doesn't exist
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'public', 'covers')
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 @app.route("/api/books/<int:id>", methods=["PUT"])
 def update_book(id):
@@ -653,95 +701,72 @@ def update_book(id):
     if not book:
         return jsonify({"error": "Book not found"}), 404
 
-    data = request.get_json()
-    print("Received update data:", data)  # Debugging line to check incoming data
+    data = request.form 
+    
+    if 'coverImage' in request.files:
+        file = request.files['coverImage']
+        if file.filename != '':
+            # We force the name to be [id].png as you requested
+            # Note: You can keep .jpg if you prefer, just be consistent
+            filename = f"{id}.png" 
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            
+            # This saves the file and overwrites if it already exists
+            file.save(file_path)
+            
+            book.uploadedImageUrl = f"/covers/{filename}"
 
     try:
-        # --- TITLE VALIDATION (NEW) ---
         title = data.get("title")
-        if title is not None:  # If the title field is being updated
-            if not title.strip():  # Check if it's empty or just spaces
-                return jsonify({"error": "Book title cannot be empty"}), 400
+        if title:
             book.title = title.strip()
 
-        # --- PRICE VALIDATION (Positive) ---
         if "listPriceUsd" in data:
             try:
-                clean_price = str(data.get("listPriceUsd", 0)).replace("$", "").strip()
-                price = float(clean_price)
+                # request.form values are always strings, so we convert to float
+                price = float(str(data.get("listPriceUsd")).replace("$", "").strip())
                 if price <= 0:
                     return jsonify({"error": "Price must be a positive number"}), 400
                 book.listPriceUsd = price
             except (ValueError, TypeError):
                 return jsonify({"error": "Invalid price format"}), 400
 
-        # --- STOCK VALIDATION (Non-negative) ---
-        if "copies" in data:
-            try:
-                num_copies = int(data.get("copies", 0))
-                if num_copies < 0:
-                    return jsonify({"error": "Total copies cannot be negative"}), 400
-                book.copies = num_copies
-            except (ValueError, TypeError):
-                return jsonify({"error": "Copies must be a whole number"}), 400
-
-        if "availableCopies" in data:
-            try:
-                available = int(data.get("availableCopies", 0))
-                if available < 0:
-                    return (
-                        jsonify({"error": "Available copies cannot be negative"}),
-                        400,
-                    )
-                if available > int(data.get("copies", book.copies)):
-                    return (
-                        jsonify({"error": "Available stock cannot exceed total stock"}),
-                        400,
-                    )
-                book.availableCopies = available
-            except (ValueError, TypeError):
-                return (
-                    jsonify({"error": "Available copies must be a whole number"}),
-                    400,
-                )
-
         # --- UPDATE REMAINING FIELDS ---
+        # Note: we use data.get("field", book.field) to keep old value if not provided
         book.author = data.get("author", book.author)
         book.series = data.get("series", book.series)
         book.volume = data.get("volume", book.volume)
         book.publisher = data.get("publisher", book.publisher)
-        book.datePublished = data.get("datePublished", book.datePublished)
         book.genre = data.get("genre", book.genre)
         book.language = data.get("language", book.language)
         book.isbn = data.get("isbn", book.isbn)
-        book.numberOfPages = data.get("numberOfPages", book.numberOfPages)
         book.summary = data.get("summary", book.summary)
-        book.notes = data.get("notes", book.notes)
-        book.uploadedImageUrl = data.get("uploadedImageUrl", book.uploadedImageUrl)
-
+        book.uploadedImageUrl = str(id)
         db.session.commit()
         return jsonify({"message": "Book updated successfully"}), 200
 
     except Exception as e:
         db.session.rollback()
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
-# ... (existing imports)
 
+
+@app.route('/api/covers/<path:filename>')
+def serve_covers(filename):
+    return send_from_directory('public/covers', filename)
 
 # --- NEW: ROUTE FOR ADMIN BULK EMAIL ---
 @app.route("/api/admin/send-email", methods=["POST"])
 @jwt_required()
 def admin_bulk_email():
-    # 1. Identity Check
     user_id = get_jwt_identity()
     admin = User.query.get(user_id)
 
     if not admin or admin.role != "admin":
         return jsonify({"error": "Unauthorized. Admin access required."}), 403
 
-    # 2. Get Data
     data = request.get_json()
     recipients = data.get("recipients")  # Expected: list of strings
     subject = data.get("subject")
@@ -754,19 +779,12 @@ def admin_bulk_email():
         return jsonify({"error": "Recipients must be a list of email addresses."}), 400
 
     try:
-        # 3. Send Emails
-        # Note: We use Bcc to prevent users from seeing each other's email addresses
         msg = Message(
             subject=subject,
             sender=app.config["MAIL_USERNAME"],
             bcc=recipients,  # Using BCC for privacy
             body=message_body,
         )
-
-        # If you prefer to send individual emails so they are personalized:
-        # for email in recipients:
-        #     individual_msg = Message(subject, recipients=[email], body=message_body)
-        #     mail.send(individual_msg)
 
         mail.send(msg)
         return (
@@ -787,12 +805,8 @@ def admin_bulk_email():
         )
 
 
-# ... (rest of your existing code: db.init_app, register, etc.)
-
-
 @app.route('/api/admin/borrow-records', methods=['GET'])
 def get_all_borrow_records():
-    # Joining with User and Book to get names for the table
     records = db.session.query(BorrowRecord, User, Book).join(
         User, BorrowRecord.user_id == User.id
     ).join(
@@ -816,17 +830,14 @@ def get_all_borrow_records():
 
 @app.route('/api/admin/return-book/<int:record_id>', methods=['PATCH'])
 def return_book_by_admin(record_id):
-    # 1. Find the specific record
     record = BorrowRecord.query.get_or_404(record_id)
     
     if record.status == "returned":
         return jsonify({"message": "Book already returned"}), 400
 
-    # 2. Update the record status
     record.status = "returned"
     record.return_date = datetime.now(timezone.utc)
     
-    # 3. Increase the available copies in the Book table
     book = Book.query.get(record.book_id)
     if book:
         book.availableCopies += 1
@@ -840,14 +851,11 @@ def return_book_by_admin(record_id):
 
 @app.route('/api/admin/add-book', methods=['POST'])
 def add_new_book():
-    print("call add book.")
     data = request.get_json()
-    print("data: ", data)
     new_entry = Book(
         title=data.get('title'),
-        # ... other fields ...
-        listPriceUsd=data.get('listPriceUsd'), # The float
-        listPrice=data.get('listPriceUsd'),       # The string "XX $"
+        listPriceUsd=data.get('listPriceUsd'), 
+        listPrice=data.get('listPriceUsd'),   
         copies=data.get('copies'),
         availableCopies=data.get('copies')
     )
@@ -859,8 +867,6 @@ def add_new_book():
 @app.route('/api/admin/delete-book/<int:book_id>', methods=['DELETE'])
 def delete_book(book_id):
     book = Book.query.get_or_404(book_id)
-
-    # 1. Safety Check: Check if there are active loans for this book
     active_loans = BorrowRecord.query.filter_by(book_id=book_id, status='borrowed').first()
     
     if active_loans:
@@ -869,9 +875,6 @@ def delete_book(book_id):
         }), 400
 
     try:
-        # 2. Optional: If you want to keep borrow history but delete the book, 
-        # you might need to handle foreign key constraints depending on your DB setup.
-        # Usually, we just delete the book if all copies are accounted for.
         db.session.delete(book)
         db.session.commit()
         return jsonify({"message": f"Book '{book.title}' deleted successfully"}), 200
@@ -884,20 +887,16 @@ def delete_book(book_id):
 
 @app.route('/api/admin/promote-user/<int:user_id>', methods=['PATCH'])
 def promote_user(user_id):
-    # Optional: Verify requester is admin here
     user = User.query.get_or_404(user_id)
-    print("promote user to admin: ", user.to_dict())
     
     try:
         user.role = "admin"
         user.own_invite_code = User.generate_unique_code()
         db.session.commit()
-        print("after promote user to admin: ", user.to_dict())
         return jsonify({"message": "User promoted successfully"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
 
 
 @app.route('/api/admin/contact_messages', methods=['GET'])
@@ -917,39 +916,17 @@ def delete_message(msg_id):
 def save_message():
     data = request.get_json()
     
-    # Extracting data from the React request
     new_msg = ContactMessage(
         name=data.get('name'),
         email=data.get('email'),
         message=data.get('message')
     )
     
-    db.session.add(new_msg) # This puts it in the "waiting area"
-    db.session.commit()      # This saves it permanently to the .db file
+    db.session.add(new_msg) 
+    db.session.commit()     
     
     return jsonify({"status": "success", "message": "Saved to database!"}), 201
 
-
-if __name__ == "__main__":
-    with app.app_context():
-        # 1. Create the database tables based on your model
-        db.create_all()
-
-        # 2. Run the seed function
-        seed_database()
-
-    # Initialize scheduler
-    scheduler.init_app(app)
-
-    # Add the job: runs once every 24 hours
-    scheduler.add_job(
-        id="overdue_check", func=check_overdue_tasks, trigger="interval", days=1
-    )
-
-    scheduler.start()
-    app.run(debug=True, port=5000)
-
-    
 
 @app.route('/api/contact', methods=['POST'])
 def receive_contact():
@@ -971,3 +948,21 @@ def receive_contact():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Failed to save message"}), 500
+
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        seed_database()
+
+    scheduler.init_app(app)
+    scheduler.add_job(
+        id="overdue_check", func=check_overdue_tasks, trigger="interval", days=1
+    )
+
+    scheduler.start()
+    app.run(debug=True, port=5000)
+
+    
+
+
