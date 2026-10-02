@@ -314,7 +314,7 @@ export default function Home() {
 
             <button
               onClick={() => setSelectedBook(book)}
-              className='mt-auto w-full text-sm font-black uppercase tracking-wider bg-slate-900 text-white px-4 py-4 rounded-xl hover:bg-indigo-600 transition-colors shadow-lg'
+              className='mt-auto w-full text-sm font-black uppercase tracking-wider bg-blue-700 text-white px-4 py-4 rounded-xl hover:bg-blue-800 transition-colors shadow-lg'
             >
               View and Borrow
             </button>
