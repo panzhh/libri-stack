@@ -574,18 +574,14 @@ export default function AdminDashboard() {
 
   return (
     <div className='min-h-screen bg-slate-300 flex'>
-      {/* Mobile top bar */}
-      {
-        <div className='md:hidden fixed top-0 left-0 right-0 z-40 bg-slate-900 text-white flex items-center justify-between px-4 py-3 shadow'>
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className='text-3xl font-black active:scale-95 transition-transform'
-            aria-label='Open menu'
-          >
-            ☰
-          </button>
-        </div>
-      }
+      {/* Mobile menu button (bottom-right, same as the member dashboard) */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+        className='md:hidden fixed bottom-6 right-6 z-[60] w-16 h-16 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl active:scale-95 transition-transform'
+      >
+        {isSidebarOpen ? "✕" : "☰"}
+      </button>
 
       {/* Mobile overlay */}
       {isSidebarOpen && (
@@ -735,7 +731,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main */}
-      <main className='flex-1 overflow-y-auto pt-16 md:pt-0 p-4 md:p-12'>
+      <main className='flex-1 overflow-y-auto p-4 md:p-12'>
         <header className='flex justify-between items-center mb-8 md:mb-12'>
           <h2 className='text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter'>
             {activeTab === "profile"
