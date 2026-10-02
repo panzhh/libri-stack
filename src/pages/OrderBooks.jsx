@@ -79,7 +79,7 @@ export default function OrderBooks() {
             Order <span className='text-indigo-600'>Books</span>
           </h2>
           <p className='text-lg text-black mb-8'>
-            Please log in to ask the library to order a book.
+            Please log in first to order books.
           </p>
           <Link
             to='/login'
