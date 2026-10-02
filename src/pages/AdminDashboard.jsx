@@ -1396,7 +1396,7 @@ export default function AdminDashboard() {
 
         {/* VIEW BOOK MODAL */}
         {selectedBook && !isEditing && (
-          <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in'>
+          <div className='fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in'>
             <div className='bg-slate-200 w-full max-w-5xl max-h-[90vh] rounded-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col'>
               <div className='p-6 md:p-8 border-b-2 border-slate-400 flex gap-6 md:gap-8 items-start bg-slate-300'>
                 <div className='w-28 h-40 md:w-32 md:h-44 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 overflow-hidden flex items-center justify-center'>
@@ -1468,7 +1468,7 @@ export default function AdminDashboard() {
 
         {/* EDIT BOOK MODAL */}
         {isEditing && (
-          <div className='fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in'>
+          <div className='fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in'>
             <form
               onSubmit={handleUpdateBook}
               className='bg-slate-200 w-full max-w-5xl max-h-[90vh] rounded-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col'
