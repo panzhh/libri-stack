@@ -1,7 +1,35 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+
+const linkClass = "hover:text-white transition-colors";
 
 export default function Footer() {
+  // Re-render on navigation so the links follow login/logout, like the Navbar
+  useLocation();
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
+  const links = [
+    { to: "/", label: "Home" },
+    ...(!token
+      ? [
+          { to: "/login", label: "Login" },
+          { to: "/register", label: "Register" },
+        ]
+      : role === "admin"
+        ? [
+            { to: "/admin-dashboard", label: "Admin Panel" },
+            { to: "/user-dashboard", label: "My Borrows" },
+            { to: "/order-books", label: "Order Books" },
+          ]
+        : [
+            { to: "/user-dashboard", label: "My Dashboard" },
+            { to: "/order-books", label: "Order Books" },
+          ]),
+    { to: "/about", label: "About Us" },
+    { to: "/contact", label: "Contact" },
+  ];
+
   return (
     <footer className='bg-slate-900 text-white mt-20 rounded-t-[3rem] overflow-hidden'>
       <div className='max-w-7xl mx-auto pt-16 pb-8 px-8'>
@@ -27,36 +55,13 @@ export default function Footer() {
               Navigation
             </h4>
             <ul className='space-y-4 text-lg font-bold text-slate-200'>
-              <li>
-                <Link to='/' className='hover:text-white transition-colors'>
-                  Home
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  to='/login'
-                  className='hover:text-white transition-colors'
-                >
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to='/about'
-                  className='hover:text-white transition-colors'
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to='/contact'
-                  className='hover:text-white transition-colors'
-                >
-                  Contact
-                </Link>
-              </li>
+              {links.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className={linkClass}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
