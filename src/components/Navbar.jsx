@@ -21,7 +21,7 @@ export default function Navbar() {
     }`;
 
   return (
-    <nav className='w-[95%] xl:w-full max-w-7xl mx-auto p-6 lg:p-8 flex flex-wrap justify-between items-center bg-slate-200 mb-4 rounded-b-[2rem] shadow-sm border-b border-slate-400'>
+    <nav className='w-[calc(100%-2rem)] max-w-7xl mx-auto p-6 lg:p-8 flex flex-wrap justify-between items-center bg-slate-200 mb-4 rounded-[2rem] shadow-sm border-2 border-slate-400'>
       {/* Branding - Shrinks slightly on tiny screens */}
       <Link
         to='/'

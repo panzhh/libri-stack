@@ -26,7 +26,7 @@ export default function App() {
     <Router>
       {/* The background photo sits behind the navbar too, so there is no white strip */}
       <div
-        className="min-h-screen bg-slate-900 bg-cover bg-center bg-fixed"
+        className="min-h-screen pt-6 bg-slate-900 bg-cover bg-center bg-fixed"
         style={{
           // Dark tint keeps white text that sits directly on the photo readable
           backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.35)), url(${backgroundImage})`,
