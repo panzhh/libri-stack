@@ -360,12 +360,6 @@ export default function Home() {
                 >
                   View &amp; Borrow
                 </button>
-                <button
-                  onClick={() => openBook(book, "order")}
-                  className="gb-btn-light py-2 px-4 text-sm"
-                >
-                  Order Book
-                </button>
               </div>
             </div>
           </li>
@@ -424,9 +418,11 @@ export default function Home() {
                     <h2 className="text-2xl sm:text-3xl font-bold text-black leading-tight break-words">
                       {selectedBook.title}
                     </h2>
-                    <p className="text-gb-darker font-bold text-base mt-2">
-                      by {selectedBook.author}
-                    </p>
+                    {selectedBook.author && (
+                      <p className="text-gb-darker font-bold text-base mt-2">
+                        by {selectedBook.author}
+                      </p>
+                    )}
 
                     {/* STOCK STATUS BADGES (borrowing only, not when ordering) */}
                     {modalMode === "view" && (
@@ -650,19 +646,19 @@ export default function Home() {
             </div>
 
             {/* Footer Actions */}
-            <div className="p-5 sm:p-6 bg-gb-box border-t-2 border-gb-line flex justify-end gap-3">
+            <div className="p-5 sm:p-6 bg-gb-box border-t-2 border-gb-line flex flex-wrap justify-end gap-3">
               {modalMode === "order" && orderStep === "confirm" ? (
                 <button
                   onClick={() => setOrderStep("form")}
                   disabled={sendingOrder}
-                  className="px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold "
+                  className="flex-1 sm:flex-none px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold"
                 >
                   Back
                 </button>
               ) : (
                 <button
                   onClick={() => setSelectedBook(null)}
-                  className="px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold "
+                  className="flex-1 sm:flex-none px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold"
                 >
                   Close
                 </button>
@@ -671,7 +667,7 @@ export default function Home() {
                 <button
                   onClick={submitOrder}
                   disabled={sendingOrder}
-                  className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold sm: transition-all shadow-sm bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
+                  className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold transition-colors bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
                 >
                   {sendingOrder ? "Ordering..." : "Confirm Order"}
                 </button>
@@ -682,25 +678,33 @@ export default function Home() {
                     type="submit"
                     form="order-form"
                     disabled={sendingOrder}
-                    className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold sm: transition-all shadow-sm bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
+                    className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold transition-colors bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
                   >
                     Order
                   </button>
                 )
               ) : (
-                <button
-                  onClick={() => handleBorrow(selectedBook.id)}
-                  disabled={selectedBook.availableCopies <= 0}
-                  className={`px-8 py-4 rounded-lg text-base font-bold   transition-all shadow-sm ${
-                    selectedBook.availableCopies > 0
-                      ? "bg-gb-dark text-white hover:bg-gb-dark"
-                      : "bg-white text-black cursor-not-allowed"
-                  }`}
-                >
-                  {selectedBook.availableCopies > 0
-                    ? "Borrow This Book"
-                    : "Out of Stock"}
-                </button>
+                <>
+                  <button
+                    onClick={() => openBook(selectedBook, "order")}
+                    className="gb-btn-light flex-1 sm:flex-none px-6 py-4"
+                  >
+                    Order Book
+                  </button>
+                  <button
+                    onClick={() => handleBorrow(selectedBook.id)}
+                    disabled={selectedBook.availableCopies <= 0}
+                    className={`w-full sm:w-auto px-6 sm:px-8 py-4 rounded-lg text-base font-bold transition-colors ${
+                      selectedBook.availableCopies > 0
+                        ? "bg-gb-dark text-white hover:bg-gb-darker"
+                        : "bg-slate-200 text-gb-muted cursor-not-allowed"
+                    }`}
+                  >
+                    {selectedBook.availableCopies > 0
+                      ? "Borrow This Book"
+                      : "Out of Stock"}
+                  </button>
+                </>
               )}
             </div>
           </div>
