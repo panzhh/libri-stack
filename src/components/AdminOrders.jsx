@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { API_URL, authHeaders } from "../api";
-import { STATUS_STYLES } from "../utils/requestStatus";
+import { STATUS_LABELS, STATUS_STYLES } from "../utils/requestStatus";
 
-const STATUSES = ["pending", "ordered", "arrived", "declined"];
+const STATUSES = Object.keys(STATUS_LABELS);
 const money = (n) => (n == null ? "—" : `$${Number(n).toFixed(2)}`);
 
 // One row per order, for the CSV download
@@ -19,7 +19,7 @@ const CSV_COLUMNS = [
   ["Email", (o) => o.requester_email],
   ["Notes", (o) => o.notes],
   ["Collection", (o) => o.collection_date],
-  ["Status", (o) => o.status],
+  ["Status", (o) => STATUS_LABELS[o.status] || o.status],
   ["Library note", (o) => o.admin_note],
 ];
 
@@ -158,7 +158,7 @@ export default function AdminOrders() {
             <option value="all">All statuses</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {s[0].toUpperCase() + s.slice(1)}
+                {STATUS_LABELS[s]}
               </option>
             ))}
           </select>
@@ -267,7 +267,7 @@ export default function AdminOrders() {
                     >
                       {STATUSES.map((s) => (
                         <option key={s} value={s}>
-                          {s}
+                          {STATUS_LABELS[s]}
                         </option>
                       ))}
                     </select>

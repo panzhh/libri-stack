@@ -166,7 +166,7 @@ class BookRequest(db.Model):
 
     __tablename__ = "book_requests"
 
-    STATUSES = ("pending", "ordered", "arrived", "declined")
+    STATUSES = ("pending", "ordered", "arrived", "delivered_paid", "declined")
 
     id = db.Column(db.Integer, primary_key=True)
     # Shown to members and admins, e.g. ORD-20261003-00042 (see assign_order_number)
