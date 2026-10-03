@@ -45,10 +45,8 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # MAIL SERVER CONFIG (Required for Email Verification)
-# Gmail by default; set MAIL_SERVER/MAIL_PORT to use an email service instead
-# (e.g. smtp-relay.brevo.com / 587), with that service's MAIL_USERNAME/MAIL_PASSWORD
-app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT", "587"))
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USE_SSL"] = False
 app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
@@ -926,6 +924,7 @@ def admin_bulk_email():
         # Note: We use Bcc to prevent users from seeing each other's email addresses
         msg = Message(
             subject=subject,
+            sender=app.config["MAIL_USERNAME"],
             bcc=recipients,  # Using BCC for privacy
             body=message_body,
         )
