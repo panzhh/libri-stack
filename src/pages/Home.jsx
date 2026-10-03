@@ -405,21 +405,23 @@ export default function Home() {
                       by {selectedBook.author}
                     </p>
 
-                    {/* STOCK STATUS BADGES */}
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <span className="whitespace-nowrap px-3 py-1.5 bg-slate-200 border border-slate-400 rounded-xl text-sm font-black uppercase text-slate-800">
-                        Total: {selectedBook.copies || 0}
-                      </span>
-                      <span
-                        className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm font-black uppercase border ${
-                          (selectedBook.availableCopies || 0) > 0
-                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                            : "bg-rose-50 border-rose-200 text-rose-700"
-                        }`}
-                      >
-                        Available: {selectedBook.availableCopies || 0}
-                      </span>
-                    </div>
+                    {/* STOCK STATUS BADGES (borrowing only, not when ordering) */}
+                    {modalMode === "view" && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <span className="whitespace-nowrap px-3 py-1.5 bg-slate-200 border border-slate-400 rounded-xl text-sm font-black uppercase text-slate-800">
+                          Total: {selectedBook.copies || 0}
+                        </span>
+                        <span
+                          className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm font-black uppercase border ${
+                            (selectedBook.availableCopies || 0) > 0
+                              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                              : "bg-rose-50 border-rose-200 text-rose-700"
+                          }`}
+                        >
+                          Available: {selectedBook.availableCopies || 0}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => setSelectedBook(null)}
