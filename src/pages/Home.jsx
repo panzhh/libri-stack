@@ -193,7 +193,7 @@ export default function Home() {
         alert("Success! Book borrowed.");
         //setSelectedBook(null);
       } else {
-        alert(data.error);
+        alert(data.message || data.error);
       }
     } catch (err) {
       console.error("Connection error:", err);

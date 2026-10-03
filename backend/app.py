@@ -494,6 +494,23 @@ def borrow_book_by_id(book_id):
         return jsonify({"error": "User not found"}), 404
 
 
+    # A member with an overdue book can't borrow more until it is returned
+    today = _library_date(datetime.now(timezone.utc))
+    overdue = [
+        record
+        for record in BorrowRecord.query.options(joinedload(BorrowRecord.book))
+        .filter_by(user_id=int(user_id), status="borrowed")
+        .all()
+        if _library_date(record.due_date) < today
+    ]
+    if overdue:
+        titles = ", ".join(f"'{r.book.title}'" for r in overdue if r.book)
+        message = (
+            f"You have an overdue book ({titles}). Please return it before "
+            "borrowing another book."
+        )
+        return jsonify({"error": message, "message": message}), 403
+
     active_borrows_count = BorrowRecord.query.filter_by(
         user_id=user_id, status="borrowed"
     ).count()
@@ -787,7 +804,8 @@ def send_reminder_email(record, kind, now):
         subject = f"Overdue: please return '{record.book.title}'"
         opening = (
             f"The book '{record.book.title}' was due on {due_text} ({late}). "
-            "Please return it as soon as possible so other members can borrow it."
+            "Please return it as soon as possible so other members can borrow it. "
+            "Until it is returned, you won't be able to borrow other books."
         )
     message = Message(subject, recipients=[user.email])
     message.body = f"""Hi {user.full_name or "there"},
