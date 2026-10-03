@@ -795,7 +795,8 @@ def send_reminder_email(record, kind, now):
 {opening}
 
 {renew_line}
-Your borrowed books: {FRONTEND_URL}/user-dashboard
+To see the details, please log in at {FRONTEND_URL} and open My Dashboard
+to check your borrowed books.
 
 {LIBRARY_NAME}
 {FRONTEND_URL}
