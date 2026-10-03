@@ -564,7 +564,7 @@ export default function Home() {
                     disabled={sendingOrder}
                     className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wide sm:tracking-wider transition-all shadow-xl bg-blue-700 text-white hover:bg-blue-800 disabled:bg-slate-500"
                   >
-                    {sendingOrder ? "Sending..." : "Send Request"}
+                    {sendingOrder ? "Ordering..." : "Order"}
                   </button>
                 )
               ) : (
