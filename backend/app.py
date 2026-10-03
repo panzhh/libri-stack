@@ -7,6 +7,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Mail, Message
+from email_sender import EmailSender
 from models import db, User, Book, BorrowRecord, ContactMessage, BookRequest
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
@@ -63,6 +64,8 @@ app.config["MAIL_DEFAULT_SENDER"] = (
 db.init_app(app)
 jwt = JWTManager(app)
 mail = Mail(app)
+# Sends through the Gmail API on Heroku, SMTP locally (see email_sender.py)
+email_sender = EmailSender(mail)
 serializer = URLSafeTimedSerializer(app.config["JWT_SECRET_KEY"])
 
 with app.app_context():
@@ -150,7 +153,7 @@ If you did not create this account, you can ignore this email.
 {LIBRARY_NAME}
 {FRONTEND_URL}
 """
-    mail.send(msg)
+    email_sender.send(msg)
 
 
 @app.route("/api/register", methods=["POST"])
@@ -272,7 +275,7 @@ If you did not ask to reset your password, you can ignore this email. Your passw
 {FRONTEND_URL}
 """
         try:
-            mail.send(msg)
+            email_sender.send(msg)
         except Exception as e:
             print(f"Password reset email to {email} failed: {e}")
             return jsonify({"error": EMAIL_UNAVAILABLE}), 503
@@ -726,7 +729,7 @@ def send_reminder_email(record):
     user = record.user
     if not user:
         return
-    mail.send(
+    email_sender.send(
         Message(
             subject="Reminder: Library Book Overdue",
             recipients=[user.email],
@@ -930,7 +933,7 @@ def admin_bulk_email():
             body=message_body,
         )
 
-        mail.send(msg)
+        email_sender.send(msg)
         return (
             jsonify({"message": f"Successfully sent to {len(recipients)} users."}),
             200,
@@ -1111,7 +1114,7 @@ Sent:  {sent_at:%A, %B %d, %Y at %I:%M %p} ET
 Reply to this email to answer {name}. The message is also saved in the
 admin panel under Contact Messages.
 """
-        mail.send(notice)
+        email_sender.send(notice)
     except Exception as e:
         print(f"Contact email to {CONTACT_EMAIL} failed: {e}")
 
