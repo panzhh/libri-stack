@@ -88,8 +88,8 @@ export default function Footer() {
                 Dunn Loring, VA 22027
               </p>
               <p>
-                <a href='mailto:fuyinshubao@gmail.com' className={linkClass}>
-                  fuyinshubao@gmail.com
+                <a href='mailto:churchlibdl@gmail.com' className={linkClass}>
+                  churchlibdl@gmail.com
                 </a>
               </p>
             </address>
