@@ -22,3 +22,5 @@ backend/.env
 # --- Editor ---
 .vscode/
 .idea/
+# Google OAuth client files (see README: Sending email from Heroku)
+client_secret*.json
