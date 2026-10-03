@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { API_URL } from "../api";
 
 export default function Contact() {
+  // Logged-in members don't need to type their name and email again
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    name: localStorage.getItem("userName") || "",
+    email: localStorage.getItem("userEmail") || "",
     message: "",
   });
 
@@ -28,7 +29,7 @@ export default function Contact() {
         alert("✨ Message sent! We will get back to you soon.");
 
         // 3. Reset form so it's ready for a new message
-        setFormData({ name: "", email: "", message: "" });
+        setFormData((prev) => ({ ...prev, message: "" }));
       } else {
         // 4. Handle backend validation errors (e.g., missing fields)
         alert("Error: " + (data.error || "Failed to send message"));

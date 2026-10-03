@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_apscheduler import APScheduler
 from sqlalchemy.orm import joinedload
+from zoneinfo import ZoneInfo
 
 # Points to the .env file one directory up (only present in local development)
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -108,6 +109,8 @@ def compress_response(response):
 
 
 LIBRARY_NAME = "Church in Dunn Loring Library"
+# Where Contact Us messages are emailed
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "churchlibdl@gmail.com")
 
 
 def send_verification_email(email, role, name):
@@ -1055,15 +1058,36 @@ def save_message():
     if not data.get("name") or not data.get("email") or not data.get("message"):
         return jsonify({"error": "All fields are required"}), 400
 
-    # Extracting data from the React request
-    new_msg = ContactMessage(
-        name=data.get("name"), email=data.get("email"), message=data.get("message")
-    )
+    name = data["name"].strip()
+    email = data["email"].strip()
+    new_msg = ContactMessage(name=name, email=email, message=data["message"].strip())
+    db.session.add(new_msg)
+    db.session.commit()  # saved first, so nothing is lost if the email fails
 
-    db.session.add(new_msg)  # This puts it in the "waiting area"
-    db.session.commit()  # This saves it permanently to the .db file
+    try:
+        sent_at = datetime.now(timezone.utc).astimezone(ZoneInfo("America/New_York"))
+        notice = Message(
+            f"Contact form: {name}",
+            recipients=[CONTACT_EMAIL],
+            reply_to=email,  # "Reply" in Gmail answers the visitor directly
+        )
+        notice.body = f"""New message from the {LIBRARY_NAME} website.
 
-    return jsonify({"status": "success", "message": "Saved to database!"}), 201
+Name:  {name}
+Email: {email}
+Sent:  {sent_at:%A, %B %d, %Y at %I:%M %p} ET
+
+{new_msg.message}
+
+---
+Reply to this email to answer {name}. The message is also saved in the
+admin panel under Contact Messages.
+"""
+        mail.send(notice)
+    except Exception as e:
+        print(f"Contact email to {CONTACT_EMAIL} failed: {e}")
+
+    return jsonify({"status": "success", "message": "Message sent"}), 201
 
 
 # --- BOOK REQUESTS (members ask the library to order a book) ---
