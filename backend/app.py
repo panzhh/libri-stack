@@ -1134,6 +1134,53 @@ def get_my_book_requests():
     return jsonify([r.to_dict() for r in requests]), 200
 
 
+def _own_pending_request(request_id):
+    """The caller's own order, if it can still be changed; else an error response."""
+    book_request = db.session.get(BookRequest, request_id)
+    if not book_request or book_request.user_id != int(get_jwt_identity()):
+        return None, (jsonify({"error": "Order not found"}), 404)
+    if book_request.status != "pending":
+        return None, (
+            jsonify(
+                {
+                    "error": "This order is already being handled by the library "
+                    "and can no longer be changed. Please contact us."
+                }
+            ),
+            409,
+        )
+    return book_request, None
+
+
+@app.route("/api/user/book-requests/<int:request_id>", methods=["PATCH"])
+@jwt_required()
+def update_my_book_request(request_id):
+    book_request, error = _own_pending_request(request_id)
+    if error:
+        return error
+    data = request.get_json() or {}
+    try:
+        copies = int(data.get("copies"))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Copies must be a whole number."}), 400
+    if not 1 <= copies <= 100:
+        return jsonify({"error": "Please request between 1 and 100 copies."}), 400
+    book_request.copies = copies
+    db.session.commit()
+    return jsonify(book_request.to_dict()), 200
+
+
+@app.route("/api/user/book-requests/<int:request_id>", methods=["DELETE"])
+@jwt_required()
+def delete_my_book_request(request_id):
+    book_request, error = _own_pending_request(request_id)
+    if error:
+        return error
+    db.session.delete(book_request)
+    db.session.commit()
+    return jsonify({"message": "Order deleted"}), 200
+
+
 @app.route("/api/admin/book-requests", methods=["GET"])
 @jwt_required()
 def get_all_book_requests():

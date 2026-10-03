@@ -7,6 +7,59 @@ const money = (n) => `$${Number(n).toFixed(2)}`;
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null); // order whose copies are being changed
+  const [editCopies, setEditCopies] = useState(1);
+  const [busyId, setBusyId] = useState(null);
+
+  const startEdit = (order) => {
+    setEditingId(order.id);
+    setEditCopies(order.copies);
+  };
+
+  const saveCopies = async (order) => {
+    setBusyId(order.id);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/user/book-requests/${order.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({ copies: editCopies }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) return alert(data.error || "Could not update the order.");
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? data : o)));
+      setEditingId(null);
+    } catch {
+      alert("Could not reach the server.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const deleteOrder = async (order) => {
+    if (
+      !window.confirm(
+        `Delete order ${order.order_number || ""} for "${order.title}"?`,
+      )
+    )
+      return;
+    setBusyId(order.id);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/user/book-requests/${order.id}`,
+        { method: "DELETE", headers: authHeaders() },
+      );
+      const data = await response.json();
+      if (!response.ok) return alert(data.error || "Could not delete the order.");
+      setOrders((prev) => prev.filter((o) => o.id !== order.id));
+    } catch {
+      alert("Could not reach the server.");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -56,7 +109,7 @@ export default function MyOrders() {
               <div className='flex items-start justify-between gap-3'>
                 <div className='min-w-0'>
                   {order.order_number && (
-                    <p className='text-sm font-black text-indigo-700 tracking-wide'>
+                    <p className='text-sm font-black text-indigo-700 tracking-wide whitespace-nowrap'>
                       Order #{order.order_number}
                     </p>
                   )}
@@ -119,6 +172,66 @@ export default function MyOrders() {
                   <span className='font-bold'>Your notes:</span> {order.notes}
                 </p>
               )}
+              {/* Members can change or delete an order until the library acts on it */}
+              {order.status === "pending" &&
+                (editingId === order.id ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      saveCopies(order);
+                    }}
+                    className='mt-4 flex flex-wrap items-end gap-3'
+                  >
+                    <label className='flex flex-col'>
+                      <span className='text-sm font-black uppercase text-slate-700'>
+                        Copies
+                      </span>
+                      <input
+                        type='number'
+                        required
+                        min='1'
+                        max='100'
+                        step='1'
+                        inputMode='numeric'
+                        value={editCopies}
+                        onChange={(e) => setEditCopies(e.target.value)}
+                        className='w-28 px-3 py-2 bg-white border-2 border-slate-400 text-slate-900 rounded-xl text-lg font-bold outline-none focus:border-indigo-700'
+                      />
+                    </label>
+                    <button
+                      type='submit'
+                      disabled={busyId === order.id}
+                      className='px-5 py-3 bg-blue-700 text-white rounded-xl text-sm font-black uppercase tracking-wider hover:bg-blue-800 disabled:bg-slate-500'
+                    >
+                      Save
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => setEditingId(null)}
+                      className='px-5 py-3 bg-white border-2 border-slate-400 text-slate-900 rounded-xl text-sm font-black uppercase tracking-wider'
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                ) : (
+                  <div className='mt-4 flex flex-wrap gap-3'>
+                    <button
+                      onClick={() => startEdit(order)}
+                      disabled={busyId === order.id}
+                      className='px-5 py-3 bg-white border-2 border-slate-900 text-slate-900 rounded-xl text-sm font-black uppercase tracking-wider hover:bg-slate-900 hover:text-white transition-colors'
+                    >
+                      Change copies
+                    </button>
+                    <button
+                      onClick={() => deleteOrder(order)}
+                      disabled={busyId === order.id}
+                      className='px-5 py-3 bg-white border-2 border-rose-700 text-rose-700 rounded-xl text-sm font-black uppercase tracking-wider hover:bg-rose-700 hover:text-white transition-colors'
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+
               {order.admin_note && (
                 <p className='text-base text-slate-900 mt-2 bg-indigo-50 border border-indigo-200 p-3 rounded-xl'>
                   <span className='font-bold'>From the library:</span>{" "}
