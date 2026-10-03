@@ -106,15 +106,17 @@ with a daily job running `python backend/send_reminders.py`.
 ## Sending email from Heroku (Gmail API)
 
 Gmail refuses SMTP password logins from Heroku's servers, so the live site
-sends through the **Gmail API** as churchlibdl@gmail.com. Locally, the normal
+sends through the **Gmail API** as the account in Heroku's `MAIL_USERNAME`
+(currently **fuyinshubao@gmail.com**). Locally, the normal
 SMTP settings in `.env` keep working. One-time setup, about 15 minutes:
 
-1. Open https://console.cloud.google.com and sign in as **churchlibdl@gmail.com**.
+1. Open https://console.cloud.google.com and sign in as **fuyinshubao@gmail.com**
+   (the sending account; any Google account can own the project).
    Create a project, e.g. "Library Website".
 2. **APIs & Services > Library**: search for **Gmail API** and click **Enable**.
 3. **Google Auth Platform** (OAuth consent screen): click **Get started**.
    App name "Church in Dunn Loring Library", support and contact email
-   churchlibdl@gmail.com, audience **External**. Then under **Audience** click
+   fuyinshubao@gmail.com, audience **External**. Then under **Audience** click
    **Publish app** so it is "In production". (In "Testing" mode Google expires
    the permission after 7 days and emails stop.)
 4. **Clients > Create client**: application type **Desktop app**, any name.
@@ -124,7 +126,8 @@ SMTP settings in `.env` keep working. One-time setup, about 15 minutes:
    cd backend
    venv/bin/python gmail_authorize.py ~/Downloads/client_secret_XXXX.json
    ```
-   A browser opens. Choose churchlibdl@gmail.com. Google warns "Google hasn't
+   A browser opens. Choose **fuyinshubao@gmail.com** (the sending account).
+   Google warns "Google hasn't
    verified this app": click **Advanced > Go to Church in Dunn Loring Library**,
    then **Continue**. Only the "send email" permission is requested.
 6. Run the `heroku config:set ... GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=...
