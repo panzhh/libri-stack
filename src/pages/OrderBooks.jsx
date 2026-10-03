@@ -220,6 +220,11 @@ export default function OrderBooks() {
               >
                 <div className='flex justify-between items-start gap-4'>
                   <div>
+                    {r.order_number && (
+                      <p className='text-sm font-black text-indigo-700 tracking-wide'>
+                        Order #{r.order_number}
+                      </p>
+                    )}
                     <p className='text-lg font-black text-slate-900'>
                       {r.title}
                     </p>

@@ -63,7 +63,7 @@ export default function Home() {
         setOrderStep("sent");
         setOrderStatus({
           type: "success",
-          msg: `Thank you! Your request for ${data.copies} ${data.copies === 1 ? "copy" : "copies"} has been sent to the library team. You can follow it on the Order Books page.`,
+          msg: `Thank you! Your order number is ${data.order_number}. Your request for ${data.copies} ${data.copies === 1 ? "copy" : "copies"} has been sent to the library team. You can follow it under My Orders in your dashboard.`,
         });
       } else {
         setOrderStatus({ type: "error", msg: data.error || data.msg });
@@ -456,7 +456,7 @@ export default function Home() {
               ref={modalBody}
               className="p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1"
             >
-              {orderStep !== "confirm" && (
+              {(modalMode === "view" || orderStep === "form") && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
                   {[
                     { label: "Series", key: "series" },
@@ -545,9 +545,15 @@ export default function Home() {
               )}
 
               {modalMode === "order" && orderStep !== "confirm" && (
-                <div className="mt-6 pt-6 border-t-2 border-slate-400">
+                <div
+                  className={
+                    orderStep === "sent"
+                      ? ""
+                      : "mt-6 pt-6 border-t-2 border-slate-400"
+                  }
+                >
                   <h3 className="text-xl font-black uppercase text-slate-900 mb-4">
-                    Order this book
+                    {orderStep === "sent" ? "Order placed" : "Order this book"}
                   </h3>
                   {!localStorage.getItem("token") ? (
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">

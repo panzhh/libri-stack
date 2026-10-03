@@ -145,6 +145,8 @@ class BookRequest(db.Model):
     STATUSES = ("pending", "ordered", "arrived", "declined")
 
     id = db.Column(db.Integer, primary_key=True)
+    # Shown to members and admins, e.g. ORD-20261003-00042 (see assign_order_number)
+    order_number = db.Column(db.String(30), unique=True, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     title = db.Column(db.String(500), nullable=False)
     author = db.Column(db.String(255))
@@ -165,9 +167,15 @@ class BookRequest(db.Model):
 
     user = db.relationship("User", backref="book_requests")
 
+    def assign_order_number(self):
+        """ORD-<order date>-<id>: unique because the id is (needs a flushed id)."""
+        created = self.created_at or datetime.now(timezone.utc)
+        self.order_number = f"ORD-{created:%Y%m%d}-{self.id:05d}"
+
     def to_dict(self):
         return {
             "id": self.id,
+            "order_number": self.order_number,
             "title": self.title,
             "author": self.author,
             "copies": self.copies,

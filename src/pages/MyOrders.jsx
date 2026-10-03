@@ -55,6 +55,11 @@ export default function MyOrders() {
             >
               <div className='flex items-start justify-between gap-3'>
                 <div className='min-w-0'>
+                  {order.order_number && (
+                    <p className='text-sm font-black text-indigo-700 tracking-wide'>
+                      Order #{order.order_number}
+                    </p>
+                  )}
                   <p className='text-lg font-black text-slate-900 break-words'>
                     {order.title}
                   </p>

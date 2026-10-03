@@ -1108,6 +1108,8 @@ def create_book_request():
         notes=(data.get("notes") or "").strip() or None,
     )
     db.session.add(book_request)
+    db.session.flush()  # get the id for the order number
+    book_request.assign_order_number()
     db.session.commit()
     return jsonify(book_request.to_dict()), 201
 
@@ -1191,6 +1193,7 @@ def add_missing_columns():
             "language": "VARCHAR(100)",
             "book_id": "INTEGER REFERENCES book(id)",
             "unit_price": "FLOAT",
+            "order_number": "VARCHAR(30)",
         },
     }
     inspector = inspect(db.engine)
@@ -1200,6 +1203,18 @@ def add_missing_columns():
             if name not in existing:
                 db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {definition}"))
                 print(f"Added column {table}.{name}")
+    db.session.commit()
+
+    # Orders created before order numbers existed get one now
+    for book_request in BookRequest.query.filter(BookRequest.order_number.is_(None)):
+        book_request.assign_order_number()
+    db.session.commit()
+    db.session.execute(
+        text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_book_requests_order_number "
+            "ON book_requests (order_number)"
+        )
+    )
     db.session.commit()
 
 

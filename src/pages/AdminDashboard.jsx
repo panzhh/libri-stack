@@ -1985,6 +1985,11 @@ export default function AdminDashboard() {
                 >
                   <div className='flex flex-wrap justify-between items-start gap-4 mb-4'>
                     <div>
+                      {r.order_number && (
+                        <p className='text-sm font-black text-indigo-700 tracking-wide'>
+                          Order #{r.order_number}
+                        </p>
+                      )}
                       <h4 className='font-black text-slate-900 text-xl'>
                         {r.title}
                       </h4>
