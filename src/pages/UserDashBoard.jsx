@@ -91,7 +91,16 @@ export default function UserDashboard() {
             >
               📜 Borrow History
             </Link>
-            {/* ---------------------------------- */}
+            <Link
+              to='/user-dashboard/orders'
+              className={`block w-full p-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+                isActive("/user-dashboard/orders")
+                  ? "bg-indigo-50 text-indigo-600"
+                  : "text-slate-800 hover:bg-slate-50"
+              }`}
+            >
+              🧾 My Orders
+            </Link>
 
             <Link
               to='/'

@@ -1089,8 +1089,18 @@ def create_book_request():
     if not 1 <= copies <= 100:
         return jsonify({"error": "Please request between 1 and 100 copies."}), 400
 
+    # Ordered from a catalog card: remember which book and its current price
+    book = None
+    if data.get("book_id") not in (None, ""):
+        try:
+            book = db.session.get(Book, int(data["book_id"]))
+        except (ValueError, TypeError):
+            book = None
+
     book_request = BookRequest(
         user_id=int(get_jwt_identity()),
+        book_id=book.id if book else None,
+        unit_price=book.listPriceUsd if book and book.listPriceUsd else None,
         title=title,
         author=(data.get("author") or "").strip() or None,
         copies=copies,
@@ -1179,6 +1189,8 @@ def add_missing_columns():
         "book_requests": {
             "copies": "INTEGER NOT NULL DEFAULT 1",
             "language": "VARCHAR(100)",
+            "book_id": "INTEGER REFERENCES book(id)",
+            "unit_price": "FLOAT",
         },
     }
     inspector = inspect(db.engine)

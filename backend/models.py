@@ -149,6 +149,9 @@ class BookRequest(db.Model):
     title = db.Column(db.String(500), nullable=False)
     author = db.Column(db.String(255))
     copies = db.Column(db.Integer, nullable=False, default=1, server_default="1")
+    # Set when ordered from a catalog book; the price is a snapshot at order time
+    book_id = db.Column(db.Integer, db.ForeignKey("book.id"))
+    unit_price = db.Column(db.Float)
     language = db.Column(db.String(100))  # None means any language
     notes = db.Column(db.Text)
     status = db.Column(db.String(20), default="pending", nullable=False)
@@ -168,6 +171,13 @@ class BookRequest(db.Model):
             "title": self.title,
             "author": self.author,
             "copies": self.copies,
+            "book_id": self.book_id,
+            "unit_price": self.unit_price,
+            "total_price": (
+                round(self.unit_price * self.copies, 2)
+                if self.unit_price is not None
+                else None
+            ),
             "language": self.language,
             "notes": self.notes,
             "status": self.status,

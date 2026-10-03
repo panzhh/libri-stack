@@ -50,6 +50,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
+          book_id: selectedBook.id,
           title: selectedBook.title,
           author: selectedBook.author,
           language: selectedBook.language,
