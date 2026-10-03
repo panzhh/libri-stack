@@ -24,7 +24,7 @@ const ForgotPassword = () => {
         body: JSON.stringify({ email }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({})); // error pages aren't JSON
 
       if (!response.ok) {
         throw new Error(data.error || "Something went wrong");
@@ -41,7 +41,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gb-box py-12 px-4 sm:px-6 lg:px-8'>
+    <div className='flex justify-center px-4 py-12 sm:py-16'>
       <div className='max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-sm border border-gb-line'>
         <div>
           <h1 className='gb-h1 text-center'>

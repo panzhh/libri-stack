@@ -2,6 +2,7 @@ import gzip
 import json
 import os
 from flask import Flask, request, jsonify, send_from_directory
+from werkzeug.exceptions import InternalServerError
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -85,6 +86,17 @@ COMPRESSIBLE_TYPES = {
 }
 
 
+@app.errorhandler(InternalServerError)
+def api_server_error(error):
+    """Unexpected errors on /api/ answer with JSON, which the pages can display."""
+    if request.path.startswith("/api/"):
+        return (
+            jsonify({"error": "Something went wrong on our side. Please try again later."}),
+            500,
+        )
+    return error
+
+
 @app.after_request
 def compress_response(response):
     """Gzip large text responses; the full catalog is ~6 MB raw but ~0.2 MB gzipped."""
@@ -111,6 +123,10 @@ def compress_response(response):
 LIBRARY_NAME = "Church in Dunn Loring Library"
 # Where Contact Us messages are emailed
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "churchlibdl@gmail.com")
+EMAIL_UNAVAILABLE = (
+    "We couldn't send the email right now. Please try again later, "
+    f"or contact the library at {CONTACT_EMAIL}."
+)
 
 
 def send_verification_email(email, role, name):
@@ -191,7 +207,16 @@ def register():
         except Exception as e:
             db.session.rollback()  # Crucial! Postgres requires a rollback after a fail
             print(f"Registration failed: {e}")
-            return jsonify({"error": str(e)}), 500
+            return (
+                jsonify(
+                    {
+                        "error": "We couldn't send the confirmation email, so the "
+                        "account was not created. Please try again later, or contact "
+                        f"the library at {CONTACT_EMAIL}."
+                    }
+                ),
+                503,
+            )
         return (
             jsonify(
                 {
@@ -244,7 +269,11 @@ If you did not ask to reset your password, you can ignore this email. Your passw
 {LIBRARY_NAME}
 {FRONTEND_URL}
 """
-        mail.send(msg)
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print(f"Password reset email to {email} failed: {e}")
+            return jsonify({"error": EMAIL_UNAVAILABLE}), 503
     # Same answer either way, so the form can't be used to discover accounts
     return jsonify({"message": "If an account exists, a reset link has been sent"}), 200
 
@@ -279,15 +308,13 @@ def login():
     # user.check_password handles the complex math of comparing hashes
     if user and user.check_password(password):
         if not user.is_verified:
-            send_verification_email(email, user.role, user.full_name)
-            return (
-                jsonify(
-                    {
-                        "msg": "Please verify your email first. We just sent you a new verification link."
-                    }
-                ),
-                401,
-            )
+            try:
+                send_verification_email(email, user.role, user.full_name)
+                note = "We just sent you a new verification link."
+            except Exception as e:
+                print(f"Verification email to {email} failed: {e}")
+                note = "We couldn't send a new verification link right now; please try again later."
+            return jsonify({"msg": f"Please verify your email first. {note}"}), 401
 
         if role != user.role:
             return jsonify({"msg": f"You are trying to log in as {role}, but the email or password is invalid."}), 401

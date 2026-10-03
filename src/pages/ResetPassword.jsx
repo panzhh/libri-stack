@@ -26,7 +26,7 @@ const ResetPassword = () => {
         body: JSON.stringify({ token, password }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({})); // error pages aren't JSON
 
       if (response.ok) {
         setStatus({
@@ -51,7 +51,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gb-box px-4'>
+    <div className='flex justify-center px-4 py-12 sm:py-16'>
       <div className='max-w-md w-full bg-white p-8 rounded-xl shadow-sm border border-gb-line'>
         <h2 className='text-2xl font-bold text-black text-center mb-2'>
           New Password
