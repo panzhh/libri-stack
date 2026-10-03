@@ -353,7 +353,7 @@ export default function Home() {
                   onClick={() => openBook(book, "view")}
                   className="gb-btn py-2 px-4 text-sm"
                 >
-                  View &amp; Borrow
+                  More details
                 </button>
               </div>
             </div>
