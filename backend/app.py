@@ -1139,11 +1139,12 @@ def _own_pending_request(request_id):
     book_request = db.session.get(BookRequest, request_id)
     if not book_request or book_request.user_id != int(get_jwt_identity()):
         return None, (jsonify({"error": "Order not found"}), 404)
-    if book_request.status != "pending":
+    if not book_request.can_be_changed():
         return None, (
             jsonify(
                 {
-                    "error": "This order is already being handled by the library "
+                    "error": "This order was collected by the library on "
+                    f"{book_request.to_dict()['collection_date']} at 8:00 PM ET "
                     "and can no longer be changed. Please contact us."
                 }
             ),

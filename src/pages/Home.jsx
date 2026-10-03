@@ -63,7 +63,7 @@ export default function Home() {
         setOrderStep("sent");
         setOrderStatus({
           type: "success",
-          msg: `Thank you! Your order number is ${data.order_number}. Your request for ${data.copies} ${data.copies === 1 ? "copy" : "copies"} has been sent to the library team. You can follow it under My Orders in your dashboard.`,
+          msg: `Thank you! Your order number is ${data.order_number}. Your request for ${data.copies} ${data.copies === 1 ? "copy" : "copies"} will be collected by the library on ${data.collection_date} at 8:00 PM ET. You can change or delete it in My Orders until then.`,
         });
       } else {
         setOrderStatus({ type: "error", msg: data.error || data.msg });
@@ -498,6 +498,12 @@ export default function Home() {
                   <h3 className="text-xl font-black uppercase text-slate-900 mb-4">
                     Please confirm your order
                   </h3>
+                  <p className="mb-4 p-4 rounded-2xl text-base font-bold bg-indigo-50 border-2 border-indigo-200 text-indigo-900">
+                    Orders are collected every Sunday at 8:00 PM ET. You can
+                    change or delete your order in My Orders until then. Orders
+                    placed after 8:00 PM on Sunday are collected the following
+                    Sunday.
+                  </p>
                   {orderStatus.type === "error" && (
                     <p className="mb-4 p-4 rounded-2xl text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
                       {orderStatus.msg}
@@ -572,58 +578,66 @@ export default function Home() {
                       {orderStatus.msg}
                     </p>
                   ) : (
-                    <form
-                      id="order-form"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        setOrderStep("confirm");
-                      }}
-                      className="space-y-4"
-                    >
-                      {orderStatus.msg && (
-                        <p className="p-4 rounded-2xl text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
-                          {orderStatus.msg}
-                        </p>
-                      )}
-                      <div>
-                        <label className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1 block">
-                          Copies <span className="text-rose-700">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          required
-                          min="1"
-                          max="100"
-                          step="1"
-                          inputMode="numeric"
-                          value={orderForm.copies}
-                          onChange={(e) =>
-                            setOrderForm({
-                              ...orderForm,
-                              copies: e.target.value,
-                            })
-                          }
-                          className="w-full sm:w-40 px-4 py-3 bg-white border-2 border-slate-400 text-slate-900 rounded-xl text-lg font-bold outline-none focus:border-indigo-700"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1 block">
-                          Notes
-                        </label>
-                        <textarea
-                          rows="3"
-                          placeholder="Edition, or anything else we should know..."
-                          value={orderForm.notes}
-                          onChange={(e) =>
-                            setOrderForm({
-                              ...orderForm,
-                              notes: e.target.value,
-                            })
-                          }
-                          className="w-full px-4 py-3 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 rounded-xl text-lg font-medium outline-none focus:border-indigo-700 resize-none"
-                        ></textarea>
-                      </div>
-                    </form>
+                    <>
+                      <p className="mb-4 text-base font-bold text-slate-800">
+                        Orders are collected every Sunday at 8:00 PM ET. You can
+                        change or delete your order in My Orders until then.
+                        Orders placed after 8:00 PM on Sunday are collected the
+                        following Sunday.
+                      </p>
+                      <form
+                        id="order-form"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          setOrderStep("confirm");
+                        }}
+                        className="space-y-4"
+                      >
+                        {orderStatus.msg && (
+                          <p className="p-4 rounded-2xl text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
+                            {orderStatus.msg}
+                          </p>
+                        )}
+                        <div>
+                          <label className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1 block">
+                            Copies <span className="text-rose-700">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            max="100"
+                            step="1"
+                            inputMode="numeric"
+                            value={orderForm.copies}
+                            onChange={(e) =>
+                              setOrderForm({
+                                ...orderForm,
+                                copies: e.target.value,
+                              })
+                            }
+                            className="w-full sm:w-40 px-4 py-3 bg-white border-2 border-slate-400 text-slate-900 rounded-xl text-lg font-bold outline-none focus:border-indigo-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1 block">
+                            Notes
+                          </label>
+                          <textarea
+                            rows="3"
+                            placeholder="Edition, or anything else we should know..."
+                            value={orderForm.notes}
+                            onChange={(e) =>
+                              setOrderForm({
+                                ...orderForm,
+                                notes: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-3 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 rounded-xl text-lg font-medium outline-none focus:border-indigo-700 resize-none"
+                          ></textarea>
+                        </div>
+                      </form>
+                    </>
                   )}
                 </div>
               )}

@@ -2,7 +2,31 @@ import random
 import string
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timezone
+from datetime import datetime, time, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+# Book orders are collected weekly, every Sunday from 8:00 PM Eastern Time
+LIBRARY_TZ = ZoneInfo("America/New_York")
+COLLECTION_WEEKDAY = 6  # Sunday (Monday = 0)
+COLLECTION_TIME = time(20, 0)
+
+
+def order_collection_time(placed_at):
+    """The Sunday 8:00 PM ET collection an order placed at `placed_at` belongs to.
+
+    Members can change or delete the order until then. An order placed at or
+    after 8:00 PM on a Sunday goes into the following Sunday's collection.
+    """
+    if placed_at.tzinfo is None:  # stored as UTC without a timezone
+        placed_at = placed_at.replace(tzinfo=timezone.utc)
+    local = placed_at.astimezone(LIBRARY_TZ)
+    days_ahead = (COLLECTION_WEEKDAY - local.weekday()) % 7
+    collection = datetime.combine(
+        local.date() + timedelta(days=days_ahead), COLLECTION_TIME, tzinfo=LIBRARY_TZ
+    )
+    if collection <= local:
+        collection += timedelta(days=7)
+    return collection
 
 db = SQLAlchemy()
 
@@ -172,10 +196,23 @@ class BookRequest(db.Model):
         created = self.created_at or datetime.now(timezone.utc)
         self.order_number = f"ORD-{created:%Y%m%d}-{self.id:05d}"
 
+    @property
+    def collection_time(self):
+        return order_collection_time(self.created_at or datetime.now(timezone.utc))
+
+    def can_be_changed(self, now=None):
+        """Members may change or delete until the Sunday collection (and while pending)."""
+        now = now or datetime.now(timezone.utc)
+        return self.status == "pending" and now < self.collection_time
+
     def to_dict(self):
+        collection = self.collection_time
         return {
             "id": self.id,
             "order_number": self.order_number,
+            "collection_date": f"{collection:%A, %B} {collection.day}, {collection.year}",
+            "collection_at": collection.isoformat(),
+            "can_modify": self.can_be_changed(),
             "title": self.title,
             "author": self.author,
             "copies": self.copies,

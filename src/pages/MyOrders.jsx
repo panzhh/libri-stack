@@ -167,7 +167,19 @@ export default function MyOrders() {
                 </p>
               )}
               {/* Members can change or delete an order until the library acts on it */}
-              {order.status === "pending" &&
+              <p
+                className={`mt-3 p-3 rounded-xl text-base font-bold ${
+                  order.can_modify
+                    ? "bg-indigo-50 border border-indigo-200 text-indigo-900"
+                    : "bg-slate-100 border border-slate-300 text-slate-800"
+                }`}
+              >
+                {order.can_modify
+                  ? `Collected ${order.collection_date} at 8:00 PM ET. You can change or delete it until then.`
+                  : "Locked: the library is processing this order."}
+              </p>
+
+              {order.can_modify &&
                 (editingId === order.id ? (
                   <form
                     onSubmit={(e) => {

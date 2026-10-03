@@ -239,7 +239,8 @@ export default function OrderBooks() {
                   {r.language || "Any language"}
                 </p>
                 <p className='text-sm text-slate-800 mt-1'>
-                  Requested {r.date}
+                  Requested {r.date} · Collected {r.collection_date}, 8:00 PM
+                  ET
                 </p>
                 {r.admin_note && (
                   <p className='text-base text-black mt-2 bg-slate-300 p-3 rounded-xl'>

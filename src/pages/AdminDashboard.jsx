@@ -2005,6 +2005,9 @@ export default function AdminDashboard() {
                       <p className='text-slate-700 text-sm font-bold mt-1'>
                         {r.requested_by} · {r.requester_email} · {r.date}
                       </p>
+                      <p className='text-slate-900 text-sm font-black mt-1'>
+                        Collection: {r.collection_date}, 8:00 PM ET
+                      </p>
                     </div>
                     <select
                       value={r.status}
