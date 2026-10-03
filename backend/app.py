@@ -801,6 +801,8 @@ to check your borrowed books.
 If you have lost this book, please contact the library as soon as possible
 by email at {CONTACT_EMAIL}.
 
+If you have already returned this book, please ignore this email.
+
 {LIBRARY_NAME}
 {FRONTEND_URL}
 """
