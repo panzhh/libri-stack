@@ -96,45 +96,11 @@ heroku config:set -a libri-stack-be \
 | `CONTACT_EMAIL` | optional | Where Contact Us messages are emailed (default `churchlibdl@gmail.com`). |
 | `FRONTEND_URL` | Heroku | Base URL for links in emails (default `http://localhost:5173`). |
 | `VITE_API_URL` | local `.env` | Backend URL for the dev server. Leave unset on Heroku: the site calls the API on the same domain. |
-| `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | Heroku | Send through the Gmail API (see below). |
 | `RUN_SCHEDULER` | optional | Set to `0` to turn off the daily reminder job. |
 
 The daily reminder only runs while the dyno is awake. On an Eco dyno, which
 sleeps when idle, set `RUN_SCHEDULER=0` and add the Heroku Scheduler add-on
 with a daily job running `python backend/send_reminders.py`.
-
-## Sending email from Heroku (Gmail API)
-
-Gmail refuses SMTP password logins from Heroku's servers, so the live site
-sends through the **Gmail API** as churchlibdl@gmail.com. Locally, the normal
-SMTP settings in `.env` keep working. One-time setup, about 15 minutes:
-
-1. Open https://console.cloud.google.com and sign in as **churchlibdl@gmail.com**.
-   Create a project, e.g. "Library Website".
-2. **APIs & Services > Library**: search for **Gmail API** and click **Enable**.
-3. **Google Auth Platform** (OAuth consent screen): click **Get started**.
-   App name "Church in Dunn Loring Library", support and contact email
-   churchlibdl@gmail.com, audience **External**. Then under **Audience** click
-   **Publish app** so it is "In production". (In "Testing" mode Google expires
-   the permission after 7 days and emails stop.)
-4. **Clients > Create client**: application type **Desktop app**, any name.
-   Click **Download JSON**.
-5. On your computer:
-   ```bash
-   cd backend
-   venv/bin/python gmail_authorize.py ~/Downloads/client_secret_XXXX.json
-   ```
-   A browser opens. Choose churchlibdl@gmail.com. Google warns "Google hasn't
-   verified this app": click **Advanced > Go to Church in Dunn Loring Library**,
-   then **Continue**. Only the "send email" permission is requested.
-6. Run the `heroku config:set ... GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=...
-   GMAIL_REFRESH_TOKEN=...` command the script prints. Then delete the
-   downloaded JSON file (or keep it somewhere private).
-
-When the three `GMAIL_*` settings are present, all emails go through the
-Gmail API; remove them to go back to SMTP. If emails stop later with
-"Gmail API authorisation failed", the permission was revoked (for example
-from the Google account's security page); repeat steps 5 and 6.
 
 ## Useful scripts
 
