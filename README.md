@@ -91,6 +91,9 @@ heroku config:set -a libri-stack-be \
 | `DATABASE_URL` | Heroku (automatic) | Heroku Postgres. |
 | `JWT_SECRET_KEY` | both | Signs login tokens and email-verification links. |
 | `MAIL_USERNAME`, `MAIL_PASSWORD` | both | Gmail account used to send emails. |
+| `MAIL_SERVER`, `MAIL_PORT` | optional | SMTP server (default `smtp.gmail.com` / `587`). Gmail blocks logins from Heroku, so production can use an email service such as Brevo (`smtp-relay.brevo.com` / `587`). |
+| `MAIL_DEFAULT_SENDER` | optional | The From address (default `MAIL_USERNAME`). Set it to `churchlibdl@gmail.com` when `MAIL_USERNAME` is an email service login. |
+| `CONTACT_EMAIL` | optional | Where Contact Us messages are emailed (default `churchlibdl@gmail.com`). |
 | `FRONTEND_URL` | Heroku | Base URL for links in emails (default `http://localhost:5173`). |
 | `VITE_API_URL` | local `.env` | Backend URL for the dev server. Leave unset on Heroku: the site calls the API on the same domain. |
 | `RUN_SCHEDULER` | optional | Set to `0` to turn off the daily reminder job. |
