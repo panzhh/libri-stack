@@ -3,6 +3,30 @@ import { API_URL, authHeaders } from "../api";
 import { STATUS_LABELS, STATUS_STYLES } from "../utils/requestStatus";
 
 const STATUSES = Object.keys(STATUS_LABELS);
+// Sort options for the table (and the CSV, which follows the table)
+const byText = (key) => (a, b) =>
+  (a[key] || "").localeCompare(b[key] || "", undefined, {
+    sensitivity: "base",
+  });
+const byTime = (a, b) => new Date(a.ordered_at) - new Date(b.ordered_at);
+const SORTS = {
+  newest: {
+    label: "Order time (newest first)",
+    compare: (a, b) => byTime(b, a),
+  },
+  oldest: { label: "Order time (oldest first)", compare: byTime },
+  title: { label: "Book title (A–Z)", compare: byText("title") },
+  member: { label: "Member name (A–Z)", compare: byText("requested_by") },
+  total: {
+    label: "Total (highest first)",
+    compare: (a, b) => (b.total_price ?? -1) - (a.total_price ?? -1),
+  },
+  copies: {
+    label: "Copies (most first)",
+    compare: (a, b) => (Number(b.copies) || 0) - (Number(a.copies) || 0),
+  },
+};
+
 const money = (n) => (n == null ? "—" : `$${Number(n).toFixed(2)}`);
 
 // One row per order, for the CSV download
@@ -37,6 +61,7 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [collection, setCollection] = useState("next"); // "next", "all" or a date
   const [status, setStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState({}); // unsaved library notes by order id
 
@@ -90,16 +115,24 @@ export default function AdminOrders() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const wanted = collection === "next" ? nextCollection : collection;
-    return orders.filter(
-      (o) =>
-        (collection === "all" || o.collection_at === wanted) &&
-        (status === "all" || o.status === status) &&
-        (!q ||
-          [o.title, o.author, o.order_number, o.requested_by, o.requester_email]
-            .filter(Boolean)
-            .some((v) => v.toLowerCase().includes(q))),
-    );
-  }, [orders, collection, nextCollection, status, search]);
+    return orders
+      .filter(
+        (o) =>
+          (collection === "all" || o.collection_at === wanted) &&
+          (status === "all" || o.status === status) &&
+          (!q ||
+            [
+              o.title,
+              o.author,
+              o.order_number,
+              o.requested_by,
+              o.requester_email,
+            ]
+              .filter(Boolean)
+              .some((v) => v.toLowerCase().includes(q))),
+      )
+      .sort(SORTS[sortBy].compare);
+  }, [orders, collection, nextCollection, status, search, sortBy]);
 
   const totals = filtered.reduce(
     (t, o) => ({
@@ -159,6 +192,20 @@ export default function AdminOrders() {
             {STATUSES.map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABELS[s]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelClass}>Sort by</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className={selectClass}
+          >
+            {Object.entries(SORTS).map(([key, { label }]) => (
+              <option key={key} value={key}>
+                {label}
               </option>
             ))}
           </select>
