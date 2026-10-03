@@ -24,16 +24,25 @@ export default function Home() {
   const [orderForm, setOrderForm] = useState({ copies: 1, notes: "" });
   const [orderStatus, setOrderStatus] = useState({ type: "", msg: "" });
   const [sendingOrder, setSendingOrder] = useState(false);
+  const [orderStep, setOrderStep] = useState("form"); // form -> confirm -> sent
 
   const openBook = (book, mode) => {
     setSelectedBook(book);
     setModalMode(mode);
     setOrderForm({ copies: 1, notes: "" });
     setOrderStatus({ type: "", msg: "" });
+    setOrderStep("form");
   };
 
-  const handleOrder = async (e) => {
-    e.preventDefault();
+  // Unit price and total for the confirmation step (null when unknown)
+  const unitPrice = Number(selectedBook?.listPriceUsd);
+  const hasPrice = Number.isFinite(unitPrice) && unitPrice > 0;
+  const orderTotal = hasPrice
+    ? unitPrice * Number(orderForm.copies || 0)
+    : null;
+  const money = (n) => `$${n.toFixed(2)}`;
+
+  const submitOrder = async () => {
     setSendingOrder(true);
     setOrderStatus({ type: "", msg: "" });
     try {
@@ -50,6 +59,7 @@ export default function Home() {
       });
       const data = await response.json();
       if (response.ok) {
+        setOrderStep("sent");
         setOrderStatus({
           type: "success",
           msg: `Thank you! Your request for ${data.copies} ${data.copies === 1 ? "copy" : "copies"} has been sent to the library team. You can follow it on the Order Books page.`,
@@ -64,6 +74,12 @@ export default function Home() {
     }
   };
   const latestRequest = useRef(0); // ignore responses that arrive out of order
+  const modalBody = useRef(null);
+
+  // Each order step starts at the top of the pop-up
+  useEffect(() => {
+    modalBody.current?.scrollTo(0, 0);
+  }, [orderStep]);
 
   // Wait until the user pauses typing before searching
   useEffect(() => {
@@ -435,43 +451,99 @@ export default function Home() {
             </div>
 
             {/* Scrollable Details */}
-            <div className="p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-                {[
-                  { label: "Series", key: "series" },
-                  { label: "Volume", key: "volume" },
-                  { label: "Publisher", key: "publisher" },
-                  { label: "Genre", key: "genre" },
-                  { label: "Language", key: "language" },
-                  { label: "ISBN", key: "isbn" },
-                  { label: "Pages", key: "numberOfPages" },
-                  { label: "Price", key: "listPriceUsd" },
-                  { label: "Summary", key: "summary", fullWidth: true },
-                ].map((field) => {
-                  let value = selectedBook[field.key];
-                  if (value === null || value === undefined || value === "")
-                    return null;
-                  if (field.key === "listPriceUsd")
-                    value = `$${Number(value).toFixed(2)}`;
-                  if (typeof value === "string")
-                    value = value.replace(/^https?:\/\/(www\.)?/, "");
-                  return (
-                    <div
-                      key={field.key}
-                      className={`border-b-2 border-slate-300 pb-3 ${field.fullWidth ? "sm:col-span-2" : ""}`}
-                    >
-                      <p className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1">
-                        {field.label}
-                      </p>
-                      <p className="text-lg font-bold text-slate-900 leading-relaxed break-words">
-                        {value}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+            <div
+              ref={modalBody}
+              className="p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1"
+            >
+              {orderStep !== "confirm" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+                  {[
+                    { label: "Series", key: "series" },
+                    { label: "Volume", key: "volume" },
+                    { label: "Publisher", key: "publisher" },
+                    { label: "Genre", key: "genre" },
+                    { label: "Language", key: "language" },
+                    { label: "ISBN", key: "isbn" },
+                    { label: "Pages", key: "numberOfPages" },
+                    { label: "Price", key: "listPriceUsd" },
+                    { label: "Summary", key: "summary", fullWidth: true },
+                  ].map((field) => {
+                    let value = selectedBook[field.key];
+                    if (value === null || value === undefined || value === "")
+                      return null;
+                    if (field.key === "listPriceUsd")
+                      value = `$${Number(value).toFixed(2)}`;
+                    if (typeof value === "string")
+                      value = value.replace(/^https?:\/\/(www\.)?/, "");
+                    return (
+                      <div
+                        key={field.key}
+                        className={`border-b-2 border-slate-300 pb-3 ${field.fullWidth ? "sm:col-span-2" : ""}`}
+                      >
+                        <p className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1">
+                          {field.label}
+                        </p>
+                        <p className="text-lg font-bold text-slate-900 leading-relaxed break-words">
+                          {value}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
-              {modalMode === "order" && (
+              {modalMode === "order" && orderStep === "confirm" && (
+                <div>
+                  <h3 className="text-xl font-black uppercase text-slate-900 mb-4">
+                    Please confirm your order
+                  </h3>
+                  {orderStatus.type === "error" && (
+                    <p className="mb-4 p-4 rounded-2xl text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
+                      {orderStatus.msg}
+                    </p>
+                  )}
+                  <dl className="bg-white border-2 border-slate-300 rounded-2xl divide-y-2 divide-slate-200">
+                    {[
+                      ["Book", selectedBook.title],
+                      ["Author", selectedBook.author],
+                      ["Language", selectedBook.language],
+                      ["Copies", orderForm.copies],
+                      [
+                        "Price per copy",
+                        hasPrice ? money(unitPrice) : "Not available",
+                      ],
+                      ["Notes", orderForm.notes.trim()],
+                    ]
+                      .filter(
+                        ([, value]) =>
+                          value !== null && value !== undefined && value !== "",
+                      )
+                      .map(([label, value]) => (
+                        <div
+                          key={label}
+                          className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 px-4 py-3"
+                        >
+                          <dt className="text-base font-black uppercase tracking-wide text-slate-800 shrink-0">
+                            {label}
+                          </dt>
+                          <dd className="text-lg font-bold text-slate-900 sm:text-right break-words min-w-0">
+                            {value}
+                          </dd>
+                        </div>
+                      ))}
+                    <div className="flex justify-between items-center gap-4 px-4 py-4 bg-blue-50 rounded-b-2xl">
+                      <dt className="text-lg font-black uppercase text-slate-900">
+                        Total
+                      </dt>
+                      <dd className="text-2xl font-black text-blue-800">
+                        {hasPrice ? money(orderTotal) : "Price not available"}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+
+              {modalMode === "order" && orderStep !== "confirm" && (
                 <div className="mt-6 pt-6 border-t-2 border-slate-400">
                   <h3 className="text-xl font-black uppercase text-slate-900 mb-4">
                     Order this book
@@ -495,7 +567,10 @@ export default function Home() {
                   ) : (
                     <form
                       id="order-form"
-                      onSubmit={handleOrder}
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        setOrderStep("confirm");
+                      }}
                       className="space-y-4"
                     >
                       {orderStatus.msg && (
@@ -549,13 +624,31 @@ export default function Home() {
 
             {/* Footer Actions */}
             <div className="p-5 sm:p-6 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-3">
-              <button
-                onClick={() => setSelectedBook(null)}
-                className="px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider"
-              >
-                Close
-              </button>
-              {modalMode === "order" ? (
+              {modalMode === "order" && orderStep === "confirm" ? (
+                <button
+                  onClick={() => setOrderStep("form")}
+                  disabled={sendingOrder}
+                  className="px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider"
+                >
+                  Back
+                </button>
+              ) : (
+                <button
+                  onClick={() => setSelectedBook(null)}
+                  className="px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider"
+                >
+                  Close
+                </button>
+              )}
+              {modalMode === "order" && orderStep === "confirm" ? (
+                <button
+                  onClick={submitOrder}
+                  disabled={sendingOrder}
+                  className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wide sm:tracking-wider transition-all shadow-xl bg-blue-700 text-white hover:bg-blue-800 disabled:bg-slate-500"
+                >
+                  {sendingOrder ? "Ordering..." : "Confirm Order"}
+                </button>
+              ) : modalMode === "order" ? (
                 localStorage.getItem("token") &&
                 orderStatus.type !== "success" && (
                   <button
@@ -564,7 +657,7 @@ export default function Home() {
                     disabled={sendingOrder}
                     className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wide sm:tracking-wider transition-all shadow-xl bg-blue-700 text-white hover:bg-blue-800 disabled:bg-slate-500"
                   >
-                    {sendingOrder ? "Ordering..." : "Order"}
+                    Order
                   </button>
                 )
               ) : (
