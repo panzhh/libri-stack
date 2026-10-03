@@ -213,7 +213,10 @@ export default function Home() {
       </section>
 
       {/* CATALOG HEADING */}
-      <div id="catalog" className="scroll-mt-6 mb-4 flex flex-wrap items-baseline gap-x-4">
+      <div
+        id="catalog"
+        className="scroll-mt-6 mb-4 flex flex-wrap items-baseline gap-x-4"
+      >
         <h2 className="gb-h2">Browse the collection</h2>
         <p className="text-lg text-gb-muted">
           {loading
@@ -226,9 +229,7 @@ export default function Home() {
 
       <div className="gb-box mb-8 p-5 flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 items-end">
         <div className="flex flex-col w-full sm:w-auto">
-          <label className="gb-label">
-            Language
-          </label>
+          <label className="gb-label">Language</label>
           <select
             value={selectedLang}
             onChange={(e) => {
@@ -244,9 +245,7 @@ export default function Home() {
           </select>
         </div>
         <div className="flex flex-col w-full sm:w-auto">
-          <label className="gb-label">
-            Sort By
-          </label>
+          <label className="gb-label">Sort By</label>
           <select
             value={sortBy}
             onChange={(e) => {
@@ -259,9 +258,7 @@ export default function Home() {
           </select>
         </div>
         <div className="flex flex-col w-full sm:w-auto">
-          <label className="gb-label">
-            Available
-          </label>
+          <label className="gb-label">Available</label>
           <select
             value={availability}
             onChange={(e) => {
@@ -275,9 +272,7 @@ export default function Home() {
           </select>
         </div>
         <div className="flex flex-col w-full lg:w-auto lg:flex-1 lg:min-w-[300px] lg:ml-4">
-          <label className="gb-label">
-            Search Books
-          </label>
+          <label className="gb-label">Search Books</label>
           <div className="relative w-full">
             <input
               type="text"
@@ -288,7 +283,10 @@ export default function Home() {
               }}
               className="gb-input py-2.5 pr-12"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl" aria-hidden="true">
+            <span
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xl"
+              aria-hidden="true"
+            >
               🔍
             </span>
           </div>
@@ -299,9 +297,7 @@ export default function Home() {
       {loading && books.length === 0 && (
         <div className="flex flex-col items-center py-16">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gb-dark mb-4"></div>
-          <p className="text-lg font-bold">
-            Loading books...
-          </p>
+          <p className="text-lg font-bold">Loading books...</p>
         </div>
       )}
       {!loading && books.length === 0 && (
@@ -316,10 +312,7 @@ export default function Home() {
       {/* BOOK LIST */}
       <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-10">
         {books.map((book) => (
-          <li
-            key={book.id}
-            className="flex gap-5 py-5 border-b border-gb-line"
-          >
+          <li key={book.id} className="flex gap-5 py-5 border-b border-gb-line">
             <button
               onClick={() => openBook(book, "view")}
               className="w-20 h-28 shrink-0 bg-gb-box border border-gb-line rounded flex items-center justify-center text-4xl overflow-hidden"
@@ -345,7 +338,9 @@ export default function Home() {
               >
                 {book.title}
               </button>
-              <p className="text-base mt-1">{book.author || "Unknown author"}</p>
+              <p className="text-base mt-1">
+                {book.author || "Unknown author"}
+              </p>
               <p
                 className={`text-base mt-1 font-semibold ${(book.copies || 0) > 0 ? "text-emerald-800" : "text-gb-red"}`}
               >
@@ -396,7 +391,10 @@ export default function Home() {
       {/* MODAL (Restored all fields) */}
 
       {selectedBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300"
+          onClick={(e) => e.target === e.currentTarget && setSelectedBook(null)}
+        >
           <div className="bg-white w-full max-w-2xl max-h-[85vh] rounded-xl shadow-sm overflow-hidden flex flex-col animate-in zoom-in-95">
             {/* Header Section */}
             <div className="p-6 border-b-2 border-gb-line flex gap-5 items-start bg-gb-box">
@@ -541,9 +539,7 @@ export default function Home() {
                         </div>
                       ))}
                     <div className="flex justify-between items-center gap-4 px-4 py-4 bg-blue-50 rounded-b-2xl">
-                      <dt className="text-lg font-bold text-black">
-                        Total
-                      </dt>
+                      <dt className="text-lg font-bold text-black">Total</dt>
                       <dd className="text-2xl font-bold text-gb-darker">
                         {hasPrice ? money(orderTotal) : "Price not available"}
                       </dd>
@@ -645,68 +641,66 @@ export default function Home() {
               )}
             </div>
 
-            {/* Footer Actions */}
-            <div className="p-5 sm:p-6 bg-gb-box border-t-2 border-gb-line flex flex-wrap justify-end gap-3">
-              {modalMode === "order" && orderStep === "confirm" ? (
-                <button
-                  onClick={() => setOrderStep("form")}
-                  disabled={sendingOrder}
-                  className="flex-1 sm:flex-none px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold"
-                >
-                  Back
-                </button>
-              ) : (
-                <button
-                  onClick={() => setSelectedBook(null)}
-                  className="flex-1 sm:flex-none px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold"
-                >
-                  Close
-                </button>
-              )}
-              {modalMode === "order" && orderStep === "confirm" ? (
-                <button
-                  onClick={submitOrder}
-                  disabled={sendingOrder}
-                  className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold transition-colors bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
-                >
-                  {sendingOrder ? "Ordering..." : "Confirm Order"}
-                </button>
-              ) : modalMode === "order" ? (
-                localStorage.getItem("token") &&
-                orderStatus.type !== "success" && (
+            {/* Footer Actions (close with the ✕ or by clicking outside) */}
+            {!(
+              modalMode === "order" &&
+              (orderStep === "sent" || !localStorage.getItem("token"))
+            ) && (
+              <div className="p-5 sm:p-6 bg-gb-box border-t-2 border-gb-line flex flex-wrap justify-end gap-3">
+                {modalMode === "order" && orderStep === "confirm" && (
                   <button
-                    type="submit"
-                    form="order-form"
+                    onClick={() => setOrderStep("form")}
+                    disabled={sendingOrder}
+                    className="flex-1 sm:flex-none px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold"
+                  >
+                    Back
+                  </button>
+                )}
+                {modalMode === "order" && orderStep === "confirm" ? (
+                  <button
+                    onClick={submitOrder}
                     disabled={sendingOrder}
                     className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold transition-colors bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
                   >
-                    Order
+                    {sendingOrder ? "Ordering..." : "Confirm Order"}
                   </button>
-                )
-              ) : (
-                <>
-                  <button
-                    onClick={() => openBook(selectedBook, "order")}
-                    className="gb-btn-light flex-1 sm:flex-none px-6 py-4"
-                  >
-                    Order Book
-                  </button>
-                  <button
-                    onClick={() => handleBorrow(selectedBook.id)}
-                    disabled={selectedBook.availableCopies <= 0}
-                    className={`w-full sm:w-auto px-6 sm:px-8 py-4 rounded-lg text-base font-bold transition-colors ${
-                      selectedBook.availableCopies > 0
-                        ? "bg-gb-dark text-white hover:bg-gb-darker"
-                        : "bg-slate-200 text-gb-muted cursor-not-allowed"
-                    }`}
-                  >
-                    {selectedBook.availableCopies > 0
-                      ? "Borrow This Book"
-                      : "Out of Stock"}
-                  </button>
-                </>
-              )}
-            </div>
+                ) : modalMode === "order" ? (
+                  localStorage.getItem("token") &&
+                  orderStatus.type !== "success" && (
+                    <button
+                      type="submit"
+                      form="order-form"
+                      disabled={sendingOrder}
+                      className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold transition-colors bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
+                    >
+                      Order
+                    </button>
+                  )
+                ) : (
+                  <>
+                    <button
+                      onClick={() => openBook(selectedBook, "order")}
+                      className="gb-btn-light flex-1 sm:flex-none px-6 py-4"
+                    >
+                      Order this book
+                    </button>
+                    <button
+                      onClick={() => handleBorrow(selectedBook.id)}
+                      disabled={selectedBook.availableCopies <= 0}
+                      className={`w-full sm:w-auto px-6 sm:px-8 py-4 rounded-lg text-base font-bold transition-colors ${
+                        selectedBook.availableCopies > 0
+                          ? "bg-gb-dark text-white hover:bg-gb-darker"
+                          : "bg-slate-200 text-gb-muted cursor-not-allowed"
+                      }`}
+                    >
+                      {selectedBook.availableCopies > 0
+                        ? "Borrow This Book"
+                        : "Out of Stock"}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
