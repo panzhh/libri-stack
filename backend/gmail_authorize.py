@@ -6,7 +6,7 @@ Run on your own computer (not on Heroku), from the backend folder:
 
 `client_secret.json` is the OAuth client ("Desktop app") downloaded from the
 Google Cloud Console. A browser opens; sign in as the library's Gmail account
-(the one in Heroku's MAIL_USERNAME, e.g. fuyinshubao@gmail.com) and click Allow. The script then prints the
+(the one in Heroku's MAIL_USERNAME, churchlibdl@gmail.com) and click Allow. The script then prints the
 `heroku config:set` command with the three GMAIL_* settings.
 
 Only the "send email" permission is requested: the site cannot read the inbox.
