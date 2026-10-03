@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { API_URL, authHeaders } from "../api";
-import { STATUS_STYLES } from "../utils/requestStatus";
 
 const money = (n) => `$${Number(n).toFixed(2)}`;
 
@@ -122,11 +121,6 @@ export default function MyOrders() {
                     </p>
                   )}
                 </div>
-                <span
-                  className={`shrink-0 px-3 py-1 rounded-lg border text-sm font-black uppercase tracking-wider ${STATUS_STYLES[order.status]}`}
-                >
-                  {order.status}
-                </span>
               </div>
 
               <dl className='mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm'>

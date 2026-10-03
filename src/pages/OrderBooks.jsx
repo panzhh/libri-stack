@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { STATUS_STYLES } from "../utils/requestStatus";
 import { API_URL, authHeaders } from "../api";
 
 const emptyForm = { title: "", author: "", copies: 1, language: "", notes: "" };
@@ -234,11 +233,6 @@ export default function OrderBooks() {
                       </p>
                     )}
                   </div>
-                  <span
-                    className={`shrink-0 px-3 py-1 rounded-lg border text-sm font-black uppercase tracking-wider ${STATUS_STYLES[r.status]}`}
-                  >
-                    {r.status}
-                  </span>
                 </div>
                 <p className='text-base font-bold text-slate-900 mt-2'>
                   {r.copies} {r.copies === 1 ? "copy" : "copies"} ·{" "}
