@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL, authHeaders, coverUrl, showFallbackCover } from "../api";
-import { STATUS_STYLES } from "../utils/requestStatus";
+import AdminOrders from "../components/AdminOrders";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -94,51 +94,6 @@ export default function AdminDashboard() {
     if (activeTab === "messages") fetchMessages();
   }, [activeTab]);
 
-  // --- BOOK REQUESTS ---
-  const [bookRequests, setBookRequests] = useState([]);
-  const [requestNotes, setRequestNotes] = useState({}); // unsaved admin notes by request id
-
-  const fetchBookRequests = async () => {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/admin/book-requests`,
-        { headers: authHeaders() },
-      );
-      if (response.ok) setBookRequests(await response.json());
-    } catch (error) {
-      console.error("Error fetching book requests:", error);
-    }
-  };
-
-  const updateBookRequest = async (id, changes) => {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/admin/book-requests/${id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            ...authHeaders(),
-          },
-          body: JSON.stringify(changes),
-        },
-      );
-      const data = await response.json();
-      if (!response.ok) return alert(data.error || "Update failed");
-      setBookRequests((prev) => prev.map((r) => (r.id === id ? data : r)));
-      setRequestNotes((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    } catch (error) {
-      console.error("Error updating book request:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === "requests") fetchBookRequests();
-  }, [activeTab]);
 
   // --- FETCH: ADMIN PROFILE ---
   const fetchAdminProfile = async () => {
@@ -689,14 +644,14 @@ export default function AdminDashboard() {
                 Contact Messages
               </li>
               <li
-                onClick={() => goTab("requests")}
+                onClick={() => goTab("orders")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
-                  activeTab === "requests"
+                  activeTab === "orders"
                     ? "bg-rose-500 text-white border-rose-500 shadow-lg"
                     : "text-slate-300 hover:text-white border-transparent"
                 }`}
               >
-                Book Requests
+                Order Books
               </li>
             </ul>
           </div>
@@ -744,8 +699,8 @@ export default function AdminDashboard() {
                       ? "Contact Messages"
                       : activeTab === "add-book"
                         ? "Add New Book"
-                        : activeTab === "requests"
-                          ? "Book Requests"
+                        : activeTab === "orders"
+                          ? "Order Books"
                           : "User Management"}
           </h2>
         </header>
@@ -1959,106 +1914,7 @@ export default function AdminDashboard() {
             </div>
           </section>
         )}
-        {activeTab === "requests" && (
-          <section className='animate-in fade-in space-y-6'>
-            <div className='flex justify-between items-center mb-8'>
-              <h3 className='text-2xl font-black text-slate-900 uppercase italic'>
-                Requests From Members
-              </h3>
-              <span className='bg-amber-100 text-amber-800 px-4 py-1 rounded-full text-sm font-black uppercase'>
-                {bookRequests.filter((r) => r.status === "pending").length}{" "}
-                Pending
-              </span>
-            </div>
-
-            {bookRequests.length === 0 ? (
-              <div className='py-20 text-center bg-slate-200 rounded-[3rem] border-2 border-dashed border-slate-400'>
-                <p className='text-slate-700 font-black text-base uppercase'>
-                  No book requests yet
-                </p>
-              </div>
-            ) : (
-              bookRequests.map((r) => (
-                <div
-                  key={r.id}
-                  className='bg-slate-200 p-8 rounded-[2.5rem] border border-slate-400 shadow-sm'
-                >
-                  <div className='flex flex-wrap justify-between items-start gap-4 mb-4'>
-                    <div>
-                      {r.order_number && (
-                        <p className='text-sm font-black text-indigo-700 tracking-wide whitespace-nowrap'>
-                          Order #{r.order_number}
-                        </p>
-                      )}
-                      <h4 className='font-black text-slate-900 text-xl'>
-                        {r.title}
-                      </h4>
-                      {r.author && (
-                        <p className='text-slate-800 text-base italic'>
-                          by {r.author}
-                        </p>
-                      )}
-                      <p className='text-slate-900 text-base font-black mt-2'>
-                        {r.copies} {r.copies === 1 ? "copy" : "copies"} ·{" "}
-                        {r.language || "Any language"}
-                      </p>
-                      <p className='text-slate-700 text-sm font-bold mt-1'>
-                        {r.requested_by} · {r.requester_email} · {r.date}
-                      </p>
-                      <p className='text-slate-900 text-sm font-black mt-1'>
-                        Collection: {r.collection_date}, 8:00 PM ET
-                      </p>
-                    </div>
-                    <select
-                      value={r.status}
-                      onChange={(e) =>
-                        updateBookRequest(r.id, { status: e.target.value })
-                      }
-                      className={`px-4 py-2 rounded-xl border-2 text-sm font-black uppercase cursor-pointer outline-none ${STATUS_STYLES[r.status]}`}
-                    >
-                      <option value='pending'>Pending</option>
-                      <option value='ordered'>Ordered</option>
-                      <option value='arrived'>Arrived</option>
-                      <option value='declined'>Declined</option>
-                    </select>
-                  </div>
-
-                  {r.notes && (
-                    <p className='text-slate-900 text-base leading-relaxed bg-slate-300 p-4 rounded-2xl border border-slate-400 italic mb-4'>
-                      "{r.notes}"
-                    </p>
-                  )}
-
-                  <div className='flex flex-col sm:flex-row gap-3'>
-                    <input
-                      type='text'
-                      placeholder='Note for the member, e.g. "Expected next month"'
-                      value={requestNotes[r.id] ?? r.admin_note ?? ""}
-                      onChange={(e) =>
-                        setRequestNotes({
-                          ...requestNotes,
-                          [r.id]: e.target.value,
-                        })
-                      }
-                      className='flex-1 px-4 py-3 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 placeholder:text-slate-500 outline-none focus:border-indigo-700'
-                    />
-                    <button
-                      disabled={requestNotes[r.id] === undefined}
-                      onClick={() =>
-                        updateBookRequest(r.id, {
-                          admin_note: requestNotes[r.id],
-                        })
-                      }
-                      className='px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-black uppercase hover:bg-indigo-600 transition-all disabled:opacity-40'
-                    >
-                      Save Note
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </section>
-        )}
+        {activeTab === "orders" && <AdminOrders />}
       </main>
     </div>
   );

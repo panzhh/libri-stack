@@ -207,8 +207,14 @@ class BookRequest(db.Model):
 
     def to_dict(self):
         collection = self.collection_time
+        placed = self.created_at or datetime.now(timezone.utc)
+        if placed.tzinfo is None:
+            placed = placed.replace(tzinfo=timezone.utc)
+        placed = placed.astimezone(LIBRARY_TZ)
         return {
             "id": self.id,
+            "ordered_at": placed.isoformat(),
+            "ordered_at_display": f"{placed:%Y-%m-%d} {placed:%I:%M %p}".replace(" 0", " "),
             "order_number": self.order_number,
             "collection_date": f"{collection:%A, %B} {collection.day}, {collection.year}",
             "collection_at": collection.isoformat(),
