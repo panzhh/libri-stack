@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { STATUS_STYLES } from "../utils/requestStatus";
 import { API_URL, authHeaders } from "../api";
 
@@ -7,14 +7,7 @@ const emptyForm = { title: "", author: "", copies: 1, language: "", notes: "" };
 
 export default function OrderBooks() {
   const token = localStorage.getItem("token");
-  // "Order Book" on a catalog card passes the book's details along
-  const prefill = useLocation().state || {};
-  const [formData, setFormData] = useState({
-    ...emptyForm,
-    title: prefill.title || "",
-    author: prefill.author || "",
-    language: prefill.language || "",
-  });
+  const [formData, setFormData] = useState(emptyForm);
   const [languages, setLanguages] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);

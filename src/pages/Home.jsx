@@ -19,6 +19,50 @@ export default function Home() {
   const [availability, setAvailability] = useState("in-stock");
   const [sortBy, setSortBy] = useState("title");
   const [selectedBook, setSelectedBook] = useState(null);
+  // The book pop-up has two modes: "view" (borrow) and "order" (request copies)
+  const [modalMode, setModalMode] = useState("view");
+  const [orderForm, setOrderForm] = useState({ copies: 1, notes: "" });
+  const [orderStatus, setOrderStatus] = useState({ type: "", msg: "" });
+  const [sendingOrder, setSendingOrder] = useState(false);
+
+  const openBook = (book, mode) => {
+    setSelectedBook(book);
+    setModalMode(mode);
+    setOrderForm({ copies: 1, notes: "" });
+    setOrderStatus({ type: "", msg: "" });
+  };
+
+  const handleOrder = async (e) => {
+    e.preventDefault();
+    setSendingOrder(true);
+    setOrderStatus({ type: "", msg: "" });
+    try {
+      const response = await fetch(`${API_URL}/api/book-requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({
+          title: selectedBook.title,
+          author: selectedBook.author,
+          language: selectedBook.language,
+          copies: orderForm.copies,
+          notes: orderForm.notes,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setOrderStatus({
+          type: "success",
+          msg: `Thank you! Your request for ${data.copies} ${data.copies === 1 ? "copy" : "copies"} has been sent to the library team. You can follow it on the Order Books page.`,
+        });
+      } else {
+        setOrderStatus({ type: "error", msg: data.error || data.msg });
+      }
+    } catch {
+      setOrderStatus({ type: "error", msg: "Could not reach the server." });
+    } finally {
+      setSendingOrder(false);
+    }
+  };
   const latestRequest = useRef(0); // ignore responses that arrive out of order
 
   // Wait until the user pauses typing before searching
@@ -285,23 +329,18 @@ export default function Home() {
 
             <div className="mt-auto flex flex-col gap-2">
               <button
-                onClick={() => setSelectedBook(book)}
+                onClick={() => openBook(book, "view")}
                 className="w-full text-sm font-black uppercase tracking-wider bg-blue-700 border-2 border-blue-700 text-white px-4 py-3 rounded-xl hover:bg-blue-800 hover:border-blue-800 transition-colors shadow-lg"
               >
                 View &amp; Borrow
               </button>
               {/* Ask the library to order (more) copies of this book */}
-              <Link
-                to="/order-books"
-                state={{
-                  title: book.title,
-                  author: book.author,
-                  language: book.language,
-                }}
-                className="w-full flex items-center justify-center text-center text-sm font-black uppercase tracking-wider bg-white border-2 border-slate-900 text-slate-900 px-4 py-3 rounded-xl hover:bg-slate-900 hover:text-white transition-colors"
+              <button
+                onClick={() => openBook(book, "order")}
+                className="w-full text-sm font-black uppercase tracking-wider bg-white border-2 border-slate-900 text-slate-900 px-4 py-3 rounded-xl hover:bg-slate-900 hover:text-white transition-colors"
               >
                 Order Book
-              </Link>
+              </button>
             </div>
           </div>
         ))}
@@ -429,6 +468,81 @@ export default function Home() {
                   );
                 })}
               </div>
+
+              {modalMode === "order" && (
+                <div className="mt-6 pt-6 border-t-2 border-slate-400">
+                  <h3 className="text-xl font-black uppercase text-slate-900 mb-4">
+                    Order this book
+                  </h3>
+                  {!localStorage.getItem("token") ? (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      <p className="text-lg font-bold text-slate-900 flex-1">
+                        Please log in first to order books.
+                      </p>
+                      <Link
+                        to="/login"
+                        className="px-8 py-4 bg-slate-900 text-white text-base font-black uppercase tracking-wider rounded-2xl text-center hover:bg-blue-700 transition-colors"
+                      >
+                        Log In
+                      </Link>
+                    </div>
+                  ) : orderStatus.type === "success" ? (
+                    <p className="p-4 rounded-2xl text-base font-bold bg-green-50 border-2 border-green-200 text-green-800">
+                      {orderStatus.msg}
+                    </p>
+                  ) : (
+                    <form
+                      id="order-form"
+                      onSubmit={handleOrder}
+                      className="space-y-4"
+                    >
+                      {orderStatus.msg && (
+                        <p className="p-4 rounded-2xl text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
+                          {orderStatus.msg}
+                        </p>
+                      )}
+                      <div>
+                        <label className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1 block">
+                          Copies <span className="text-rose-700">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="1"
+                          max="100"
+                          step="1"
+                          inputMode="numeric"
+                          value={orderForm.copies}
+                          onChange={(e) =>
+                            setOrderForm({
+                              ...orderForm,
+                              copies: e.target.value,
+                            })
+                          }
+                          className="w-full sm:w-40 px-4 py-3 bg-white border-2 border-slate-400 text-slate-900 rounded-xl text-lg font-bold outline-none focus:border-indigo-700"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1 block">
+                          Notes
+                        </label>
+                        <textarea
+                          rows="3"
+                          placeholder="Edition, or anything else we should know..."
+                          value={orderForm.notes}
+                          onChange={(e) =>
+                            setOrderForm({
+                              ...orderForm,
+                              notes: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-3 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 rounded-xl text-lg font-medium outline-none focus:border-indigo-700 resize-none"
+                        ></textarea>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Footer Actions */}
@@ -439,19 +553,33 @@ export default function Home() {
               >
                 Close
               </button>
-              <button
-                onClick={() => handleBorrow(selectedBook.id)}
-                disabled={selectedBook.availableCopies <= 0}
-                className={`px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wider transition-all shadow-xl ${
-                  selectedBook.availableCopies > 0
-                    ? "bg-indigo-600 text-white hover:bg-slate-900"
-                    : "bg-slate-200 text-slate-800 cursor-not-allowed"
-                }`}
-              >
-                {selectedBook.availableCopies > 0
-                  ? "Borrow This Book"
-                  : "Out of Stock"}
-              </button>
+              {modalMode === "order" ? (
+                localStorage.getItem("token") &&
+                orderStatus.type !== "success" && (
+                  <button
+                    type="submit"
+                    form="order-form"
+                    disabled={sendingOrder}
+                    className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wide sm:tracking-wider transition-all shadow-xl bg-blue-700 text-white hover:bg-blue-800 disabled:bg-slate-500"
+                  >
+                    {sendingOrder ? "Sending..." : "Send Request"}
+                  </button>
+                )
+              ) : (
+                <button
+                  onClick={() => handleBorrow(selectedBook.id)}
+                  disabled={selectedBook.availableCopies <= 0}
+                  className={`px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wider transition-all shadow-xl ${
+                    selectedBook.availableCopies > 0
+                      ? "bg-indigo-600 text-white hover:bg-slate-900"
+                      : "bg-slate-200 text-slate-800 cursor-not-allowed"
+                  }`}
+                >
+                  {selectedBook.availableCopies > 0
+                    ? "Borrow This Book"
+                    : "Out of Stock"}
+                </button>
+              )}
             </div>
           </div>
         </div>
