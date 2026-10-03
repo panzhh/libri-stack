@@ -1,1 +1,63 @@
 @import "tailwindcss";
+
+/* Look inspired by gutenberg.org: white page, teal header, gold headings,
+   dark-red title links, flat pale boxes. Colours measured from their site. */
+@theme {
+  --font-sans: "Open Sans", Helvetica, Arial, sans-serif;
+  --color-gb-teal: #7ebed0; /* header bar */
+  --color-gb-nav: #c7dde3; /* menu row, light buttons */
+  --color-gb-dark: #427e94; /* main buttons */
+  --color-gb-darker: #2f6175; /* button hover */
+  --color-gb-gold: #9a772b; /* page headings */
+  --color-gb-red: #a01f13; /* book-title links */
+  --color-gb-box: #eef6f9; /* group boxes */
+  --color-gb-tile: #fafbfc; /* tiles and cards */
+  --color-gb-line: #d5dde2; /* thin borders */
+  --color-gb-muted: #555f66; /* secondary text (7:1 on white) */
+}
+
+@layer base {
+  body {
+    @apply bg-white text-black font-sans antialiased;
+  }
+}
+
+@layer components {
+  .gb-h1 {
+    @apply text-3xl sm:text-4xl font-bold text-gb-gold leading-tight;
+  }
+  .gb-h2 {
+    @apply text-2xl font-bold text-black;
+  }
+  .gb-box {
+    @apply bg-gb-box rounded-xl;
+  }
+  .gb-tile {
+    @apply bg-gb-tile border border-gb-line rounded-xl;
+  }
+  .gb-link {
+    @apply text-gb-red font-bold underline underline-offset-2 hover:text-black;
+  }
+  .gb-btn {
+    @apply inline-flex items-center justify-center gap-2 bg-gb-dark text-white font-bold
+      text-base px-5 py-3 rounded-md hover:bg-gb-darker transition-colors
+      disabled:bg-slate-400 disabled:cursor-not-allowed;
+  }
+  .gb-btn-light {
+    @apply inline-flex items-center justify-center gap-2 bg-gb-nav text-black font-bold
+      text-base px-5 py-3 rounded-md hover:bg-gb-teal transition-colors
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .gb-btn-danger {
+    @apply inline-flex items-center justify-center gap-2 bg-white border-2 border-gb-red
+      text-gb-red font-bold text-base px-5 py-2.5 rounded-md hover:bg-gb-red hover:text-white
+      transition-colors disabled:opacity-50;
+  }
+  .gb-label {
+    @apply block text-base font-bold text-black mb-1;
+  }
+  .gb-input {
+    @apply w-full bg-white border-2 border-[#9fb3bd] text-black text-lg px-4 py-3 rounded-md
+      outline-none placeholder:text-gb-muted focus:border-gb-dark;
+  }
+}

@@ -20,23 +20,15 @@ import AdminDashboard from "./pages/AdminDashboard";
 import OrderBooks from "./pages/OrderBooks";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import backgroundImage from "./assets/background.jpg";
 
 export default function App() {
   return (
     <Router>
-      {/* The background photo sits behind the navbar too, so there is no white strip */}
-      <div
-        className="min-h-screen pt-6 bg-slate-900 bg-cover bg-center bg-fixed"
-        style={{
-          // Dark tint keeps white text that sits directly on the photo readable
-          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.35)), url(${backgroundImage})`,
-        }}
-      >
+      <div className="min-h-screen bg-white flex flex-col">
         {/* The Navbar stays outside Routes so it shows on every page */}
         <Navbar />
 
-        <main className="min-h-screen">
+        <main className="flex-1">
           <Routes>
             {/* Main Library Page */}
             <Route path="/" element={<Home />} />
@@ -66,12 +58,13 @@ export default function App() {
             <Route
               path="*"
               element={
-                <div className="flex flex-col items-center justify-center pt-20">
-                  <h1 className="text-6xl font-black italic text-slate-200">
-                    404
-                  </h1>
-                  <p className="font-bold uppercase tracking-widest text-white">
-                    Page Not Found
+                <div className="max-w-7xl mx-auto px-6 py-20">
+                  <h1 className="gb-h1">Page not found</h1>
+                  <p className="text-lg mt-4">
+                    Sorry, this page does not exist.{" "}
+                    <a href="/" className="gb-link">
+                      Back to the library
+                    </a>
                   </p>
                 </div>
               }

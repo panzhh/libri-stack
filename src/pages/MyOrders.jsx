@@ -85,16 +85,16 @@ export default function MyOrders() {
   return (
     <div className='space-y-4'>
       <div className='flex justify-between items-center mb-6'>
-        <h3 className='text-base font-black text-slate-800 uppercase italic'>
+        <h3 className='text-base font-bold text-black '>
           My Orders
         </h3>
-        <span className='bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-black'>
+        <span className='bg-gb-box text-gb-darker px-3 py-1 rounded-full text-sm font-bold'>
           {orders.length} {orders.length === 1 ? "order" : "orders"}
         </span>
       </div>
 
       {orders.length === 0 ? (
-        <p className='text-slate-800 text-base italic'>
+        <p className='text-black text-base '>
           You haven't ordered any books yet. Use the Order Book button on a
           book in the catalog.
         </p>
@@ -103,20 +103,20 @@ export default function MyOrders() {
           {orders.map((order) => (
             <li
               key={order.id}
-              className='bg-white rounded-2xl border border-slate-300 p-4 sm:p-5'
+              className='bg-white rounded-lg border border-gb-line p-4 sm:p-5'
             >
               <div className='flex items-start justify-between gap-3'>
                 <div className='min-w-0'>
                   {order.order_number && (
-                    <p className='text-sm font-black text-indigo-700 tracking-wide whitespace-nowrap'>
+                    <p className='text-sm font-bold text-gb-darker whitespace-nowrap'>
                       Order #{order.order_number}
                     </p>
                   )}
-                  <p className='text-lg font-black text-slate-900 break-words'>
+                  <p className='text-lg font-bold text-black break-words'>
                     {order.title}
                   </p>
                   {order.author && (
-                    <p className='text-sm font-bold italic text-slate-700'>
+                    <p className='text-sm font-bold text-gb-muted'>
                       by {order.author}
                     </p>
                   )}
@@ -125,30 +125,30 @@ export default function MyOrders() {
 
               <dl className='mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm'>
                 <div>
-                  <dt className='font-black uppercase text-slate-700'>Copies</dt>
-                  <dd className='text-base font-bold text-slate-900'>
+                  <dt className='font-bold text-gb-muted'>Copies</dt>
+                  <dd className='text-base font-bold text-black'>
                     {order.copies}
                   </dd>
                 </div>
                 <div>
-                  <dt className='font-black uppercase text-slate-700'>
+                  <dt className='font-bold text-gb-muted'>
                     Language
                   </dt>
-                  <dd className='text-base font-bold text-slate-900 break-words'>
+                  <dd className='text-base font-bold text-black break-words'>
                     {(order.language || "Any").replace("/", "/\u200b")}
                   </dd>
                 </div>
                 <div>
-                  <dt className='font-black uppercase text-slate-700'>
+                  <dt className='font-bold text-gb-muted'>
                     Ordered
                   </dt>
-                  <dd className='text-base font-bold text-slate-900'>
+                  <dd className='text-base font-bold text-black'>
                     {order.date}
                   </dd>
                 </div>
                 <div>
-                  <dt className='font-black uppercase text-slate-700'>Total</dt>
-                  <dd className='text-base font-black text-blue-800'>
+                  <dt className='font-bold text-gb-muted'>Total</dt>
+                  <dd className='text-base font-bold text-gb-darker'>
                     {order.total_price != null
                       ? money(order.total_price)
                       : "—"}
@@ -156,13 +156,13 @@ export default function MyOrders() {
                 </div>
               </dl>
               {order.unit_price != null && (
-                <p className='text-sm text-slate-700 mt-1'>
+                <p className='text-sm text-gb-muted mt-1'>
                   {order.copies} × {money(order.unit_price)}
                 </p>
               )}
 
               {order.notes && (
-                <p className='text-base text-slate-900 mt-3'>
+                <p className='text-base text-black mt-3'>
                   <span className='font-bold'>Your notes:</span> {order.notes}
                 </p>
               )}
@@ -170,8 +170,8 @@ export default function MyOrders() {
               <p
                 className={`mt-3 p-3 rounded-xl text-base font-bold ${
                   order.can_modify
-                    ? "bg-indigo-50 border border-indigo-200 text-indigo-900"
-                    : "bg-slate-100 border border-slate-300 text-slate-800"
+                    ? "bg-gb-box border border-gb-line text-gb-darker"
+                    : "bg-gb-tile border border-gb-line text-black"
                 }`}
               >
                 {order.can_modify
@@ -189,7 +189,7 @@ export default function MyOrders() {
                     className='mt-4 flex flex-wrap items-end gap-3'
                   >
                     <label className='flex flex-col'>
-                      <span className='text-sm font-black uppercase text-slate-700'>
+                      <span className='text-sm font-bold text-gb-muted'>
                         Copies
                       </span>
                       <input
@@ -201,20 +201,20 @@ export default function MyOrders() {
                         inputMode='numeric'
                         value={editCopies}
                         onChange={(e) => setEditCopies(e.target.value)}
-                        className='w-28 px-3 py-2 bg-white border-2 border-slate-400 text-slate-900 rounded-xl text-lg font-bold outline-none focus:border-indigo-700'
+                        className='w-28 px-3 py-2 bg-white border-2 border-[#9fb3bd] text-black rounded-xl text-lg font-normal outline-none focus:border-gb-dark'
                       />
                     </label>
                     <button
                       type='submit'
                       disabled={busyId === order.id}
-                      className='px-5 py-3 bg-blue-700 text-white rounded-xl text-sm font-black uppercase tracking-wider hover:bg-blue-800 disabled:bg-slate-500'
+                      className='px-5 py-3 bg-gb-dark text-white rounded-xl text-sm font-bold hover:bg-gb-darker disabled:bg-slate-500'
                     >
                       Save
                     </button>
                     <button
                       type='button'
                       onClick={() => setEditingId(null)}
-                      className='px-5 py-3 bg-white border-2 border-slate-400 text-slate-900 rounded-xl text-sm font-black uppercase tracking-wider'
+                      className='px-5 py-3 bg-white border-2 border-gb-line text-black rounded-xl text-sm font-bold '
                     >
                       Cancel
                     </button>
@@ -224,14 +224,14 @@ export default function MyOrders() {
                     <button
                       onClick={() => startEdit(order)}
                       disabled={busyId === order.id}
-                      className='px-5 py-3 bg-white border-2 border-slate-900 text-slate-900 rounded-xl text-sm font-black uppercase tracking-wider hover:bg-slate-900 hover:text-white transition-colors'
+                      className='px-5 py-3 bg-white border-2 border-gb-dark text-black rounded-xl text-sm font-bold hover:bg-gb-dark hover:text-white transition-colors'
                     >
                       Change copies
                     </button>
                     <button
                       onClick={() => deleteOrder(order)}
                       disabled={busyId === order.id}
-                      className='px-5 py-3 bg-white border-2 border-rose-700 text-rose-700 rounded-xl text-sm font-black uppercase tracking-wider hover:bg-rose-700 hover:text-white transition-colors'
+                      className='px-5 py-3 bg-white border-2 border-rose-700 text-rose-700 rounded-xl text-sm font-bold hover:bg-rose-700 hover:text-white transition-colors'
                     >
                       Delete
                     </button>
@@ -239,7 +239,7 @@ export default function MyOrders() {
                 ))}
 
               {order.admin_note && (
-                <p className='text-base text-slate-900 mt-2 bg-indigo-50 border border-indigo-200 p-3 rounded-xl'>
+                <p className='text-base text-black mt-2 bg-gb-box border border-gb-line p-3 rounded-xl'>
                   <span className='font-bold'>From the library:</span>{" "}
                   {order.admin_note}
                 </p>

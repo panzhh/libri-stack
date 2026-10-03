@@ -23,9 +23,9 @@ export default function About() {
   return (
     <div className='max-w-5xl mx-auto px-6 py-12 animate-in fade-in duration-700'>
       {/* --- HERO SECTION --- */}
-      <section className='bg-slate-200 p-12 rounded-[3rem] border border-slate-400 shadow-sm mb-12'>
-        <h1 className='text-5xl font-black italic text-slate-900 uppercase tracking-tighter mb-6'>
-          Our <span className='text-indigo-600'>Mission</span>
+      <section className='bg-white p-12 rounded-xl border border-gb-line shadow-sm mb-12'>
+        <h1 className='gb-h1 mb-6'>
+          Our Mission
         </h1>
         <p className='text-lg text-black leading-relaxed font-medium max-w-3xl'>
           The Church in Dunn Loring Library is dedicated to equipping the
@@ -36,45 +36,45 @@ export default function About() {
 
       {/* --- HOW TO USE SECTION --- */}
       <section className='mb-20 px-4'>
-        <h2 className='text-2xl font-black text-white uppercase italic mb-10 tracking-tight drop-shadow'>
-          Getting <span className='text-indigo-300'>Started</span>
+        <h2 className='text-2xl font-bold text-black mb-10 '>
+          Getting Started
         </h2>
 
         <div className='grid grid-cols-1 md:grid-cols-3 gap-12'>
           <div className='space-y-4'>
-            <div className='w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black shadow-lg shadow-indigo-200'>
+            <div className='w-12 h-12 bg-gb-dark text-black rounded-lg flex items-center justify-center font-bold shadow-sm '>
               1
             </div>
-            <h3 className='font-black text-white uppercase text-base tracking-wide drop-shadow'>
+            <h3 className='font-bold text-black text-base '>
               Book Browse
             </h3>
-            <p className='text-white text-base leading-relaxed drop-shadow'>
+            <p className='text-black text-base leading-relaxed '>
               Explore our collection of spiritual resources. Filter by title,
               language or search for specific authors.
             </p>
           </div>
 
           <div className='space-y-4'>
-            <div className='w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black shadow-lg shadow-indigo-200'>
+            <div className='w-12 h-12 bg-gb-dark text-black rounded-lg flex items-center justify-center font-bold shadow-sm '>
               2
             </div>
-            <h3 className='font-black text-white uppercase text-base tracking-wide drop-shadow'>
+            <h3 className='font-bold text-black text-base '>
               Borrow Instantly
             </h3>
-            <p className='text-white text-base leading-relaxed drop-shadow'>
+            <p className='text-black text-base leading-relaxed '>
               Found a book? Borrow it with one click. It will be added
               immediately to your personal shelf.
             </p>
           </div>
 
           <div className='space-y-4'>
-            <div className='w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black shadow-lg shadow-indigo-200'>
+            <div className='w-12 h-12 bg-gb-dark text-black rounded-lg flex items-center justify-center font-bold shadow-sm '>
               3
             </div>
-            <h3 className='font-black text-white uppercase text-base tracking-wide drop-shadow'>
+            <h3 className='font-bold text-black text-base '>
               Manage Shelf
             </h3>
-            <p className='text-white text-base leading-relaxed drop-shadow'>
+            <p className='text-black text-base leading-relaxed '>
               Track due dates and return books digitally through your dashboard
               to keep our library moving.
             </p>
@@ -83,10 +83,10 @@ export default function About() {
       </section>
 
       {/* --- FAQ SECTION --- */}
-      <section className='bg-slate-300 p-12 rounded-[3.5rem] border border-slate-400'>
+      <section className='bg-gb-box p-12 rounded-xl border border-gb-line'>
         <div className='flex items-center gap-4 mb-10'>
-          <h2 className='text-2xl font-black text-slate-900 uppercase italic tracking-tight'>
-            Common <span className='text-indigo-600'>Questions</span>
+          <h2 className='text-2xl font-bold text-black '>
+            Common Questions
           </h2>
         </div>
 
@@ -94,15 +94,15 @@ export default function About() {
           {faqs.map((item, index) => (
             <div
               key={index}
-              className='p-8 bg-slate-200 rounded-[2rem] border border-slate-400 group hover:border-indigo-300 transition-all duration-300 shadow-sm'
+              className='p-8 bg-white rounded-xl border border-gb-line group hover:border-indigo-300 transition-all duration-300 shadow-sm'
             >
-              <h4 className='font-black text-black text-sm uppercase mb-3 flex items-center gap-3'>
-                <span className='text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs'>
+              <h4 className='font-bold text-black text-sm mb-3 flex items-center gap-3'>
+                <span className='text-gb-darker bg-gb-box px-2 py-0.5 rounded text-xs'>
                   Q
                 </span>
                 {item.q}
               </h4>
-              <p className='text-black text-base leading-relaxed pl-8 border-l-2 border-slate-50 group-hover:border-indigo-100'>
+              <p className='text-black text-base leading-relaxed pl-8 border-l-2 border-gb-line group-hover:border-gb-line'>
                 {item.a}
               </p>
             </div>
@@ -112,7 +112,7 @@ export default function About() {
 
       {/* --- FOOTER NOTE --- */}
       <div className='mt-12 text-center'>
-        <p className='text-white text-sm font-bold uppercase tracking-[0.2em] drop-shadow'>
+        <p className='text-black text-sm font-bold '>
           Est. 2024 • Building Faith Through Knowledge
         </p>
       </div>

@@ -46,18 +46,18 @@ export default function VerifyEmail() {
   }, [token, role]);
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-slate-300 p-6'>
-      <div className='bg-slate-200 w-full max-w-md p-10 rounded-[3rem] shadow-2xl border-2 border-slate-400 text-center'>
+    <div className='min-h-screen flex items-center justify-center bg-gb-box p-6'>
+      <div className='bg-white w-full max-w-md p-10 rounded-xl shadow-sm border-2 border-gb-line text-center'>
         {/* LOGO / HEADER */}
-        <h2 className='text-2xl font-black uppercase italic tracking-tighter mb-6'>
-          Church in Dunn Loring <span className='text-indigo-600'>Library</span>
+        <h2 className='text-2xl font-bold mb-6'>
+          Church in Dunn Loring Library
         </h2>
 
         {/* LOADING STATE */}
         {status === "verifying" && (
           <div className='space-y-4'>
-            <div className='w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto'></div>
-            <p className='text-slate-700 font-bold uppercase tracking-widest text-xs'>
+            <div className='w-12 h-12 border-4 border-gb-dark border-t-transparent rounded-full animate-spin mx-auto'></div>
+            <p className='text-gb-muted font-bold text-xs'>
               Confirming your identity...
             </p>
           </div>
@@ -69,16 +69,16 @@ export default function VerifyEmail() {
             <div className='bg-green-100 text-green-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl'>
               ✓
             </div>
-            <h1 className='text-2xl font-black text-slate-800'>
+            <h1 className='text-2xl font-bold text-black'>
               Account Verified!
             </h1>
-            <p className='text-slate-700 text-sm'>
+            <p className='text-gb-muted text-sm'>
               Your <strong>{role}</strong> account is now active. You can safely
               close this window or log in below.
             </p>
             <Link
               to='/login'
-              className='block w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] transition-transform'
+              className='block w-full py-4 bg-gb-dark text-white rounded-lg font-bold hover:scale-[1.02] transition-transform'
             >
               Go to Login
             </Link>
@@ -91,15 +91,15 @@ export default function VerifyEmail() {
             <div className='bg-red-100 text-red-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl'>
               ✕
             </div>
-            <h1 className='text-2xl font-black text-slate-800'>
+            <h1 className='text-2xl font-bold text-black'>
               Verification Failed
             </h1>
-            <p className='text-red-700 text-sm font-bold uppercase'>
+            <p className='text-red-700 text-sm font-bold '>
               {errorMsg}
             </p>
             <Link
               to='/register'
-              className='block w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-black uppercase tracking-widest'
+              className='block w-full py-4 bg-gb-tile text-gb-muted rounded-lg font-bold '
             >
               Try Registering Again
             </Link>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
-const linkClass = "hover:text-white transition-colors";
+const linkClass = "underline underline-offset-2 hover:text-gb-darker";
 
 export default function Footer() {
   // Re-render on navigation so the links follow login/logout, like the Navbar
@@ -31,19 +31,19 @@ export default function Footer() {
   ];
 
   return (
-    <footer className='bg-slate-900 text-white mt-20 rounded-t-[3rem] overflow-hidden'>
-      <div className='max-w-7xl mx-auto pt-16 pb-8 px-8'>
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-12 mb-16'>
+    <footer className='bg-gb-nav text-black mt-16 border-t-4 border-gb-teal'>
+      <div className='max-w-7xl mx-auto pt-12 pb-8 px-6'>
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-10 mb-10'>
           {/* Brand Section */}
-          <div className='col-span-1 md:col-span-1'>
+          <div>
             <Link
               to='/'
-              className='text-2xl font-black italic tracking-tighter uppercase inline-block mb-6'
+              className='font-serif text-2xl leading-tight inline-block mb-4'
             >
               Church in Dunn Loring{" "}
-              <span className='text-indigo-300'>Library</span>
+              <span className='font-bold text-gb-darker'>Library</span>
             </Link>
-            <p className='text-slate-300 text-lg leading-relaxed'>
+            <p className='text-lg leading-relaxed'>
               Equipping the community with spiritual resources and historical
               archives to foster growth and faith in the modern age.
             </p>
@@ -51,10 +51,8 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className='font-black uppercase text-base tracking-[0.2em] text-indigo-300 mb-6'>
-              Navigation
-            </h4>
-            <ul className='space-y-4 text-lg font-bold text-slate-200'>
+            <h4 className='text-lg font-bold mb-4'>Navigation</h4>
+            <ul className='space-y-3 text-lg'>
               {links.map((link) => (
                 <li key={link.to}>
                   <Link to={link.to} className={linkClass}>
@@ -67,55 +65,45 @@ export default function Footer() {
 
           {/* Library Hours */}
           <div>
-            <h4 className='font-black uppercase text-base tracking-[0.2em] text-indigo-300 mb-6'>
-              Physical Library
-            </h4>
-            <ul className='space-y-4 text-lg text-slate-200'>
+            <h4 className='text-lg font-bold mb-4'>Physical Library</h4>
+            <ul className='space-y-3 text-lg'>
               <li className='flex flex-col'>
-                <span className='font-bold text-white'>Lord's Day</span>
-                <span className='text-base text-slate-300'>
-                  12:00 PM - 13:00 PM
-                </span>
+                <span className='font-bold'>Lord's Day</span>
+                <span>12:00 PM - 13:00 PM</span>
               </li>
               {/* <li className='flex flex-col'>
-                <span className='font-bold text-white'>Wednesday</span>
-                <span className='text-base text-slate-300'>
-                  6:00 PM - 8:00 PM
-                </span>
+                <span className='font-bold'>Wednesday</span>
+                <span>6:00 PM - 8:00 PM</span>
               </li> */}
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
-            <h4 className='font-black uppercase text-base tracking-[0.2em] text-indigo-300 mb-6'>
-              Get In Touch
-            </h4>
-            <address className='not-italic text-lg text-slate-200 space-y-4'>
-              <p className='flex items-start gap-3'>
-                <span className='text-indigo-300'>📍</span>
+            <h4 className='text-lg font-bold mb-4'>Get in Touch</h4>
+            <address className='not-italic text-lg space-y-3'>
+              <p>
                 2317 Morgan Ln,
                 <br />
                 Dunn Loring, VA 22027
               </p>
-              <p className='flex items-center gap-3'>
-                <span className='text-indigo-300'>✉️</span>
-                fuyinshubao@gmail.com
+              <p>
+                <a href='mailto:fuyinshubao@gmail.com' className={linkClass}>
+                  fuyinshubao@gmail.com
+                </a>
               </p>
             </address>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className='pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4'>
-          <p className='text-sm font-bold text-slate-300 uppercase tracking-widest'>
-            © 2026 Church in Dunn Loring. All Rights Reserved.
-          </p>
-          <div className='flex gap-8 text-sm font-black uppercase tracking-widest text-slate-300'>
-            <Link to='/privacy' className='hover:text-indigo-300'>
+        <div className='pt-6 border-t border-gb-teal flex flex-col md:flex-row justify-between items-center gap-4 text-base'>
+          <p>© 2026 Church in Dunn Loring. All Rights Reserved.</p>
+          <div className='flex gap-6'>
+            <Link to='/privacy' className={linkClass}>
               Privacy Policy
             </Link>
-            <Link to='/terms' className='hover:text-indigo-300'>
+            <Link to='/terms' className={linkClass}>
               Terms of Service
             </Link>
           </div>

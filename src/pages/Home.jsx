@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_URL, authHeaders, coverUrl, showFallbackCover } from "../api";
 
 const BOOKS_PER_PAGE = 20;
@@ -75,6 +75,17 @@ export default function Home() {
     }
   };
   const latestRequest = useRef(0); // ignore responses that arrive out of order
+
+  // The header search box sends people here with ?q=...
+  const [searchParams] = useSearchParams();
+  const headerQuery = searchParams.get("q");
+  useEffect(() => {
+    if (headerQuery === null) return;
+    setAvailability("all"); // a header search looks through the whole catalog
+    setSearchTerm(headerQuery);
+    setDebouncedSearch(headerQuery.trim());
+    document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
+  }, [headerQuery]);
   const modalBody = useRef(null);
 
   // Each order step starts at the top of the pop-up
@@ -190,23 +201,21 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-12 sm:pt-16 pb-12 font-sans">
-      {/* WELCOME HERO */}
-      <section className="mb-16 bg-slate-200/85 backdrop-blur-sm p-8 sm:p-14 rounded-[3rem] border-2 border-white shadow-xl animate-in fade-in duration-700">
-        <p className="text-base font-black uppercase tracking-[0.2em] text-indigo-700 mb-4">
-          Welcome
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-12">
+      {/* INTRO */}
+      <section className="mb-10">
+        <h1 className="gb-h1">Church in Dunn Loring Library</h1>
+        <p className="text-lg leading-relaxed mt-4 max-w-4xl">
+          Spiritual books, booklets and recordings for the church in Dunn
+          Loring. Browse the collection below, borrow a book, or ask the library
+          to order one for you.
         </p>
-        <h1 className="text-4xl sm:text-6xl font-black italic text-slate-900 uppercase tracking-tighter leading-none">
-          Church in Dunn Loring <span className="text-indigo-600">Library</span>
-        </h1>
       </section>
 
       {/* CATALOG HEADING */}
-      <div id="catalog" className="scroll-mt-6 mb-4 px-2">
-        <h2 className="text-3xl font-black italic text-white uppercase tracking-tight drop-shadow">
-          The <span className="text-indigo-300">Collection</span>
-        </h2>
-        <p className="text-lg font-bold text-white mt-1 drop-shadow">
+      <div id="catalog" className="scroll-mt-6 mb-4 flex flex-wrap items-baseline gap-x-4">
+        <h2 className="gb-h2">Browse the collection</h2>
+        <p className="text-lg text-gb-muted">
           {loading
             ? "Loading books..."
             : `${total.toLocaleString()} matching ${total === 1 ? "book" : "books"}`}
@@ -215,9 +224,9 @@ export default function Home() {
 
       {/* FILTER CONTROLS (Your Original Section) */}
 
-      <div className="mb-8 flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 items-center bg-slate-200 p-5 rounded-[2rem] border-2 border-slate-400 shadow-sm">
+      <div className="gb-box mb-8 p-5 flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap gap-4 items-end">
         <div className="flex flex-col w-full sm:w-auto">
-          <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 mb-1 ml-2">
+          <label className="gb-label">
             Language
           </label>
           <select
@@ -225,7 +234,7 @@ export default function Home() {
             onChange={(e) => {
               setSelectedLang(e.target.value);
             }}
-            className="bg-white border-2 border-slate-500 text-slate-900 focus:border-indigo-700 px-4 py-3 rounded-xl font-bold text-base outline-none cursor-pointer transition-all"
+            className="gb-input py-2.5 text-base cursor-pointer"
           >
             {languages.map((lang) => (
               <option key={lang} value={lang}>
@@ -235,7 +244,7 @@ export default function Home() {
           </select>
         </div>
         <div className="flex flex-col w-full sm:w-auto">
-          <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 mb-1 ml-2">
+          <label className="gb-label">
             Sort By
           </label>
           <select
@@ -243,14 +252,14 @@ export default function Home() {
             onChange={(e) => {
               setSortBy(e.target.value);
             }}
-            className="bg-white border-2 border-slate-500 text-slate-900 focus:border-indigo-700 px-4 py-3 rounded-xl font-bold text-base outline-none cursor-pointer transition-all"
+            className="gb-input py-2.5 text-base cursor-pointer"
           >
             <option value="title">Title (A–Z)</option>
             <option value="section">Section</option>
           </select>
         </div>
         <div className="flex flex-col w-full sm:w-auto">
-          <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 mb-1 ml-2">
+          <label className="gb-label">
             Available
           </label>
           <select
@@ -258,7 +267,7 @@ export default function Home() {
             onChange={(e) => {
               setAvailability(e.target.value);
             }}
-            className="bg-white border-2 border-slate-500 text-slate-900 focus:border-indigo-700 px-4 py-3 rounded-xl font-bold text-base outline-none cursor-pointer transition-all"
+            className="gb-input py-2.5 text-base cursor-pointer"
           >
             <option value="in-stock">In-Stock Only</option>
             <option value="out-of-stock">Out-of-Stock Only</option>
@@ -266,7 +275,7 @@ export default function Home() {
           </select>
         </div>
         <div className="flex flex-col w-full lg:w-auto lg:flex-1 lg:min-w-[300px] lg:ml-4">
-          <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 mb-1 ml-2">
+          <label className="gb-label">
             Search Books
           </label>
           <div className="relative w-full">
@@ -277,9 +286,9 @@ export default function Home() {
               onChange={(e) => {
                 setSearchTerm(e.target.value);
               }}
-              className="w-full bg-white border-2 border-slate-500 text-slate-900 placeholder:text-slate-600 focus:border-indigo-700 px-5 py-3 rounded-xl font-bold text-lg outline-none transition-all pr-14"
+              className="gb-input py-2.5 pr-12"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-2xl">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl" aria-hidden="true">
               🔍
             </span>
           </div>
@@ -289,105 +298,102 @@ export default function Home() {
       {/* LOADING / NO RESULTS */}
       {loading && books.length === 0 && (
         <div className="flex flex-col items-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-          <p className="text-white font-black text-lg uppercase tracking-widest drop-shadow">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gb-dark mb-4"></div>
+          <p className="text-lg font-bold">
             Loading books...
           </p>
         </div>
       )}
       {!loading && books.length === 0 && (
-        <div className="bg-slate-200 border-2 border-slate-400 rounded-[2rem] p-10 text-center">
-          <p className="text-xl font-black text-slate-900">No books found.</p>
-          <p className="text-lg text-slate-800 mt-2">
+        <div className="gb-box p-10 text-center">
+          <p className="text-xl font-bold">No books found.</p>
+          <p className="text-lg mt-2">
             Try a different search, language or availability.
           </p>
         </div>
       )}
 
-      {/* BOOK GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {/* BOOK LIST */}
+      <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-10">
         {books.map((book) => (
-          <div
+          <li
             key={book.id}
-            className="bg-slate-200 border-2 border-slate-400 p-5 rounded-[2rem] shadow-sm hover:shadow-xl transition-all flex flex-col"
+            className="flex gap-5 py-5 border-b border-gb-line"
           >
-            <div className="flex gap-4 mb-4">
-              {/* Small cover in the top-left corner */}
-              <div className="w-20 h-28 shrink-0 bg-slate-300 rounded-xl border border-slate-400 overflow-hidden flex items-center justify-center text-5xl leading-none">
-                {book.uploadedImageUrl ? (
-                  <img
-                    src={coverUrl(book.id)}
-                    className="w-full h-full object-cover"
-                    alt=""
-                    loading="lazy"
-                    onError={showFallbackCover}
-                  />
-                ) : (
-                  "📖"
-                )}
-              </div>
+            <button
+              onClick={() => openBook(book, "view")}
+              className="w-20 h-28 shrink-0 bg-gb-box border border-gb-line rounded flex items-center justify-center text-4xl overflow-hidden"
+              aria-label={`Details for ${book.title}`}
+            >
+              {book.uploadedImageUrl ? (
+                <img
+                  src={coverUrl(book.id)}
+                  className="w-full h-full object-cover"
+                  alt=""
+                  loading="lazy"
+                  onError={showFallbackCover}
+                />
+              ) : (
+                "📖"
+              )}
+            </button>
 
-              <div className="min-w-0 flex-1">
-                <p
-                  className={`mb-1 text-sm font-black uppercase tracking-wider ${(book.copies || 0) > 0 ? "text-emerald-700" : "text-rose-700"}`}
-                >
-                  {(book.copies || 0) > 0
-                    ? `${book.copies} In Stock`
-                    : "Out of Stock"}
-                </p>
-                <h3 className="font-black text-xl leading-snug line-clamp-3 text-slate-900 break-words">
-                  {book.title}
-                </h3>
-                <p className="text-slate-700 text-base font-bold italic mt-1 truncate">
-                  by {book.author || "Unknown"}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-auto flex flex-col gap-2">
+            <div className="min-w-0 flex-1">
               <button
                 onClick={() => openBook(book, "view")}
-                className="w-full text-sm font-black uppercase tracking-wider bg-blue-700 border-2 border-blue-700 text-white px-4 py-3 rounded-xl hover:bg-blue-800 hover:border-blue-800 transition-colors shadow-lg"
+                className="gb-link text-lg text-left leading-snug break-words"
               >
-                View &amp; Borrow
+                {book.title}
               </button>
-              {/* Ask the library to order (more) copies of this book */}
-              <button
-                onClick={() => openBook(book, "order")}
-                className="w-full text-sm font-black uppercase tracking-wider bg-white border-2 border-slate-900 text-slate-900 px-4 py-3 rounded-xl hover:bg-slate-900 hover:text-white transition-colors"
+              <p className="text-base mt-1">{book.author || "Unknown author"}</p>
+              <p
+                className={`text-base mt-1 font-semibold ${(book.copies || 0) > 0 ? "text-emerald-800" : "text-gb-red"}`}
               >
-                Order Book
-              </button>
+                {(book.copies || 0) > 0
+                  ? `${book.copies} in stock`
+                  : "Out of stock"}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <button
+                  onClick={() => openBook(book, "view")}
+                  className="gb-btn py-2 px-4 text-sm"
+                >
+                  View &amp; Borrow
+                </button>
+                <button
+                  onClick={() => openBook(book, "order")}
+                  className="gb-btn-light py-2 px-4 text-sm"
+                >
+                  Order Book
+                </button>
+              </div>
             </div>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
 
       {/* SHOW MORE */}
       {!loading && books.length > 0 && (
-        <div className="mt-12 flex flex-col items-center gap-4 bg-slate-200 border-2 border-slate-400 p-6 rounded-[2rem] shadow-sm">
-          <p className="text-lg font-black text-slate-900">
+        <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
+          <p className="text-lg">
             Showing {books.length.toLocaleString()} of {total.toLocaleString()}{" "}
             {total === 1 ? "book" : "books"}
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="flex gap-3 sm:ml-auto">
             {hasMore && (
               <button
                 onClick={showMore}
                 disabled={loadingMore}
-                className="w-full sm:w-auto px-6 sm:px-10 py-4 bg-slate-900 border-2 border-slate-900 text-white text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-indigo-600 hover:border-indigo-600 transition-colors disabled:bg-slate-500 disabled:cursor-wait"
+                className="gb-btn"
               >
                 {loadingMore ? "Loading..." : "Show more books"}
               </button>
             )}
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-slate-900 text-slate-900 text-lg font-black uppercase tracking-wider rounded-2xl hover:bg-slate-900 hover:text-white transition-colors"
+              className="gb-btn-light"
             >
-              <span aria-hidden="true" className="text-2xl leading-none">
-                ↑
-              </span>
-              Back to top
+              <span aria-hidden="true">↑</span> Back to top
             </button>
           </div>
         </div>
@@ -397,10 +403,10 @@ export default function Home() {
 
       {selectedBook && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-slate-200 w-full max-w-2xl max-h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95">
+          <div className="bg-white w-full max-w-2xl max-h-[85vh] rounded-xl shadow-sm overflow-hidden flex flex-col animate-in zoom-in-95">
             {/* Header Section */}
-            <div className="p-6 border-b-2 border-slate-400 flex gap-5 items-start bg-slate-300">
-              <div className="w-24 h-32 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 flex-shrink-0 overflow-hidden flex items-center justify-center">
+            <div className="p-6 border-b-2 border-gb-line flex gap-5 items-start bg-gb-box">
+              <div className="w-24 h-32 bg-white rounded-lg shadow-md border-2 border-gb-line flex-shrink-0 overflow-hidden flex items-center justify-center">
                 {selectedBook.uploadedImageUrl ? (
                   <img
                     src={coverUrl(selectedBook.id)}
@@ -415,21 +421,21 @@ export default function Home() {
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start gap-4">
                   <div className="min-w-0">
-                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight break-words">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-black leading-tight break-words">
                       {selectedBook.title}
                     </h2>
-                    <p className="text-indigo-700 font-black text-base mt-2">
+                    <p className="text-gb-darker font-bold text-base mt-2">
                       by {selectedBook.author}
                     </p>
 
                     {/* STOCK STATUS BADGES (borrowing only, not when ordering) */}
                     {modalMode === "view" && (
                       <div className="flex flex-wrap gap-2 mt-3">
-                        <span className="whitespace-nowrap px-3 py-1.5 bg-slate-200 border border-slate-400 rounded-xl text-sm font-black uppercase text-slate-800">
+                        <span className="whitespace-nowrap px-3 py-1.5 bg-white border border-gb-line rounded-xl text-sm font-bold text-black">
                           Total: {selectedBook.copies || 0}
                         </span>
                         <span
-                          className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm font-black uppercase border ${
+                          className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm font-bold  border ${
                             (selectedBook.availableCopies || 0) > 0
                               ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                               : "bg-rose-50 border-rose-200 text-rose-700"
@@ -443,7 +449,7 @@ export default function Home() {
                   <button
                     onClick={() => setSelectedBook(null)}
                     aria-label="Close"
-                    className="w-12 h-12 shrink-0 flex items-center justify-center rounded-full bg-slate-900 text-white hover:bg-rose-600 transition-all text-2xl font-black"
+                    className="w-12 h-12 shrink-0 flex items-center justify-center rounded-full bg-gb-dark text-white hover:bg-rose-600 transition-all text-2xl font-bold"
                   >
                     ✕
                   </button>
@@ -454,7 +460,7 @@ export default function Home() {
             {/* Scrollable Details */}
             <div
               ref={modalBody}
-              className="p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1"
+              className="p-6 sm:p-8 overflow-y-auto bg-white flex-1"
             >
               {(modalMode === "view" || orderStep === "form") && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
@@ -479,12 +485,12 @@ export default function Home() {
                     return (
                       <div
                         key={field.key}
-                        className={`border-b-2 border-slate-300 pb-3 ${field.fullWidth ? "sm:col-span-2" : ""}`}
+                        className={`border-b-2 border-gb-line pb-3 ${field.fullWidth ? "sm:col-span-2" : ""}`}
                       >
-                        <p className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1">
+                        <p className="text-sm font-bold text-black mb-1">
                           {field.label}
                         </p>
-                        <p className="text-lg font-bold text-slate-900 leading-relaxed break-words">
+                        <p className="text-lg font-bold text-black leading-relaxed break-words">
                           {value}
                         </p>
                       </div>
@@ -495,21 +501,21 @@ export default function Home() {
 
               {modalMode === "order" && orderStep === "confirm" && (
                 <div>
-                  <h3 className="text-xl font-black uppercase text-slate-900 mb-4">
+                  <h3 className="text-xl font-bold text-black mb-4">
                     Please confirm your order
                   </h3>
-                  <p className="mb-4 p-4 rounded-2xl text-base font-bold bg-indigo-50 border-2 border-indigo-200 text-indigo-900">
+                  <p className="mb-4 p-4 rounded-lg text-base font-bold bg-gb-box border-2 border-gb-line text-gb-darker">
                     Orders are collected every Sunday at 8:00 PM ET. You can
                     change or delete your order in My Orders until then. Orders
                     placed after 8:00 PM on Sunday are collected the following
                     Sunday.
                   </p>
                   {orderStatus.type === "error" && (
-                    <p className="mb-4 p-4 rounded-2xl text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
+                    <p className="mb-4 p-4 rounded-lg text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
                       {orderStatus.msg}
                     </p>
                   )}
-                  <dl className="bg-white border-2 border-slate-300 rounded-2xl divide-y-2 divide-slate-200">
+                  <dl className="bg-white border-2 border-gb-line rounded-lg divide-y-2 divide-slate-200">
                     {[
                       ["Book", selectedBook.title],
                       ["Author", selectedBook.author],
@@ -530,19 +536,19 @@ export default function Home() {
                           key={label}
                           className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 px-4 py-3"
                         >
-                          <dt className="text-base font-black uppercase tracking-wide text-slate-800 shrink-0">
+                          <dt className="text-base font-bold text-black shrink-0">
                             {label}
                           </dt>
-                          <dd className="text-lg font-bold text-slate-900 sm:text-right break-words min-w-0">
+                          <dd className="text-lg font-bold text-black sm:text-right break-words min-w-0">
                             {value}
                           </dd>
                         </div>
                       ))}
                     <div className="flex justify-between items-center gap-4 px-4 py-4 bg-blue-50 rounded-b-2xl">
-                      <dt className="text-lg font-black uppercase text-slate-900">
+                      <dt className="text-lg font-bold text-black">
                         Total
                       </dt>
-                      <dd className="text-2xl font-black text-blue-800">
+                      <dd className="text-2xl font-bold text-gb-darker">
                         {hasPrice ? money(orderTotal) : "Price not available"}
                       </dd>
                     </div>
@@ -555,31 +561,31 @@ export default function Home() {
                   className={
                     orderStep === "sent"
                       ? ""
-                      : "mt-6 pt-6 border-t-2 border-slate-400"
+                      : "mt-6 pt-6 border-t-2 border-gb-line"
                   }
                 >
-                  <h3 className="text-xl font-black uppercase text-slate-900 mb-4">
+                  <h3 className="text-xl font-bold text-black mb-4">
                     {orderStep === "sent" ? "Order placed" : "Order this book"}
                   </h3>
                   {!localStorage.getItem("token") ? (
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                      <p className="text-lg font-bold text-slate-900 flex-1">
+                      <p className="text-lg font-bold text-black flex-1">
                         Please log in first to order books.
                       </p>
                       <Link
                         to="/login"
-                        className="px-8 py-4 bg-slate-900 text-white text-base font-black uppercase tracking-wider rounded-2xl text-center hover:bg-blue-700 transition-colors"
+                        className="px-8 py-4 bg-gb-dark text-white text-base font-bold rounded-lg text-center hover:bg-gb-dark transition-colors"
                       >
                         Log In
                       </Link>
                     </div>
                   ) : orderStatus.type === "success" ? (
-                    <p className="p-4 rounded-2xl text-base font-bold bg-green-50 border-2 border-green-200 text-green-800">
+                    <p className="p-4 rounded-lg text-base font-bold bg-green-50 border-2 border-green-200 text-green-800">
                       {orderStatus.msg}
                     </p>
                   ) : (
                     <>
-                      <p className="mb-4 text-base font-bold text-slate-800">
+                      <p className="mb-4 text-base font-bold text-black">
                         Orders are collected every Sunday at 8:00 PM ET. You can
                         change or delete your order in My Orders until then.
                         Orders placed after 8:00 PM on Sunday are collected the
@@ -594,12 +600,12 @@ export default function Home() {
                         className="space-y-4"
                       >
                         {orderStatus.msg && (
-                          <p className="p-4 rounded-2xl text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
+                          <p className="p-4 rounded-lg text-base font-bold bg-red-50 border-2 border-red-200 text-red-700">
                             {orderStatus.msg}
                           </p>
                         )}
                         <div>
-                          <label className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1 block">
+                          <label className="text-sm font-bold text-black mb-1 block">
                             Copies <span className="text-rose-700">*</span>
                           </label>
                           <input
@@ -616,11 +622,11 @@ export default function Home() {
                                 copies: e.target.value,
                               })
                             }
-                            className="w-full sm:w-40 px-4 py-3 bg-white border-2 border-slate-400 text-slate-900 rounded-xl text-lg font-bold outline-none focus:border-indigo-700"
+                            className="w-full sm:w-40 px-4 py-3 bg-white border-2 border-[#9fb3bd] text-black rounded-xl text-lg font-normal outline-none focus:border-gb-dark"
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-black uppercase tracking-widest text-slate-800 mb-1 block">
+                          <label className="text-sm font-bold text-black mb-1 block">
                             Notes
                           </label>
                           <textarea
@@ -633,7 +639,7 @@ export default function Home() {
                                 notes: e.target.value,
                               })
                             }
-                            className="w-full px-4 py-3 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 rounded-xl text-lg font-medium outline-none focus:border-indigo-700 resize-none"
+                            className="w-full px-4 py-3 bg-white border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted rounded-xl text-lg font-medium outline-none focus:border-gb-dark resize-none"
                           ></textarea>
                         </div>
                       </form>
@@ -644,19 +650,19 @@ export default function Home() {
             </div>
 
             {/* Footer Actions */}
-            <div className="p-5 sm:p-6 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-3">
+            <div className="p-5 sm:p-6 bg-gb-box border-t-2 border-gb-line flex justify-end gap-3">
               {modalMode === "order" && orderStep === "confirm" ? (
                 <button
                   onClick={() => setOrderStep("form")}
                   disabled={sendingOrder}
-                  className="px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider"
+                  className="px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold "
                 >
                   Back
                 </button>
               ) : (
                 <button
                   onClick={() => setSelectedBook(null)}
-                  className="px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider"
+                  className="px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold "
                 >
                   Close
                 </button>
@@ -665,7 +671,7 @@ export default function Home() {
                 <button
                   onClick={submitOrder}
                   disabled={sendingOrder}
-                  className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wide sm:tracking-wider transition-all shadow-xl bg-blue-700 text-white hover:bg-blue-800 disabled:bg-slate-500"
+                  className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold sm: transition-all shadow-sm bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
                 >
                   {sendingOrder ? "Ordering..." : "Confirm Order"}
                 </button>
@@ -676,7 +682,7 @@ export default function Home() {
                     type="submit"
                     form="order-form"
                     disabled={sendingOrder}
-                    className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wide sm:tracking-wider transition-all shadow-xl bg-blue-700 text-white hover:bg-blue-800 disabled:bg-slate-500"
+                    className="whitespace-nowrap px-6 sm:px-8 py-4 rounded-lg text-base font-bold sm: transition-all shadow-sm bg-gb-dark text-white hover:bg-gb-darker disabled:bg-slate-500"
                   >
                     Order
                   </button>
@@ -685,10 +691,10 @@ export default function Home() {
                 <button
                   onClick={() => handleBorrow(selectedBook.id)}
                   disabled={selectedBook.availableCopies <= 0}
-                  className={`px-8 py-4 rounded-2xl text-base font-black uppercase tracking-wider transition-all shadow-xl ${
+                  className={`px-8 py-4 rounded-lg text-base font-bold   transition-all shadow-sm ${
                     selectedBook.availableCopies > 0
-                      ? "bg-indigo-600 text-white hover:bg-slate-900"
-                      : "bg-slate-200 text-slate-800 cursor-not-allowed"
+                      ? "bg-gb-dark text-white hover:bg-gb-dark"
+                      : "bg-white text-black cursor-not-allowed"
                   }`}
                 >
                   {selectedBook.availableCopies > 0

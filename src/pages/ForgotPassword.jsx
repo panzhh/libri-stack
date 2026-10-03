@@ -41,13 +41,13 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-slate-300 py-12 px-4 sm:px-6 lg:px-8'>
-      <div className='max-w-md w-full space-y-8 bg-slate-200 p-10 rounded-xl shadow-lg border border-slate-400'>
+    <div className='min-h-screen flex items-center justify-center bg-gb-box py-12 px-4 sm:px-6 lg:px-8'>
+      <div className='max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-sm border border-gb-line'>
         <div>
-          <h2 className='text-center text-3xl font-extrabold text-slate-900'>
+          <h1 className='gb-h1 text-center'>
             Reset Password
-          </h2>
-          <p className='mt-2 text-center text-sm text-slate-700'>
+          </h1>
+          <p className='mt-2 text-center text-sm text-gb-muted'>
             Enter your email and we'll send you a recovery link.
           </p>
         </div>
@@ -57,7 +57,7 @@ const ForgotPassword = () => {
             <input
               type='email'
               required
-              className='appearance-none rounded-lg relative block w-full px-3 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm'
+              className='appearance-none rounded-lg relative block w-full px-3 py-3 border border-[#9fb3bd] placeholder-slate-400 text-black focus:outline-none focus:ring-indigo-500 focus:border-gb-dark focus:z-10 sm:text-sm'
               placeholder='Email address'
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -65,12 +65,12 @@ const ForgotPassword = () => {
           </div>
 
           {message && (
-            <p className='text-emerald-700 text-xs font-bold uppercase text-center'>
+            <p className='text-emerald-700 text-xs font-bold text-center'>
               {message}
             </p>
           )}
           {error && (
-            <p className='text-rose-700 text-xs font-bold uppercase text-center'>
+            <p className='text-rose-700 text-xs font-bold text-center'>
               {error}
             </p>
           )}
@@ -79,7 +79,7 @@ const ForgotPassword = () => {
             <button
               type='submit'
               disabled={loading}
-              className='group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50'
+              className='group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-normal rounded-md text-white bg-gb-dark hover:bg-gb-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50'
             >
               {loading ? "Sending..." : "Send Reset Link"}
             </button>
@@ -88,7 +88,7 @@ const ForgotPassword = () => {
           <div className='text-center'>
             <Link
               to='/login'
-              className='text-xs font-bold text-slate-800 hover:text-indigo-600 uppercase tracking-widest transition-colors'
+              className='text-xs font-bold text-black hover:text-gb-darker transition-colors'
             >
               Back to Login
             </Link>

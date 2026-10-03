@@ -34,11 +34,11 @@ export default function BorrowHistory() {
 
   return (
     <div className='space-y-4'>
-      <h3 className='text-base font-black text-slate-800 uppercase italic mb-6'>
+      <h3 className='text-base font-bold text-black mb-6'>
         Past Reads
       </h3>
       {history.length === 0 ? (
-        <p className='text-slate-800 text-base italic'>
+        <p className='text-black text-base '>
           No finished books yet. Keep reading!
         </p>
       ) : (
@@ -48,31 +48,31 @@ export default function BorrowHistory() {
             {history.map((item, index) => (
               <li
                 key={index}
-                className='bg-white rounded-2xl border border-slate-300 p-4'
+                className='bg-white rounded-lg border border-gb-line p-4'
               >
                 <div className='flex items-start justify-between gap-3'>
                   <div className='min-w-0'>
-                    <p className='text-lg font-black text-slate-900 break-words'>
+                    <p className='text-lg font-bold text-black break-words'>
                       {item.title}
                     </p>
                     {item.author && (
-                      <p className='text-sm font-bold italic text-slate-700'>
+                      <p className='text-sm font-bold text-gb-muted'>
                         by {item.author}
                       </p>
                     )}
                   </div>
-                  <span className='shrink-0 text-sm font-black bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md uppercase'>
+                  <span className='shrink-0 text-sm font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md '>
                     Returned
                   </span>
                 </div>
                 <dl className='mt-3 grid grid-cols-2 gap-2 text-sm'>
                   <div>
-                    <dt className='font-black uppercase text-slate-700'>Borrowed</dt>
-                    <dd className='font-bold text-slate-900'>{item.borrow_date}</dd>
+                    <dt className='font-bold text-gb-muted'>Borrowed</dt>
+                    <dd className='font-bold text-black'>{item.borrow_date}</dd>
                   </div>
                   <div>
-                    <dt className='font-black uppercase text-slate-700'>Returned</dt>
-                    <dd className='font-bold text-slate-900'>{item.return_date}</dd>
+                    <dt className='font-bold text-gb-muted'>Returned</dt>
+                    <dd className='font-bold text-black'>{item.return_date}</dd>
                   </div>
                 </dl>
               </li>
@@ -80,9 +80,9 @@ export default function BorrowHistory() {
           </ul>
 
           {/* Tablets and up: table */}
-          <div className='hidden sm:block overflow-x-auto rounded-2xl border border-slate-300'>
+          <div className='hidden sm:block overflow-x-auto rounded-lg border border-gb-line'>
             <table className='w-full text-left border-collapse'>
-              <thead className='bg-white text-sm uppercase font-black text-slate-800'>
+              <thead className='bg-white text-sm font-bold text-black'>
                 <tr>
                   <th className='p-4'>Book Title</th>
                   <th className='p-4 whitespace-nowrap'>Borrowed</th>
@@ -90,14 +90,14 @@ export default function BorrowHistory() {
                   <th className='p-4'>Status</th>
                 </tr>
               </thead>
-              <tbody className='text-base font-bold text-slate-800'>
+              <tbody className='text-base font-bold text-black'>
                 {history.map((item, index) => (
-                  <tr key={index} className='border-t border-slate-300'>
+                  <tr key={index} className='border-t border-gb-line'>
                     <td className='p-4'>{item.title}</td>
                     <td className='p-4 whitespace-nowrap'>{item.borrow_date}</td>
                     <td className='p-4 whitespace-nowrap'>{item.return_date}</td>
                     <td className='p-4'>
-                      <span className='text-sm bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md uppercase'>
+                      <span className='text-sm bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md '>
                         Returned
                       </span>
                     </td>

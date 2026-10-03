@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
-const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const [query, setQuery] = useState("");
 
   // --- AUTH LOGIC ---
   const token = localStorage.getItem("token");
@@ -12,82 +12,103 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.clear(); // Wipes token, role, and name
-    navigate("/login"); // Redirects to login
+    navigate("/login");
+  };
+
+  // Search from any page: show the results in the Home page catalog
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const q = query.trim();
+    navigate(q ? `/?q=${encodeURIComponent(q)}#catalog` : "/#catalog");
   };
 
   const linkStyles = ({ isActive }) =>
-    `transition-all hover:text-indigo-600 text-sm tracking-wide ${
-      isActive ? "text-indigo-600 font-black" : "text-slate-700 font-bold"
+    `px-1 py-1 text-base font-bold transition-colors hover:text-gb-darker ${
+      isActive ? "text-black underline underline-offset-4" : "text-black"
     }`;
 
   return (
-    <nav className='w-[calc(100%-2rem)] max-w-7xl mx-auto p-6 lg:p-8 flex flex-wrap justify-between items-center bg-slate-200 mb-4 rounded-[2rem] shadow-sm border-2 border-slate-400'>
-      {/* Branding - Shrinks slightly on tiny screens */}
-      <Link
-        to='/'
-        className='text-lg sm:text-2xl font-black italic tracking-tighter uppercase whitespace-nowrap'
-      >
-        Church in Dunn Loring <span className='text-indigo-600'>Library</span>
-      </Link>
+    <header>
+      {/* Top bar: name, search, account */}
+      <div className='bg-gb-teal'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-x-6 gap-y-3'>
+          <Link
+            to='/'
+            className='font-serif text-xl sm:text-2xl leading-tight text-black'
+          >
+            Church in Dunn Loring{" "}
+            <span className='font-bold text-gb-darker'>Library</span>
+          </Link>
 
-      {/* Navigation Links - Automatically wraps if space runs out */}
-      <div className='flex flex-wrap items-center gap-4 lg:gap-8 text-sm uppercase tracking-wider'>
-        <NavLink title='Home' to='/' className={linkStyles}>
-          Home
-        </NavLink>
-        <NavLink title='About' to='/about' className={linkStyles}>
-          About
-        </NavLink>
-
-        <NavLink title='Contact' to='/contact' className={linkStyles}>
-          Contact
-        </NavLink>
-
-        {!token ? (
-          <div className='flex items-center gap-3'>
-            <NavLink title='Register' to='/register' className={linkStyles}>
-              Register
-            </NavLink>
-            <NavLink
-              to='/login'
-              className={({ isActive }) =>
-                `px-5 py-2 rounded-full font-black transition-all text-sm ${
-                  isActive
-                    ? "bg-indigo-600 text-white"
-                    : "bg-slate-900 text-white hover:bg-indigo-600"
-                }`
-              }
+          <form
+            onSubmit={handleSearch}
+            role='search'
+            className='order-last w-full md:order-none md:w-auto md:flex-1 md:max-w-xl flex'
+          >
+            <input
+              type='search'
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder='Search books by title or author'
+              aria-label='Search books'
+              className='flex-1 min-w-0 bg-white text-black text-base px-4 py-2.5 rounded-l-full outline-none placeholder:text-gb-muted focus:ring-2 focus:ring-gb-dark'
+            />
+            <button
+              type='submit'
+              className='bg-gb-dark hover:bg-gb-darker text-white font-bold px-5 rounded-r-full'
             >
-              Login
-            </NavLink>
-          </div>
-        ) : (
-          <div className='flex flex-wrap items-center gap-4 lg:gap-6'>
-            {role === "admin" && (
-              <NavLink to='/admin-dashboard' className={linkStyles}>
-                Admin Panel
-              </NavLink>
+              Go!
+            </button>
+          </form>
+
+          <div className='ml-auto flex items-center gap-3'>
+            {!token ? (
+              <>
+                <Link to='/register' className='gb-btn-light py-2'>
+                  Register
+                </Link>
+                <Link to='/login' className='gb-btn py-2'>
+                  Log in
+                </Link>
+              </>
+            ) : (
+              <>
+                <span className='hidden sm:inline text-base font-semibold text-black'>
+                  Hi, {userName?.split(" ")[0] || "User"}
+                </span>
+                <button onClick={handleLogout} className='gb-btn py-2'>
+                  Log out
+                </button>
+              </>
             )}
-
-            <NavLink to='/user-dashboard' className={linkStyles}>
-              {role === "admin" ? "My Borrows" : "Dashboard"}
-            </NavLink>
-
-            <div className='flex items-center gap-4 lg:gap-6 lg:ml-4 lg:pl-6 border-l-2 border-slate-100'>
-              <span className='hidden sm:inline text-slate-700 font-bold tracking-tight italic normal-case text-base'>
-                Hi, {userName?.split(" ")[0] || "User"}
-              </span>
-              <button
-                onClick={handleLogout}
-                className='px-5 py-2 rounded-full bg-rose-50 text-rose-700 font-black text-sm hover:bg-rose-600 hover:text-white transition-all border border-rose-100 shadow-sm'
-              >
-                Logout
-              </button>
-            </div>
           </div>
-        )}
-
+        </div>
       </div>
-    </nav>
+
+      {/* Menu row */}
+      <nav className='bg-gb-nav'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-x-8 gap-y-1'>
+          <NavLink to='/' end className={linkStyles}>
+            Home
+          </NavLink>
+          <NavLink to='/about' className={linkStyles}>
+            About
+          </NavLink>
+          <NavLink to='/contact' className={linkStyles}>
+            Contact
+          </NavLink>
+          {token && role === "admin" && (
+            <NavLink to='/admin-dashboard' className={linkStyles}>
+              Admin Panel
+            </NavLink>
+          )}
+          {token && (
+            <NavLink to='/user-dashboard' className={linkStyles}>
+              {role === "admin" ? "My Borrows" : "My Dashboard"}
+            </NavLink>
+          )}
+        </div>
+      </nav>
+    </header>
   );
 }

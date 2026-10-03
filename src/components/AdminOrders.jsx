@@ -157,14 +157,14 @@ export default function AdminOrders() {
     return <p className="p-10 text-center animate-pulse">Loading orders...</p>;
 
   const selectClass =
-    "bg-white border-2 border-slate-400 text-slate-900 px-3 py-2 rounded-xl font-bold text-base outline-none focus:border-indigo-700";
+    "gb-input w-auto py-2 text-base";
   const labelClass =
-    "text-xs font-black uppercase tracking-widest text-slate-800 mb-1 block";
+    "gb-label text-sm";
 
   return (
     <section className="space-y-6">
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-4 bg-slate-200 border border-slate-400 rounded-[2rem] p-5">
+      <div className="flex flex-wrap items-end gap-4 bg-white border border-gb-line rounded-xl p-5">
         <div>
           <label className={labelClass}>Collection</label>
           <select
@@ -223,19 +223,19 @@ export default function AdminOrders() {
         <button
           onClick={downloadCsv}
           disabled={filtered.length === 0}
-          className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-black uppercase tracking-wider hover:bg-blue-700 disabled:bg-slate-400"
+          className="px-5 py-2.5 bg-gb-dark text-white rounded-xl text-sm font-bold hover:bg-gb-dark disabled:bg-slate-400"
         >
           Download CSV
         </button>
       </div>
 
       {/* Summary */}
-      <p className="text-lg font-black text-slate-900">
+      <p className="text-lg font-bold text-black">
         {filtered.length} {filtered.length === 1 ? "order" : "orders"} ·{" "}
         {totals.copies} {totals.copies === 1 ? "copy" : "copies"} · Total{" "}
         {money(totals.amount)}
         {collection === "next" && !nextCollection && (
-          <span className="font-bold text-slate-700">
+          <span className="font-bold text-gb-muted">
             {" "}
             (no upcoming collection yet)
           </span>
@@ -243,15 +243,15 @@ export default function AdminOrders() {
       </p>
 
       {filtered.length === 0 ? (
-        <div className="py-16 text-center bg-slate-200 rounded-[2rem] border-2 border-dashed border-slate-400">
-          <p className="text-slate-800 font-black text-base uppercase">
+        <div className="py-16 text-center bg-white rounded-xl border-2 border-dashed border-gb-line">
+          <p className="text-black font-bold text-base ">
             No orders match these filters
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white border border-slate-400 rounded-2xl">
+        <div className="overflow-x-auto bg-white border border-gb-line rounded-lg">
           <table className="w-full text-left text-sm border-collapse min-w-[1100px]">
-            <thead className="bg-slate-200 text-xs uppercase font-black text-slate-800">
+            <thead className="bg-white text-xs font-bold text-black">
               <tr>
                 {[
                   "Order time (ET)",
@@ -273,36 +273,36 @@ export default function AdminOrders() {
                 ))}
               </tr>
             </thead>
-            <tbody className="text-slate-900">
+            <tbody className="text-black">
               {filtered.map((o) => (
-                <tr key={o.id} className="border-t border-slate-300 align-top">
+                <tr key={o.id} className="border-t border-gb-line align-top">
                   <td className="p-3 whitespace-nowrap">
                     {o.ordered_at_display}
                   </td>
-                  <td className="p-3 whitespace-nowrap font-black text-indigo-700">
+                  <td className="p-3 whitespace-nowrap font-bold text-gb-darker">
                     {o.order_number}
                   </td>
                   <td className="p-3 min-w-[180px]">
-                    <p className="font-black">{o.title}</p>
+                    <p className="font-bold">{o.title}</p>
                     {o.author && (
-                      <p className="italic text-slate-700">by {o.author}</p>
+                      <p className="text-gb-muted">by {o.author}</p>
                     )}
                   </td>
                   <td className="p-3">{o.language || "Any"}</td>
-                  <td className="p-3 font-black text-base">{o.copies}</td>
+                  <td className="p-3 font-bold text-base">{o.copies}</td>
                   <td className="p-3 whitespace-nowrap">
                     {money(o.unit_price)}
                   </td>
-                  <td className="p-3 whitespace-nowrap font-black text-blue-800">
+                  <td className="p-3 whitespace-nowrap font-bold text-gb-darker">
                     {money(o.total_price)}
                   </td>
                   <td className="p-3 min-w-[200px]">
                     <p className="font-bold">{o.requested_by}</p>
-                    <p className="text-slate-700 whitespace-nowrap">
+                    <p className="text-gb-muted whitespace-nowrap">
                       {o.requester_email}
                     </p>
                   </td>
-                  <td className="p-3 min-w-[140px] italic">{o.notes || "—"}</td>
+                  <td className="p-3 min-w-[140px] ">{o.notes || "—"}</td>
                   <td className="p-3 whitespace-nowrap">{o.collection_date}</td>
                   <td className="p-3">
                     <select
@@ -310,7 +310,7 @@ export default function AdminOrders() {
                       onChange={(e) =>
                         updateOrder(o.id, { status: e.target.value })
                       }
-                      className={`px-2 py-1 rounded-lg border-2 text-xs font-black uppercase cursor-pointer outline-none ${STATUS_STYLES[o.status]}`}
+                      className={`px-2 py-1 rounded-lg border-2 text-xs font-normal  cursor-pointer outline-none ${STATUS_STYLES[o.status]}`}
                     >
                       {STATUSES.map((s) => (
                         <option key={s} value={s}>
@@ -328,14 +328,14 @@ export default function AdminOrders() {
                         onChange={(e) =>
                           setNotes({ ...notes, [o.id]: e.target.value })
                         }
-                        className="flex-1 min-w-0 px-2 py-1 bg-white border-2 border-slate-300 rounded-lg text-sm outline-none focus:border-indigo-700"
+                        className="flex-1 min-w-0 px-2 py-1 bg-white border-2 border-[#9fb3bd] rounded-lg text-sm outline-none focus:border-gb-dark"
                       />
                       <button
                         disabled={notes[o.id] === undefined}
                         onClick={() =>
                           updateOrder(o.id, { admin_note: notes[o.id] })
                         }
-                        className="px-3 py-1 bg-slate-900 text-white rounded-lg text-xs font-black uppercase disabled:opacity-30"
+                        className="px-3 py-1 bg-gb-dark text-white rounded-lg text-xs font-bold disabled:opacity-30"
                       >
                         Save
                       </button>

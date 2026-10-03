@@ -51,12 +51,12 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-slate-300 px-4'>
-      <div className='max-w-md w-full bg-slate-200 p-8 rounded-xl shadow-lg border border-slate-400'>
-        <h2 className='text-2xl font-bold text-slate-900 text-center mb-2'>
+    <div className='min-h-screen flex items-center justify-center bg-gb-box px-4'>
+      <div className='max-w-md w-full bg-white p-8 rounded-xl shadow-sm border border-gb-line'>
+        <h2 className='text-2xl font-bold text-black text-center mb-2'>
           New Password
         </h2>
-        <p className='text-slate-700 text-center text-sm mb-8'>
+        <p className='text-gb-muted text-center text-sm mb-8'>
           Please enter your new secure password.
         </p>
 
@@ -65,7 +65,7 @@ const ResetPassword = () => {
             type='password'
             placeholder='New Password'
             required
-            className='w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none'
+            className='w-full px-4 py-3 rounded-lg border border-[#9fb3bd] focus:ring-2 focus:ring-indigo-500 outline-none'
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -73,14 +73,14 @@ const ResetPassword = () => {
             type='password'
             placeholder='Confirm New Password'
             required
-            className='w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none'
+            className='w-full px-4 py-3 rounded-lg border border-[#9fb3bd] focus:ring-2 focus:ring-indigo-500 outline-none'
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
 
           {status.message && (
             <p
-              className={`text-center text-xs font-bold uppercase ${status.type === "error" ? "text-rose-700" : "text-emerald-700"}`}
+              className={`text-center text-xs font-bold  ${status.type === "error" ? "text-rose-700" : "text-emerald-700"}`}
             >
               {status.message}
             </p>
@@ -89,7 +89,7 @@ const ResetPassword = () => {
           <button
             type='submit'
             disabled={loading}
-            className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50'
+            className='w-full bg-gb-dark hover:bg-gb-dark text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50'
           >
             {loading ? "Updating..." : "Reset Password"}
           </button>

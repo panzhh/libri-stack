@@ -66,23 +66,23 @@ export default function OrderBooks() {
   };
 
   const inputClass =
-    "w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none font-bold text-lg transition-all";
+    "gb-input";
   const labelClass =
-    "text-base font-black text-slate-800 uppercase ml-2 mb-1 block";
+    "gb-label";
 
   if (!token) {
     return (
       <div className='max-w-xl mx-auto px-6 py-20'>
-        <div className='bg-slate-200 p-8 sm:p-12 rounded-[3rem] border-2 border-slate-400 shadow-xl text-center'>
-          <h2 className='text-4xl font-black uppercase italic tracking-tighter mb-4'>
-            Order <span className='text-indigo-600'>Books</span>
-          </h2>
+        <div className='bg-white p-8 sm:p-12 rounded-xl border-2 border-gb-line shadow-sm text-center'>
+          <h1 className='gb-h1 mb-4'>
+            Order Books
+          </h1>
           <p className='text-lg text-black mb-8'>
             Please log in first to order books.
           </p>
           <Link
             to='/login'
-            className='inline-block px-10 py-5 bg-slate-900 text-white text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-colors'
+            className='inline-block px-10 py-5 bg-gb-dark text-white text-lg font-bold rounded-lg hover:bg-gb-dark transition-colors'
           >
             Log In
           </Link>
@@ -93,10 +93,10 @@ export default function OrderBooks() {
 
   return (
     <div className='max-w-xl mx-auto px-6 py-20 space-y-10'>
-      <div className='bg-slate-200 p-8 sm:p-12 rounded-[3rem] border-2 border-slate-400 shadow-xl'>
-        <h2 className='text-4xl font-black uppercase italic tracking-tighter mb-2'>
-          Order <span className='text-indigo-600'>Books</span>
-        </h2>
+      <div className='bg-white p-8 sm:p-12 rounded-xl border-2 border-gb-line shadow-sm'>
+        <h1 className='gb-h1 mb-2'>
+          Order Books
+        </h1>
         <p className='text-lg text-black mb-8'>
           Can't find a book in our collection? Tell us what you're looking for
           and the library team will try to order it.
@@ -104,7 +104,7 @@ export default function OrderBooks() {
 
         {status.msg && (
           <div
-            className={`p-4 rounded-2xl mb-6 text-base font-bold ${
+            className={`p-4 rounded-lg mb-6 text-base font-bold ${
               status.type === "error"
                 ? "bg-red-50 text-red-700"
                 : "bg-green-50 text-green-700"
@@ -195,19 +195,19 @@ export default function OrderBooks() {
           <button
             type='submit'
             disabled={loading}
-            className='w-full py-5 mt-4 bg-slate-900 text-white text-lg font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-all disabled:opacity-50'
+            className='w-full py-5 mt-4 bg-gb-dark text-white text-lg font-bold rounded-lg hover:bg-gb-dark transition-all disabled:opacity-50'
           >
             {loading ? "Sending..." : "Send Request"}
           </button>
         </form>
       </div>
 
-      <div className='bg-slate-200 p-8 sm:p-12 rounded-[3rem] border-2 border-slate-400 shadow-xl'>
-        <h3 className='text-2xl font-black uppercase italic tracking-tight mb-6'>
-          My <span className='text-indigo-600'>Requests</span>
+      <div className='bg-white p-8 sm:p-12 rounded-xl border-2 border-gb-line shadow-sm'>
+        <h3 className='text-2xl font-bold mb-6'>
+          My Requests
         </h3>
         {requests.length === 0 ? (
-          <p className='text-lg text-slate-800'>
+          <p className='text-lg text-black'>
             You haven't requested any books yet.
           </p>
         ) : (
@@ -215,35 +215,35 @@ export default function OrderBooks() {
             {requests.map((r) => (
               <li
                 key={r.id}
-                className='border-2 border-slate-100 rounded-2xl p-5'
+                className='border-2 border-gb-line rounded-lg p-5'
               >
                 <div className='flex justify-between items-start gap-4'>
                   <div>
                     {r.order_number && (
-                      <p className='text-sm font-black text-indigo-700 tracking-wide whitespace-nowrap'>
+                      <p className='text-sm font-bold text-gb-darker whitespace-nowrap'>
                         Order #{r.order_number}
                       </p>
                     )}
-                    <p className='text-lg font-black text-slate-900'>
+                    <p className='text-lg font-bold text-black'>
                       {r.title}
                     </p>
                     {r.author && (
-                      <p className='text-base text-slate-800 italic'>
+                      <p className='text-base text-black '>
                         by {r.author}
                       </p>
                     )}
                   </div>
                 </div>
-                <p className='text-base font-bold text-slate-900 mt-2'>
+                <p className='text-base font-bold text-black mt-2'>
                   {r.copies} {r.copies === 1 ? "copy" : "copies"} ·{" "}
                   {r.language || "Any language"}
                 </p>
-                <p className='text-sm text-slate-800 mt-1'>
+                <p className='text-sm text-black mt-1'>
                   Requested {r.date} · Collected {r.collection_date}, 8:00 PM
                   ET
                 </p>
                 {r.admin_note && (
-                  <p className='text-base text-black mt-2 bg-slate-300 p-3 rounded-xl'>
+                  <p className='text-base text-black mt-2 bg-gb-box p-3 rounded-xl'>
                     <span className='font-bold'>Library note:</span>{" "}
                     {r.admin_note}
                   </p>

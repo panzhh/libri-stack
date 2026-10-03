@@ -506,8 +506,8 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-slate-300 flex items-center justify-center'>
-        <div className='text-slate-700 font-black uppercase text-xs tracking-widest'>
+      <div className='min-h-screen bg-gb-box flex items-center justify-center'>
+        <div className='text-gb-muted font-bold text-xs '>
           Loading...
         </div>
       </div>
@@ -526,12 +526,12 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className='min-h-screen bg-slate-300 flex'>
+    <div className='min-h-screen bg-gb-box flex'>
       {/* Mobile menu button (bottom-right, same as the member dashboard) */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
-        className='xl:hidden fixed bottom-6 right-6 z-[60] w-16 h-16 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl active:scale-95 transition-transform'
+        className='xl:hidden fixed bottom-6 right-6 z-[60] w-16 h-16 bg-gb-dark text-white rounded-full shadow-sm flex items-center justify-center text-3xl active:scale-95 transition-transform'
       >
         {isSidebarOpen ? "✕" : "☰"}
       </button>
@@ -549,7 +549,7 @@ export default function AdminDashboard() {
         className={`
           fixed xl:sticky top-0 z-50 xl:z-auto
           h-screen overflow-y-auto
-          bg-slate-900 text-white p-6 xl:p-8
+          bg-gb-box text-black border-r border-gb-line p-6 xl:p-8
           w-[85vw] max-w-xs xl:w-72 shrink-0
           transform transition-transform duration-200
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -560,7 +560,7 @@ export default function AdminDashboard() {
         <div className='xl:hidden flex justify-end mb-4'>
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className='text-xl font-black'
+            className='text-xl font-bold'
             aria-label='Close menu'
           >
             ✕
@@ -568,18 +568,18 @@ export default function AdminDashboard() {
         </div>
 
         <div className='mb-12'>
-          <h1 className='text-2xl font-black italic tracking-tighter'>
+          <h1 className='font-serif text-2xl leading-tight'>
             Church in Dunn Loring{" "}
-            <span className='text-rose-500'>Library</span>
+            Library
           </h1>
-          <p className='text-slate-300 text-xs font-bold uppercase tracking-[0.2em]'>
+          <p className='text-gb-muted text-xs font-bold '>
             Control Panel
           </p>
         </div>
 
         <nav className='flex-1 space-y-6'>
           <div>
-            <p className='text-slate-300 text-xs font-black uppercase tracking-widest mb-4'>
+            <p className='text-gb-muted text-xs font-bold mb-4'>
               Main Menu
             </p>
             <ul className='space-y-2'>
@@ -587,8 +587,8 @@ export default function AdminDashboard() {
                 onClick={() => goTab("overview")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "overview"
-                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-300 hover:text-white border-transparent"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
+                    : "text-black hover:bg-gb-nav border-transparent"
                 }`}
               >
                 Dashboard Overview
@@ -597,8 +597,8 @@ export default function AdminDashboard() {
                 onClick={() => goTab("users")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "users"
-                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-300 hover:text-white border-transparent"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
+                    : "text-black hover:bg-gb-nav border-transparent"
                 }`}
               >
                 User Management
@@ -607,8 +607,8 @@ export default function AdminDashboard() {
                 onClick={() => goTab("inventory")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "inventory"
-                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-300 hover:text-white border-transparent"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
+                    : "text-black hover:bg-gb-nav border-transparent"
                 }`}
               >
                 Book Inventory
@@ -617,8 +617,8 @@ export default function AdminDashboard() {
                 onClick={() => goTab("borrowed")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "borrowed"
-                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-300 hover:text-white border-transparent"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
+                    : "text-black hover:bg-gb-nav border-transparent"
                 }`}
               >
                 Borrowed Books
@@ -627,8 +627,8 @@ export default function AdminDashboard() {
                 onClick={() => goTab("add-book")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "add-book"
-                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-300 hover:text-white border-transparent"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
+                    : "text-black hover:bg-gb-nav border-transparent"
                 }`}
               >
                 Add New Book
@@ -637,8 +637,8 @@ export default function AdminDashboard() {
                 onClick={() => goTab("messages")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "messages"
-                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-300 hover:text-white border-transparent"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
+                    : "text-black hover:bg-gb-nav border-transparent"
                 }`}
               >
                 Contact Messages
@@ -647,8 +647,8 @@ export default function AdminDashboard() {
                 onClick={() => goTab("orders")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "orders"
-                    ? "bg-rose-500 text-white border-rose-500 shadow-lg"
-                    : "text-slate-300 hover:text-white border-transparent"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
+                    : "text-black hover:bg-gb-nav border-transparent"
                 }`}
               >
                 Order Books
@@ -657,7 +657,7 @@ export default function AdminDashboard() {
           </div>
 
           <div>
-            <p className='text-slate-300 text-xs font-black uppercase tracking-widest mb-4'>
+            <p className='text-gb-muted text-xs font-bold mb-4'>
               Personal
             </p>
             <ul className='space-y-2'>
@@ -665,8 +665,8 @@ export default function AdminDashboard() {
                 onClick={() => goTab("profile")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "profile"
-                    ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/20"
-                    : "text-slate-300 hover:text-white border-transparent"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm "
+                    : "text-black hover:bg-gb-nav border-transparent"
                 }`}
               >
                 My Profile
@@ -677,16 +677,16 @@ export default function AdminDashboard() {
 
         <button
           onClick={handleLogout}
-          className='mt-auto p-4 bg-slate-800 hover:bg-rose-600 transition-all rounded-2xl text-sm font-black uppercase tracking-widest hidden md:block'
+          className='gb-btn mt-6 hidden md:inline-flex'
         >
-          Logout Session
+          Log out
         </button>
       </aside>
 
       {/* Main */}
       <main className='flex-1 overflow-y-auto p-4 md:p-12'>
         <header className='flex justify-between items-center mb-8 md:mb-12'>
-          <h2 className='text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter'>
+          <h1 className='gb-h1'>
             {activeTab === "profile"
               ? "Admin Profile"
               : activeTab === "overview"
@@ -702,13 +702,13 @@ export default function AdminDashboard() {
                         : activeTab === "orders"
                           ? "Order Books"
                           : "User Management"}
-          </h2>
+          </h1>
         </header>
 
         {/* USERS SEARCH */}
         {activeTab === "users" && (
           <div className='relative w-full max-w-md mb-6 md:mb-10'>
-            <span className='absolute inset-y-0 left-4 flex items-center text-slate-800'>
+            <span className='absolute inset-y-0 left-4 flex items-center text-black'>
               🔍
             </span>
             <input
@@ -716,7 +716,7 @@ export default function AdminDashboard() {
               placeholder='Search records...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className='w-full pl-11 pr-5 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-500/20 shadow-sm'
+              className='w-full pl-11 pr-5 py-3 bg-white border border-[#9fb3bd] rounded-lg text-xs font-normal focus:outline-none focus:ring-2 focus:ring-rose-500/20 shadow-sm'
             />
           </div>
         )}
@@ -724,25 +724,25 @@ export default function AdminDashboard() {
         {/* OVERVIEW */}
         {activeTab === "overview" && (
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 animate-in fade-in'>
-            <div className='bg-slate-200 p-6 md:p-8 rounded-[2.5rem] border border-slate-400 shadow-sm'>
-              <div className='w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-2xl mb-6'>
+            <div className='bg-white p-6 md:p-8 rounded-xl border border-gb-line shadow-sm'>
+              <div className='w-12 h-12 bg-gb-box rounded-lg flex items-center justify-center text-2xl mb-6'>
                 👥
               </div>
-              <h3 className='text-slate-800 font-black text-xs uppercase mb-1'>
+              <h3 className='text-black font-bold text-xs mb-1'>
                 Total Members
               </h3>
-              <p className='text-4xl font-black text-slate-800'>
+              <p className='text-4xl font-bold text-black'>
                 {users.length}
               </p>
             </div>
-            <div className='bg-slate-200 p-6 md:p-8 rounded-[2.5rem] border border-slate-400 shadow-sm'>
-              <div className='w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-2xl mb-6'>
+            <div className='bg-white p-6 md:p-8 rounded-xl border border-gb-line shadow-sm'>
+              <div className='w-12 h-12 bg-rose-50 rounded-lg flex items-center justify-center text-2xl mb-6'>
                 📖
               </div>
-              <h3 className='text-slate-800 font-black text-xs uppercase mb-1'>
+              <h3 className='text-black font-bold text-xs mb-1'>
                 Books in Catalog
               </h3>
-              <p className='text-4xl font-black text-slate-800'>
+              <p className='text-4xl font-bold text-black'>
                 {books.length}
               </p>
             </div>
@@ -751,42 +751,42 @@ export default function AdminDashboard() {
 
         {/* USERS TAB */}
         {activeTab === "users" && (
-          <section className='bg-slate-200 rounded-[2rem] md:rounded-[3rem] border border-slate-400 shadow-sm p-5 md:p-10 animate-in fade-in'>
+          <section className='bg-white rounded-xl md:rounded-xl border border-gb-line shadow-sm p-5 md:p-10 animate-in fade-in'>
             <div className='flex flex-col md:flex-row md:flex-wrap md:justify-between md:items-center gap-4 mb-6 md:mb-10'>
-              <h3 className='text-lg md:text-xl font-black text-slate-800 uppercase italic'>
+              <h3 className='text-lg md:text-xl font-bold text-black '>
                 Database Records
               </h3>
 
               <div className='flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center sm:justify-between'>
                 <button
                   onClick={() => setIsEmailModalOpen(true)}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold  transition-all ${
                     selectedEmails.length > 0
-                      ? "bg-indigo-600 text-white"
-                      : "bg-slate-100 text-slate-800"
+                      ? "bg-gb-dark text-white"
+                      : "bg-gb-tile text-black"
                   }`}
                   disabled={selectedEmails.length === 0}
                 >
                   Email Selected ({selectedEmails.length})
                 </button>
 
-                <div className='flex bg-slate-200 p-1.5 rounded-2xl'>
+                <div className='flex bg-white p-1.5 rounded-lg'>
                   <button
                     onClick={() => setUserSubTab("user")}
-                    className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${
+                    className={`px-6 py-2.5 rounded-xl text-xs font-bold  transition-all ${
                       userSubTab === "user"
-                        ? "bg-white text-indigo-600 shadow-sm"
-                        : "text-slate-700"
+                        ? "bg-white text-gb-darker shadow-sm"
+                        : "text-gb-muted"
                     }`}
                   >
                     Members
                   </button>
                   <button
                     onClick={() => setUserSubTab("admin")}
-                    className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${
+                    className={`px-6 py-2.5 rounded-xl text-xs font-bold  transition-all ${
                       userSubTab === "admin"
                         ? "bg-white text-rose-700 shadow-sm"
-                        : "text-slate-700"
+                        : "text-gb-muted"
                     }`}
                   >
                     Admins
@@ -800,20 +800,20 @@ export default function AdminDashboard() {
               {filteredUsers.map((u) => (
                 <div
                   key={u.id}
-                  className='border border-slate-400 rounded-2xl p-4 bg-slate-200'
+                  className='border border-gb-line rounded-lg p-4 bg-white'
                 >
                   <div className='flex items-start justify-between gap-3'>
                     <div className='min-w-0'>
                       <div
-                        className='font-black text-slate-900 truncate cursor-pointer'
+                        className='font-bold text-black truncate cursor-pointer'
                         onClick={() => setSelectedUser(u)}
                       >
                         {u.full_name}
                       </div>
-                      <div className='text-xs text-slate-700 break-all'>
+                      <div className='text-xs text-gb-muted break-all'>
                         {u.email}
                       </div>
-                      <div className='text-xs text-slate-800 font-black uppercase mt-2'>
+                      <div className='text-xs text-black font-bold mt-2'>
                         Joined: {u.registration_date || "Unknown"}
                       </div>
                     </div>
@@ -830,14 +830,14 @@ export default function AdminDashboard() {
                     {u.role === "user" && userSubTab === "user" && (
                       <button
                         onClick={() => handlePromoteUser(u.id, u.full_name)}
-                        className='flex-1 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black uppercase'
+                        className='flex-1 py-2 rounded-xl bg-gb-dark text-white text-xs font-bold '
                       >
                         Promote
                       </button>
                     )}
                     <button
                       onClick={() => handleDeleteUser(u.email)}
-                      className='flex-1 py-2 rounded-xl bg-rose-50 text-rose-700 text-xs font-black uppercase border border-rose-100'
+                      className='flex-1 py-2 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold border border-rose-100'
                     >
                       Delete
                     </button>
@@ -850,7 +850,7 @@ export default function AdminDashboard() {
             <div className='hidden md:block'>
               <table className='w-full text-left'>
                 <thead>
-                  <tr className='text-xs font-black text-slate-800 border-b uppercase'>
+                  <tr className='text-xs font-bold text-black border-b '>
                     <th className='pb-4'>Select</th>
                     <th className='pb-4'>Name</th>
                     <th className='pb-4'>Email</th>
@@ -862,7 +862,7 @@ export default function AdminDashboard() {
                   {filteredUsers.map((u) => (
                     <tr
                       key={u.id}
-                      className='border-b border-slate-50 hover:bg-slate-50 transition-colors'
+                      className='border-b border-gb-line hover:bg-gb-tile transition-colors'
                     >
                       <td className='py-5'>
                         <input
@@ -872,13 +872,13 @@ export default function AdminDashboard() {
                         />
                       </td>
                       <td
-                        className='py-5 font-bold text-slate-800 text-sm cursor-pointer hover:text-indigo-600 hover:underline transition-all'
+                        className='py-5 font-bold text-black text-sm cursor-pointer hover:text-gb-darker hover:underline transition-all'
                         onClick={() => setSelectedUser(u)}
                       >
                         {u.full_name}
                       </td>
-                      <td className='py-5 text-sm text-slate-700'>{u.email}</td>
-                      <td className='py-5 text-xs font-black text-slate-800 uppercase'>
+                      <td className='py-5 text-sm text-gb-muted'>{u.email}</td>
+                      <td className='py-5 text-xs font-bold text-black '>
                         {u.registration_date || "Unknown"}
                       </td>
                       <td className='py-5 text-right'>
@@ -888,14 +888,14 @@ export default function AdminDashboard() {
                               onClick={() =>
                                 handlePromoteUser(u.id, u.full_name)
                               }
-                              className='text-xs font-black text-indigo-600 uppercase hover:underline'
+                              className='text-xs font-bold text-gb-darker hover:underline'
                             >
                               Promote
                             </button>
                           )}
                           <button
                             onClick={() => handleDeleteUser(u.email)}
-                            className='text-xs font-black text-rose-700 uppercase hover:underline'
+                            className='text-xs font-bold text-rose-700 hover:underline'
                           >
                             Delete
                           </button>
@@ -912,9 +912,9 @@ export default function AdminDashboard() {
         {/* INVENTORY TAB */}
         {activeTab === "inventory" && (
           <div className='animate-in fade-in'>
-            <div className='flex flex-wrap items-center gap-4 mb-6 md:mb-10 bg-slate-200 p-5 md:p-6 rounded-[2rem] border border-slate-400 shadow-sm'>
+            <div className='flex flex-wrap items-center gap-4 mb-6 md:mb-10 bg-white p-5 md:p-6 rounded-xl border border-gb-line shadow-sm'>
               <div className='relative flex-1 min-w-[240px]'>
-                <span className='absolute inset-y-0 left-4 flex items-center text-slate-800'>
+                <span className='absolute inset-y-0 left-4 flex items-center text-black'>
                   🔍
                 </span>
                 <input
@@ -922,14 +922,14 @@ export default function AdminDashboard() {
                   placeholder='Search title or author...'
                   value={inventorySearch}
                   onChange={(e) => setInventorySearch(e.target.value)}
-                  className='w-full pl-11 pr-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-500/20'
+                  className='w-full pl-11 pr-5 py-3 bg-gb-tile border border-[#9fb3bd] rounded-lg text-xs font-normal focus:outline-none focus:ring-2 focus:ring-rose-500/20'
                 />
               </div>
 
               <select
                 value={languageFilter}
                 onChange={(e) => setLanguageFilter(e.target.value)}
-                className='px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black uppercase text-slate-700 focus:outline-none'
+                className='px-4 py-3 bg-gb-tile border border-[#9fb3bd] rounded-lg text-xs font-normal text-gb-muted focus:outline-none'
               >
                 <option value='All'>All Languages</option>
                 <option value='Burmese'>Burmese</option>
@@ -948,15 +948,15 @@ export default function AdminDashboard() {
                 <option value='Tagalog'>Tagalog</option>
               </select>
 
-              <div className='flex bg-slate-200 p-1 rounded-2xl'>
+              <div className='flex bg-white p-1 rounded-lg'>
                 {["All", "In Stock", "Out of Stock"].map((s) => (
                   <button
                     key={s}
                     onClick={() => setStockFilter(s)}
-                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all ${
+                    className={`px-4 py-2 rounded-xl text-xs font-bold  transition-all ${
                       stockFilter === s
                         ? "bg-white text-rose-700 shadow-sm"
-                        : "text-slate-700 hover:text-slate-700"
+                        : "text-gb-muted hover:text-gb-muted"
                     }`}
                   >
                     {s}
@@ -969,9 +969,9 @@ export default function AdminDashboard() {
               {filteredInventory.map((book) => (
                 <div
                   key={book.id}
-                  className='bg-slate-200 p-6 rounded-[2.5rem] border border-slate-400 shadow-sm hover:shadow-xl transition-all group'
+                  className='bg-white p-6 rounded-xl border border-gb-line shadow-sm hover:shadow-sm transition-all group'
                 >
-                  <div className='aspect-square bg-slate-300 rounded-[2rem] mb-4 flex items-center justify-center text-5xl border border-slate-400 overflow-hidden relative'>
+                  <div className='aspect-square bg-gb-box rounded-xl mb-4 flex items-center justify-center text-5xl border border-gb-line overflow-hidden relative'>
                     {book.uploadedImageUrl ? (
                       <img
                         src={`${API_URL}/api/covers/${book.id}.png`}
@@ -989,10 +989,10 @@ export default function AdminDashboard() {
                     )}
 
                     <div
-                      className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-black uppercase ${
+                      className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold  ${
                         Number(book.availableCopies) > 0
-                          ? "bg-emerald-500 text-white"
-                          : "bg-rose-500 text-white"
+                          ? "bg-emerald-700 text-white"
+                          : "bg-gb-red text-white"
                       }`}
                     >
                       {Number(book.availableCopies) > 0
@@ -1001,30 +1001,30 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <h4 className='font-black text-slate-900 truncate uppercase text-sm'>
+                  <h4 className='font-bold text-black truncate text-sm'>
                     {book.title}
                   </h4>
-                  <p className='text-slate-700 text-xs font-bold italic mb-6'>
+                  <p className='text-gb-muted text-xs font-bold mb-6'>
                     by {book.author || "Unknown"}
                   </p>
 
                   <div className='space-y-2'>
                     <button
                       onClick={() => setSelectedBook(book)}
-                      className='w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase hover:bg-indigo-600 transition-all shadow-md'
+                      className='w-full py-3 bg-gb-dark text-white rounded-xl text-xs font-bold hover:bg-gb-dark transition-all shadow-md'
                     >
                       View Details
                     </button>
                     <div className='flex gap-2'>
                       <button
                         onClick={() => startEditing(book)}
-                        className='flex-1 py-3 border-2 border-slate-100 text-slate-700 rounded-xl text-xs font-black uppercase hover:bg-slate-50 transition-all'
+                        className='flex-1 py-3 border-2 border-gb-line text-gb-muted rounded-xl text-xs font-bold hover:bg-gb-tile transition-all'
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteBook(book.id, book.title)}
-                        className='px-4 py-3 border-2 border-slate-100 text-rose-700 rounded-xl text-xs font-black uppercase hover:bg-rose-50 transition-all'
+                        className='px-4 py-3 border-2 border-gb-line text-rose-700 rounded-xl text-xs font-bold hover:bg-rose-50 transition-all'
                       >
                         Delete
                       </button>
@@ -1035,8 +1035,8 @@ export default function AdminDashboard() {
             </div>
 
             {filteredInventory.length === 0 && (
-              <div className='py-20 text-center bg-slate-200 rounded-[3rem] border-2 border-dashed border-slate-400'>
-                <p className='text-slate-800 font-black text-xs uppercase tracking-widest'>
+              <div className='py-20 text-center bg-white rounded-xl border-2 border-dashed border-gb-line'>
+                <p className='text-black font-bold text-xs '>
                   No books match those filters
                 </p>
               </div>
@@ -1046,17 +1046,17 @@ export default function AdminDashboard() {
 
         {/* BORROWED TAB (mobile cards + desktop table) */}
         {activeTab === "borrowed" && (
-          <section className='bg-slate-200 rounded-[2rem] md:rounded-[3rem] border border-slate-400 shadow-sm p-5 md:p-10 animate-in fade-in'>
+          <section className='bg-white rounded-xl md:rounded-xl border border-gb-line shadow-sm p-5 md:p-10 animate-in fade-in'>
             <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-6 mb-6 md:mb-10'>
               <div>
-                <p className='text-xs text-slate-800 font-bold uppercase mt-2'>
+                <p className='text-xs text-black font-bold mt-2'>
                   Monitoring {filteredBorrowRecords.length} Records
                 </p>
               </div>
 
               <div className='flex flex-wrap items-center gap-4 w-full lg:w-auto'>
                 <div className='relative flex-1 lg:w-64'>
-                  <span className='absolute inset-y-0 left-4 flex items-center text-slate-800 text-xs'>
+                  <span className='absolute inset-y-0 left-4 flex items-center text-black text-xs'>
                     🔍
                   </span>
                   <input
@@ -1064,19 +1064,19 @@ export default function AdminDashboard() {
                     placeholder='Search borrower or book...'
                     value={borrowSearch}
                     onChange={(e) => setBorrowSearch(e.target.value)}
-                    className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-rose-500/20'
+                    className='w-full pl-10 pr-4 py-2.5 bg-gb-tile border border-[#9fb3bd] rounded-xl text-xs font-normal focus:outline-none focus:ring-2 focus:ring-rose-500/20'
                   />
                 </div>
 
-                <div className='flex bg-slate-200 p-1 rounded-xl'>
+                <div className='flex bg-white p-1 rounded-xl'>
                   {["all", "borrowed", "returned"].map((s) => (
                     <button
                       key={s}
                       onClick={() => setStatusFilter(s)}
-                      className={`px-4 py-2 rounded-lg text-xs font-black uppercase transition-all ${
+                      className={`px-4 py-2 rounded-lg text-xs font-bold  transition-all ${
                         statusFilter === s
                           ? "bg-white text-rose-700 shadow-sm"
-                          : "text-slate-700"
+                          : "text-gb-muted"
                       }`}
                     >
                       {s}
@@ -1096,25 +1096,25 @@ export default function AdminDashboard() {
                 return (
                   <div
                     key={record.id}
-                    className={`rounded-2xl border p-4 ${
+                    className={`rounded-lg border p-4 ${
                       isOverdue
                         ? "border-rose-100 bg-rose-50/50"
-                        : "border-slate-100 bg-white"
+                        : "border-gb-line bg-white"
                     }`}
                   >
                     <div className='flex items-start justify-between gap-3'>
                       <div className='min-w-0'>
-                        <div className='font-black text-slate-900 truncate'>
+                        <div className='font-bold text-black truncate'>
                           {record.book_title}
                         </div>
-                        <div className='text-xs text-slate-700 truncate'>
+                        <div className='text-xs text-gb-muted truncate'>
                           Borrower: {record.user_name}
                         </div>
-                        <div className='mt-2 text-xs text-slate-700 font-bold'>
+                        <div className='mt-2 text-xs text-gb-muted font-bold'>
                           Out: {record.borrow_date} · Due:{" "}
                           <span
                             className={
-                              isOverdue ? "text-rose-700 font-black" : ""
+                              isOverdue ? "text-rose-700 font-bold" : ""
                             }
                           >
                             {record.due_date}
@@ -1124,7 +1124,7 @@ export default function AdminDashboard() {
                       </div>
 
                       <span
-                        className={`px-3 py-1 rounded-lg text-xs font-black uppercase h-fit ${
+                        className={`px-3 py-1 rounded-lg text-xs font-bold  h-fit ${
                           record.status === "borrowed"
                             ? "bg-amber-100 text-amber-700 border border-amber-200"
                             : "bg-emerald-100 text-emerald-700 border border-emerald-200"
@@ -1138,16 +1138,16 @@ export default function AdminDashboard() {
                       {record.status === "borrowed" ? (
                         <button
                           onClick={() => handleReturnBook(record.id)}
-                          className={`flex-1 py-2 rounded-xl text-xs font-black uppercase ${
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold  ${
                             isOverdue
                               ? "bg-rose-600 text-white"
-                              : "bg-slate-900 text-white"
+                              : "bg-gb-dark text-white"
                           }`}
                         >
                           Return Book
                         </button>
                       ) : (
-                        <div className='flex-1 text-xs text-slate-800 font-black uppercase text-right'>
+                        <div className='flex-1 text-xs text-black font-bold text-right'>
                           Returned: {record.return_date || "N/A"}
                         </div>
                       )}
@@ -1161,7 +1161,7 @@ export default function AdminDashboard() {
             <div className='hidden md:block overflow-x-auto'>
               <table className='w-full text-left'>
                 <thead>
-                  <tr className='text-xs font-black text-slate-800 border-b uppercase'>
+                  <tr className='text-xs font-bold text-black border-b '>
                     <th className='pb-4'>Borrower Details</th>
                     <th className='pb-4'>Book Information</th>
                     <th className='pb-4'>Timeline</th>
@@ -1178,38 +1178,38 @@ export default function AdminDashboard() {
                     return (
                       <tr
                         key={record.id}
-                        className={`border-b border-slate-50 transition-colors group ${
+                        className={`border-b border-gb-line transition-colors group ${
                           isOverdue
                             ? "bg-rose-50/30 hover:bg-rose-50/60"
-                            : "hover:bg-slate-50"
+                            : "hover:bg-gb-tile"
                         }`}
                       >
                         <td className='py-5'>
-                          <p className='font-bold text-slate-800 text-sm'>
+                          <p className='font-bold text-black text-sm'>
                             {record.user_name}
                           </p>
-                          <p className='text-xs text-indigo-700 font-black uppercase tracking-tighter'>
+                          <p className='text-xs text-gb-darker font-bold '>
                             User ID: #{record.user_id}
                           </p>
                         </td>
 
                         <td className='py-5'>
-                          <p className='font-black text-slate-700 text-xs uppercase truncate max-w-[200px]'>
+                          <p className='font-bold text-gb-muted text-xs truncate max-w-[200px]'>
                             {record.book_title}
                           </p>
-                          <p className='text-xs text-slate-800 font-bold'>
+                          <p className='text-xs text-black font-bold'>
                             Book ID: {record.book_id}
                           </p>
                         </td>
 
                         <td className='py-5'>
                           <div className='flex flex-col gap-1'>
-                            <span className='text-xs font-bold text-slate-700 italic'>
+                            <span className='text-xs font-bold text-gb-muted '>
                               Out: {record.borrow_date}
                             </span>
                             <span
-                              className={`text-xs font-black uppercase flex items-center gap-1 ${
-                                isOverdue ? "text-rose-700" : "text-slate-800"
+                              className={`text-xs font-bold  flex items-center gap-1 ${
+                                isOverdue ? "text-rose-700" : "text-black"
                               }`}
                             >
                               Due: {record.due_date}
@@ -1222,7 +1222,7 @@ export default function AdminDashboard() {
 
                         <td className='py-5'>
                           <span
-                            className={`px-3 py-1 rounded-lg text-xs font-black uppercase ${
+                            className={`px-3 py-1 rounded-lg text-xs font-bold  ${
                               record.status === "borrowed"
                                 ? "bg-amber-100 text-amber-700 shadow-sm border border-amber-200"
                                 : "bg-emerald-100 text-emerald-700 border border-emerald-200"
@@ -1236,20 +1236,20 @@ export default function AdminDashboard() {
                           {record.status === "borrowed" ? (
                             <button
                               onClick={() => handleReturnBook(record.id)}
-                              className={`text-xs font-black px-4 py-2 rounded-xl uppercase transition-all transform hover:scale-105 active:scale-95 shadow-sm ${
+                              className={`text-xs font-bold px-4 py-2 rounded-xl  transition-all transform hover:scale-105 active:scale-95 shadow-sm ${
                                 isOverdue
-                                  ? "bg-rose-600 text-white hover:bg-rose-700 shadow-rose-200"
-                                  : "bg-slate-900 text-white hover:bg-indigo-600"
+                                  ? "bg-rose-600 text-white hover:bg-rose-700 "
+                                  : "bg-gb-dark text-white hover:bg-gb-dark"
                               }`}
                             >
                               Return Book
                             </button>
                           ) : (
                             <div className='flex flex-col items-end'>
-                              <span className='text-xs font-black text-slate-800 uppercase tracking-widest'>
+                              <span className='text-xs font-bold text-black '>
                                 Archived
                               </span>
-                              <span className='text-xs text-slate-800 italic'>
+                              <span className='text-xs text-black '>
                                 In: {record.return_date || "N/A"}
                               </span>
                             </div>
@@ -1264,7 +1264,7 @@ export default function AdminDashboard() {
 
             {filteredBorrowRecords.length === 0 && (
               <div className='py-20 text-center'>
-                <p className='text-slate-800 font-black text-xs uppercase tracking-widest'>
+                <p className='text-black font-bold text-xs '>
                   No records found matching your filters
                 </p>
               </div>
@@ -1274,16 +1274,16 @@ export default function AdminDashboard() {
 
         {/* PROFILE TAB */}
         {activeTab === "profile" && adminProfile && (
-          <section className='bg-slate-200 rounded-[2rem] md:rounded-[3rem] border border-slate-400 shadow-sm overflow-hidden animate-in fade-in'>
-            <div className='bg-slate-900 p-6 md:p-12 text-white flex items-center gap-6 md:gap-8'>
-              <div className='w-20 h-20 md:w-24 md:h-24 bg-rose-500 rounded-[2rem] flex items-center justify-center text-3xl md:text-4xl font-black shadow-lg shadow-rose-500/20'>
+          <section className='bg-white rounded-xl md:rounded-xl border border-gb-line shadow-sm overflow-hidden animate-in fade-in'>
+            <div className='bg-gb-dark p-6 md:p-12 text-white flex items-center gap-6 md:gap-8'>
+              <div className='w-20 h-20 md:w-24 md:h-24 bg-gb-dark rounded-xl flex items-center justify-center text-3xl md:text-4xl font-bold shadow-sm '>
                 {adminProfile.full_name?.charAt(0)}
               </div>
               <div>
-                <h3 className='text-2xl md:text-3xl font-black tracking-tight'>
+                <h3 className='text-2xl md:text-3xl font-bold '>
                   {adminProfile.full_name}
                 </h3>
-                <p className='text-rose-400 font-bold uppercase text-xs tracking-widest mt-1'>
+                <p className='text-rose-400 font-bold text-xs mt-1'>
                   Authorized {adminProfile.role}
                 </p>
               </div>
@@ -1291,34 +1291,34 @@ export default function AdminDashboard() {
             <div className='p-6 md:p-12'>
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12'>
                 <div>
-                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
+                  <p className='text-black text-xs font-bold mb-1'>
                     Email
                   </p>
-                  <p className='font-bold text-slate-800 text-lg'>
+                  <p className='font-bold text-black text-lg'>
                     {adminProfile.email}
                   </p>
                 </div>
                 <div>
-                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
+                  <p className='text-black text-xs font-bold mb-1'>
                     Phone
                   </p>
-                  <p className='font-bold text-slate-800 text-lg'>
+                  <p className='font-bold text-black text-lg'>
                     {adminProfile.phone || "---"}
                   </p>
                 </div>
                 <div>
-                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
+                  <p className='text-black text-xs font-bold mb-1'>
                     Invite Code
                   </p>
-                  <p className='font-black text-indigo-600 text-3xl tabular-nums'>
+                  <p className='font-bold text-gb-darker text-3xl tabular-nums'>
                     {adminProfile.own_invite_code || "---"}
                   </p>
                 </div>
                 <div>
-                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
+                  <p className='text-black text-xs font-bold mb-1'>
                     Registered
                   </p>
-                  <p className='font-bold text-slate-800 text-lg'>
+                  <p className='font-bold text-black text-lg'>
                     {adminProfile.registration_date
                       ? new Date(
                           adminProfile.registration_date,
@@ -1327,11 +1327,11 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div>
-                  <p className='text-slate-800 text-xs font-black uppercase tracking-widest mb-1'>
+                  <p className='text-black text-xs font-bold mb-1'>
                     Status
                   </p>
                   <p
-                    className={`font-black uppercase text-xs ${
+                    className={`font-bold  text-xs ${
                       adminProfile.is_verified
                         ? "text-emerald-700"
                         : "text-amber-700"
@@ -1350,9 +1350,9 @@ export default function AdminDashboard() {
         {/* VIEW BOOK MODAL */}
         {selectedBook && !isEditing && (
           <div className='fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in'>
-            <div className='bg-slate-200 w-full max-w-2xl max-h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col'>
-              <div className='p-6 border-b-2 border-slate-400 flex gap-5 items-start bg-slate-300'>
-                <div className='w-24 h-32 shrink-0 bg-slate-200 rounded-2xl shadow-md border-2 border-slate-400 overflow-hidden flex items-center justify-center'>
+            <div className='bg-white w-full max-w-2xl max-h-[85vh] rounded-xl shadow-sm overflow-hidden flex flex-col'>
+              <div className='p-6 border-b-2 border-gb-line flex gap-5 items-start bg-gb-box'>
+                <div className='w-24 h-32 shrink-0 bg-white rounded-lg shadow-md border-2 border-gb-line overflow-hidden flex items-center justify-center'>
                   {selectedBook.uploadedImageUrl ? (
                     <img
                       src={coverUrl(selectedBook.id)}
@@ -1366,24 +1366,24 @@ export default function AdminDashboard() {
                 </div>
                 <div className='flex-1 min-w-0 flex justify-between items-start gap-4'>
                   <div className='min-w-0'>
-                    <h2 className='text-2xl sm:text-3xl font-black text-slate-900 leading-tight break-words'>
+                    <h2 className='text-2xl sm:text-3xl font-bold text-black leading-tight break-words'>
                       {selectedBook.title}
                     </h2>
-                    <p className='text-indigo-700 font-black text-base mt-2'>
+                    <p className='text-gb-darker font-bold text-base mt-2'>
                       by {selectedBook.author}
                     </p>
                   </div>
                   <button
                     onClick={() => setSelectedBook(null)}
                     aria-label='Close'
-                    className='w-12 h-12 shrink-0 flex items-center justify-center rounded-full bg-slate-900 text-white text-2xl font-black'
+                    className='w-12 h-12 shrink-0 flex items-center justify-center rounded-full bg-gb-dark text-white text-2xl font-bold'
                   >
                     ✕
                   </button>
                 </div>
               </div>
 
-              <div className='p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1'>
+              <div className='p-6 sm:p-8 overflow-y-auto bg-white flex-1'>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5'>
                   {bookFields
                     // title/author/cover are in the header; skip empty fields
@@ -1404,14 +1404,14 @@ export default function AdminDashboard() {
                       return (
                         <div
                           key={field.key}
-                          className={`border-b-2 border-slate-300 pb-3 ${
+                          className={`border-b-2 border-gb-line pb-3 ${
                             field.fullWidth ? "sm:col-span-2" : ""
                           }`}
                         >
-                          <p className='text-sm font-black uppercase tracking-widest text-slate-800 mb-1'>
+                          <p className='text-sm font-bold text-black mb-1'>
                             {field.label}
                           </p>
-                          <p className='text-lg font-bold text-slate-900 leading-relaxed break-words'>
+                          <p className='text-lg font-bold text-black leading-relaxed break-words'>
                             {value}
                           </p>
                         </div>
@@ -1420,16 +1420,16 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className='p-5 sm:p-6 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-3'>
+              <div className='p-5 sm:p-6 bg-gb-box border-t-2 border-gb-line flex justify-end gap-3'>
                 <button
                   onClick={() => setSelectedBook(null)}
-                  className='px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider'
+                  className='px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold '
                 >
                   Close
                 </button>
                 <button
                   onClick={() => startEditing(selectedBook)}
-                  className='px-8 py-4 bg-indigo-600 text-white rounded-2xl text-base font-black uppercase tracking-wider shadow-xl hover:bg-slate-900 transition-all'
+                  className='px-8 py-4 bg-gb-dark text-white rounded-lg text-base font-bold shadow-sm hover:bg-gb-dark transition-all'
                 >
                   Edit Record
                 </button>
@@ -1443,10 +1443,10 @@ export default function AdminDashboard() {
           <div className='fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in'>
             <form
               onSubmit={handleUpdateBook}
-              className='bg-slate-200 w-full max-w-2xl max-h-[85vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col'
+              className='bg-white w-full max-w-2xl max-h-[85vh] rounded-xl shadow-sm overflow-hidden flex flex-col'
             >
-              <div className='p-6 sm:p-8 overflow-y-auto bg-slate-200 flex-1'>
-                <h2 className='text-2xl sm:text-3xl font-black text-slate-900 uppercase tracking-tighter mb-6'>
+              <div className='p-6 sm:p-8 overflow-y-auto bg-white flex-1'>
+                <h2 className='text-2xl sm:text-3xl font-bold text-black mb-6'>
                   Editing Full Record
                 </h2>
 
@@ -1456,14 +1456,14 @@ export default function AdminDashboard() {
                       key={field.key}
                       className={`${field.fullWidth ? "sm:col-span-2" : ""}`}
                     >
-                      <label className='text-sm font-black uppercase text-slate-800 mb-1 block ml-2'>
+                      <label className='text-sm font-bold text-black mb-1 block ml-2'>
                         {field.label}
                       </label>
 
                       {field.key === "uploadedImageUrl" ? (
-                        <div className='flex items-center gap-6 p-4 bg-slate-300 border-2 border-slate-400 rounded-2xl'>
+                        <div className='flex items-center gap-6 p-4 bg-gb-box border-2 border-gb-line rounded-lg'>
                           {/* Preview: Calculated from ID or the new local file */}
-                          <div className='w-20 h-28 bg-slate-200 rounded-lg border-2 border-white shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center'>
+                          <div className='w-20 h-28 bg-white rounded-lg border-2 border-gb-line shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center'>
                             {editFormData.uploadedImageUrl ? (
                               <img
                                 src={coverUrl(editFormData.id)}
@@ -1481,11 +1481,11 @@ export default function AdminDashboard() {
                               type='file'
                               accept='image/png, image/jpeg'
                               onChange={handleImageUpload}
-                              className='text-sm font-black text-slate-800 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-slate-900 file:text-white hover:file:bg-rose-600 cursor-pointer transition-all'
+                              className='text-sm font-bold text-black file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-gb-dark file:text-white hover:file:bg-rose-600 cursor-pointer transition-all'
                             />
-                            <p className='text-xs font-bold text-slate-800 mt-2 uppercase tracking-tight'>
+                            <p className='text-xs font-bold text-black mt-2 '>
                               Filename will be:{" "}
-                              <span className='text-slate-900'>
+                              <span className='text-black'>
                                 {editFormData.id}.png
                               </span>
                             </p>
@@ -1499,7 +1499,7 @@ export default function AdminDashboard() {
                               value={editFormData[field.key] ?? ""}
                               onChange={handleInputChange}
                               rows='4'
-                              className='w-full bg-white border-2 border-slate-400 text-slate-900 p-4 rounded-2xl text-lg font-medium outline-none focus:border-indigo-700 transition-all'
+                              className='w-full bg-white border-2 border-[#9fb3bd] text-black p-4 rounded-lg text-lg font-medium outline-none focus:border-gb-dark transition-all'
                             />
                           ) : (
                             <input
@@ -1515,7 +1515,7 @@ export default function AdminDashboard() {
                                   : (editFormData[field.key] ?? "")
                               }
                               onChange={handleInputChange}
-                              className='w-full bg-white border-2 border-slate-400 text-slate-900 px-4 py-3 rounded-xl text-lg font-bold outline-none focus:border-indigo-700'
+                              className='w-full bg-white border-2 border-[#9fb3bd] text-black px-4 py-3 rounded-xl text-lg font-normal outline-none focus:border-gb-dark'
                               required={field.required}
                             />
                           )}
@@ -1526,17 +1526,17 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className='p-5 sm:p-6 bg-slate-300 border-t-2 border-slate-400 flex justify-end gap-3'>
+              <div className='p-5 sm:p-6 bg-gb-box border-t-2 border-gb-line flex justify-end gap-3'>
                 <button
                   type='button'
                   onClick={() => setIsEditing(false)}
-                  className='px-6 py-4 bg-white border-2 border-slate-400 text-slate-900 rounded-2xl text-base font-black uppercase tracking-wider'
+                  className='px-6 py-4 bg-white border-2 border-gb-line text-black rounded-lg text-base font-bold '
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
-                  className='px-8 py-4 bg-emerald-700 text-white rounded-2xl text-base font-black uppercase tracking-wider shadow-xl hover:bg-emerald-800 transition-all'
+                  className='px-8 py-4 bg-emerald-700 text-white rounded-lg text-base font-bold shadow-sm hover:bg-emerald-800 transition-all'
                 >
                   Save Changes
                 </button>
@@ -1550,13 +1550,13 @@ export default function AdminDashboard() {
           <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl animate-in fade-in'>
             <form
               onSubmit={handleConfirmSendEmail}
-              className='bg-slate-200 w-full max-w-2xl rounded-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden'
+              className='bg-white w-full max-w-2xl rounded-xl md:rounded-xl shadow-sm overflow-hidden'
             >
-              <div className='p-6 md:p-8 bg-indigo-600 text-white'>
-                <h2 className='text-xl md:text-2xl font-black uppercase'>
+              <div className='p-6 md:p-8 bg-gb-dark text-white'>
+                <h2 className='text-xl md:text-2xl font-bold '>
                   Server Mailer
                 </h2>
-                <p className='text-indigo-200 text-xs font-bold uppercase'>
+                <p className='text-indigo-200 text-xs font-bold '>
                   Sending to {selectedEmails.length} Users
                 </p>
               </div>
@@ -1571,7 +1571,7 @@ export default function AdminDashboard() {
                       subject: e.target.value,
                     })
                   }
-                  className='w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl text-sm font-bold outline-none'
+                  className='w-full bg-gb-tile border-2 border-[#9fb3bd] p-4 rounded-lg text-sm font-normal outline-none'
                 />
                 <textarea
                   required
@@ -1581,21 +1581,21 @@ export default function AdminDashboard() {
                   onChange={(e) =>
                     setEmailContent({ ...emailContent, body: e.target.value })
                   }
-                  className='w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl text-sm outline-none resize-none'
+                  className='w-full bg-gb-tile border-2 border-[#9fb3bd] p-4 rounded-lg text-sm outline-none resize-none'
                 />
               </div>
-              <div className='p-6 md:p-8 bg-slate-300 border-t flex gap-4'>
+              <div className='p-6 md:p-8 bg-gb-box border-t flex gap-4'>
                 <button
                   type='button'
                   onClick={() => setIsEmailModalOpen(false)}
-                  className='flex-1 py-4 font-black uppercase text-xs'
+                  className='flex-1 py-4 font-bold text-xs'
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
                   disabled={isSendingEmail}
-                  className='flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs disabled:opacity-60'
+                  className='flex-[2] py-4 bg-gb-dark text-white rounded-lg font-bold text-xs disabled:opacity-60'
                 >
                   {isSendingEmail ? "Sending..." : "Send via Server"}
                 </button>
@@ -1607,13 +1607,13 @@ export default function AdminDashboard() {
         {/* USER DETAIL MODAL */}
         {selectedUser && (
           <div className='fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in'>
-            <div className='bg-slate-200 w-full max-w-2xl rounded-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden'>
-              <div className='bg-slate-900 p-6 md:p-8 text-white flex justify-between items-center'>
+            <div className='bg-white w-full max-w-2xl rounded-xl md:rounded-xl shadow-sm overflow-hidden'>
+              <div className='bg-gb-dark p-6 md:p-8 text-white flex justify-between items-center'>
                 <div className='flex items-center gap-4'>
-                  <div className='w-12 h-12 bg-rose-500 rounded-xl flex items-center justify-center font-black'>
+                  <div className='w-12 h-12 bg-gb-dark rounded-xl flex items-center justify-center font-bold'>
                     {selectedUser.full_name?.charAt(0)}
                   </div>
-                  <h2 className='text-lg md:text-xl font-black uppercase'>
+                  <h2 className='text-lg md:text-xl font-bold '>
                     {selectedUser.full_name}
                   </h2>
                 </div>
@@ -1627,43 +1627,43 @@ export default function AdminDashboard() {
 
               <div className='p-6 md:p-10 grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8'>
                 <div>
-                  <p className='text-xs font-black text-slate-800 uppercase mb-1'>
+                  <p className='text-xs font-bold text-black mb-1'>
                     Email
                   </p>
-                  <p className='font-bold text-slate-800 break-all'>
+                  <p className='font-bold text-black break-all'>
                     {selectedUser.email}
                   </p>
                 </div>
                 <div>
-                  <p className='text-xs font-black text-slate-800 uppercase mb-1'>
+                  <p className='text-xs font-bold text-black mb-1'>
                     Role
                   </p>
-                  <p className='font-bold text-indigo-600 uppercase'>
+                  <p className='font-bold text-gb-darker '>
                     {selectedUser.role}
                   </p>
                 </div>
                 <div>
-                  <p className='text-xs font-black text-slate-800 uppercase mb-1'>
+                  <p className='text-xs font-bold text-black mb-1'>
                     Phone
                   </p>
-                  <p className='font-bold text-slate-800'>
+                  <p className='font-bold text-black'>
                     {selectedUser.phone || "---"}
                   </p>
                 </div>
                 <div>
-                  <p className='text-xs font-black text-slate-800 uppercase mb-1'>
+                  <p className='text-xs font-bold text-black mb-1'>
                     Invite Code
                   </p>
-                  <p className='font-black text-slate-800'>
+                  <p className='font-bold text-black'>
                     {selectedUser.own_invite_code || "---"}
                   </p>
                 </div>
               </div>
 
-              <div className='p-6 bg-slate-300 text-right'>
+              <div className='p-6 bg-gb-box text-right'>
                 <button
                   onClick={() => setSelectedUser(null)}
-                  className='px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase'
+                  className='px-6 py-2 bg-gb-dark text-white rounded-xl text-xs font-bold '
                 >
                   Close
                 </button>
@@ -1674,13 +1674,13 @@ export default function AdminDashboard() {
 
         {/* ADD NEW BOOK TAB */}
         {activeTab === "add-book" && (
-          <section className='bg-slate-200 rounded-[2rem] md:rounded-[3rem] border border-slate-400 shadow-sm p-6 md:p-12 animate-in slide-in-from-bottom-6 duration-500'>
+          <section className='bg-white rounded-xl md:rounded-xl border border-gb-line shadow-sm p-6 md:p-12 animate-in slide-in-from-bottom-6 duration-500'>
             <div className='max-w-5xl mx-auto'>
               <header className='mb-8 md:mb-12'>
-                <h3 className='text-2xl md:text-3xl font-black text-slate-900 uppercase italic leading-none'>
+                <h3 className='text-2xl md:text-3xl font-bold text-black leading-none'>
                   New Title
                 </h3>
-                <p className='text-xs text-slate-800 font-bold uppercase mt-3 tracking-widest'>
+                <p className='text-xs text-black font-bold mt-3 '>
                   Database entry / Global Library System
                 </p>
               </header>
@@ -1692,7 +1692,7 @@ export default function AdminDashboard() {
                 <div className='lg:col-span-2 space-y-8'>
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
                     <div className='sm:col-span-2'>
-                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                      <label className='text-xs font-bold text-black ml-2'>
                         Main Title
                       </label>
                       <input
@@ -1703,12 +1703,12 @@ export default function AdminDashboard() {
                           setNewBook({ ...newBook, title: e.target.value })
                         }
                         placeholder='Enter book title...'
-                        className='w-full mt-2 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-rose-500/5 outline-none transition-all'
+                        className='w-full mt-2 px-6 py-4 bg-gb-tile border border-[#9fb3bd] rounded-lg text-sm font-normal focus:ring-4 focus:ring-rose-500/5 outline-none transition-all'
                       />
                     </div>
 
                     <div>
-                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                      <label className='text-xs font-bold text-black ml-2'>
                         Primary Author
                       </label>
                       <input
@@ -1718,12 +1718,12 @@ export default function AdminDashboard() {
                         onChange={(e) =>
                           setNewBook({ ...newBook, author: e.target.value })
                         }
-                        className='w-full mt-2 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                        className='w-full mt-2 px-6 py-4 bg-gb-tile border border-[#9fb3bd] rounded-lg text-sm font-normal outline-none'
                       />
                     </div>
 
                     <div>
-                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                      <label className='text-xs font-bold text-black ml-2'>
                         ISBN-13
                       </label>
                       <input
@@ -1733,13 +1733,13 @@ export default function AdminDashboard() {
                           setNewBook({ ...newBook, isbn: e.target.value })
                         }
                         placeholder='978-...'
-                        className='w-full mt-2 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                        className='w-full mt-2 px-6 py-4 bg-gb-tile border border-[#9fb3bd] rounded-lg text-sm font-normal outline-none'
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                    <label className='text-xs font-bold text-black ml-2'>
                       Language <span className='text-rose-700'>*</span>
                     </label>
                     <select
@@ -1748,7 +1748,7 @@ export default function AdminDashboard() {
                       onChange={(e) =>
                         setNewBook({ ...newBook, language: e.target.value })
                       }
-                      className='w-full mt-2 px-4 py-4 bg-white border border-slate-100 rounded-2xl text-xs font-black uppercase outline-none focus:ring-4 focus:ring-rose-500/5 transition-all cursor-pointer'
+                      className='w-full mt-2 px-4 py-4 bg-white border border-[#9fb3bd] rounded-lg text-xs font-normal outline-none focus:ring-4 focus:ring-rose-500/5 transition-all cursor-pointer'
                     >
                       <option value=''>Select Language</option>
                       <option value='English'>English</option>
@@ -1759,7 +1759,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                    <label className='text-xs font-bold text-black ml-2'>
                       Book Summary
                     </label>
                     <textarea
@@ -1768,14 +1768,14 @@ export default function AdminDashboard() {
                       onChange={(e) =>
                         setNewBook({ ...newBook, summary: e.target.value })
                       }
-                      className='w-full mt-2 px-6 py-4 bg-slate-50 border border-slate-100 rounded-[2rem] text-sm font-medium outline-none resize-none'
+                      className='w-full mt-2 px-6 py-4 bg-gb-tile border border-[#9fb3bd] rounded-xl text-sm font-medium outline-none resize-none'
                     />
                   </div>
                 </div>
 
-                <div className='space-y-8 bg-slate-300 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-slate-400'>
+                <div className='space-y-8 bg-gb-box p-6 md:p-10 rounded-xl md:rounded-xl border border-gb-line'>
                   <div>
-                    <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                    <label className='text-xs font-bold text-black ml-2'>
                       Category / Genre
                     </label>
                     <input
@@ -1785,13 +1785,13 @@ export default function AdminDashboard() {
                         setNewBook({ ...newBook, category: e.target.value })
                       }
                       placeholder='e.g. Hymns'
-                      className='w-full mt-2 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                      className='w-full mt-2 px-6 py-4 bg-white border border-[#9fb3bd] rounded-lg text-sm font-normal outline-none'
                     />
                   </div>
 
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                     <div>
-                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                      <label className='text-xs font-bold text-black ml-2'>
                         Total Copies
                       </label>
                       <input
@@ -1805,11 +1805,11 @@ export default function AdminDashboard() {
                             copies: parseInt(e.target.value || "1", 10),
                           })
                         }
-                        className='w-full mt-2 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                        className='w-full mt-2 px-6 py-4 bg-white border border-[#9fb3bd] rounded-lg text-sm font-normal outline-none'
                       />
                     </div>
                     <div>
-                      <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                      <label className='text-xs font-bold text-black ml-2'>
                         Price (USD)
                       </label>
                       <input
@@ -1823,13 +1823,13 @@ export default function AdminDashboard() {
                             listPriceUsd: parseFloat(e.target.value || "0"),
                           })
                         }
-                        className='w-full mt-2 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                        className='w-full mt-2 px-6 py-4 bg-white border border-[#9fb3bd] rounded-lg text-sm font-normal outline-none'
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className='text-xs font-black text-slate-800 uppercase ml-2'>
+                    <label className='text-xs font-bold text-black ml-2'>
                       Cover Image URL
                     </label>
                     <input
@@ -1841,13 +1841,13 @@ export default function AdminDashboard() {
                           uploadedImageUrl: e.target.value,
                         })
                       }
-                      className='w-full mt-2 px-6 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none'
+                      className='w-full mt-2 px-6 py-4 bg-white border border-[#9fb3bd] rounded-lg text-sm font-normal outline-none'
                     />
                   </div>
 
                   <button
                     type='submit'
-                    className='w-full py-6 bg-slate-900 text-white rounded-[2rem] text-xs font-black uppercase tracking-[0.2em] hover:bg-rose-600 transition-all shadow-xl shadow-slate-200 active:scale-95'
+                    className='w-full py-6 bg-gb-dark text-white rounded-xl text-xs font-bold hover:bg-rose-600 transition-all shadow-sm active:scale-95'
                   >
                     Confirm & Save Entry
                   </button>
@@ -1861,18 +1861,18 @@ export default function AdminDashboard() {
         {activeTab === "messages" && (
           <section className='animate-in fade-in space-y-6'>
             <div className='flex justify-between items-center mb-6 md:mb-8'>
-              <h3 className='text-xl md:text-2xl font-black text-slate-900 uppercase italic'>
+              <h3 className='text-xl md:text-2xl font-bold text-black '>
                 Inbox
               </h3>
-              <span className='bg-indigo-100 text-indigo-600 px-4 py-1 rounded-full text-xs font-black uppercase'>
+              <span className='bg-gb-box text-gb-darker px-4 py-1 rounded-full text-xs font-bold '>
                 {contactMessages.length} Messages
               </span>
             </div>
 
             <div className='grid grid-cols-1 gap-4'>
               {contactMessages.length === 0 ? (
-                <div className='py-20 text-center bg-slate-200 rounded-[3rem] border-2 border-dashed border-slate-400'>
-                  <p className='text-slate-800 font-black text-xs uppercase'>
+                <div className='py-20 text-center bg-white rounded-xl border-2 border-dashed border-gb-line'>
+                  <p className='text-black font-bold text-xs '>
                     No messages yet
                   </p>
                 </div>
@@ -1880,30 +1880,30 @@ export default function AdminDashboard() {
                 contactMessages.map((msg) => (
                   <div
                     key={msg.id}
-                    className='bg-slate-200 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-400 shadow-sm hover:shadow-md transition-all'
+                    className='bg-white p-6 md:p-8 rounded-xl md:rounded-xl border border-gb-line shadow-sm hover:shadow-md transition-all'
                   >
                     <div className='flex justify-between items-start mb-4 gap-4'>
                       <div className='min-w-0'>
-                        <h4 className='font-black text-slate-800 uppercase text-sm truncate'>
+                        <h4 className='font-bold text-black text-sm truncate'>
                           {msg.name}
                         </h4>
-                        <p className='text-indigo-700 text-xs font-bold break-all'>
+                        <p className='text-gb-darker text-xs font-bold break-all'>
                           {msg.email}
                         </p>
                       </div>
-                      <span className='text-xs font-black text-slate-800 uppercase bg-slate-300 px-3 py-1 rounded-lg'>
+                      <span className='text-xs font-bold text-black bg-gb-box px-3 py-1 rounded-lg'>
                         {msg.date}
                       </span>
                     </div>
 
-                    <p className='text-slate-700 text-sm leading-relaxed bg-slate-300 p-5 md:p-6 rounded-2xl border border-slate-400 italic break-words'>
+                    <p className='text-gb-muted text-sm leading-relaxed bg-gb-box p-5 md:p-6 rounded-lg border border-gb-line break-words'>
                       "{msg.message}"
                     </p>
 
                     <div className='mt-6 flex gap-3'>
                       <button
                         onClick={() => handleDeleteMessage(msg.id)}
-                        className='text-xs font-black border-2 border-slate-100 text-slate-800 px-6 py-3 rounded-xl uppercase hover:text-rose-700 hover:border-rose-100 transition-all'
+                        className='text-xs font-bold border-2 border-gb-line text-black px-6 py-3 rounded-xl hover:text-rose-700 hover:border-rose-100 transition-all'
                       >
                         Delete
                       </button>

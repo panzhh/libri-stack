@@ -91,14 +91,13 @@ export default function Register() {
 
   return (
     <div className='min-h-[90vh] flex items-center justify-center px-6 py-12'>
-      <div className='bg-slate-200 w-full max-w-xl p-8 sm:p-12 rounded-[3rem] border-2 border-slate-400 shadow-xl'>
+      <div className='bg-white w-full max-w-xl p-8 sm:p-12 rounded-xl border-2 border-gb-line shadow-sm'>
         {/* HEADER */}
         <div className='text-center mb-8'>
-          <h2 className='text-4xl font-black uppercase italic tracking-tighter'>
-            Join the Church in Dunn Loring
-            <span className='text-indigo-600'> Library</span>
-          </h2>
-          <p className='text-slate-800 font-bold uppercase tracking-widest text-base mt-2'>
+          <h1 className='gb-h1'>
+            Create an account
+          </h1>
+          <p className='text-black font-bold text-base mt-2'>
             Create your Church in Dunn Loring Library account
           </p>
         </div>
@@ -106,7 +105,7 @@ export default function Register() {
         {/* FEEDBACK UI */}
         {status.msg && (
           <div
-            className={`mb-6 p-4 rounded-2xl text-base font-black uppercase tracking-widest text-center animate-in zoom-in-95 duration-200 ${
+            className={`mb-6 p-4 rounded-lg text-base font-bold   text-center animate-in zoom-in-95 duration-200 ${
               status.type === "success"
                 ? "bg-green-50 text-green-700 border border-green-100"
                 : "bg-rose-50 text-rose-700 border border-rose-100"
@@ -117,18 +116,18 @@ export default function Register() {
         )}
 
         {/* ROLE SELECTOR */}
-        <div className='flex bg-slate-300 p-1.5 rounded-2xl mb-8'>
+        <div className='flex bg-gb-box p-1.5 rounded-lg mb-8'>
           <button
             type='button'
             onClick={() => setRole("user")}
-            className={`flex-1 py-2 rounded-xl text-base font-black uppercase tracking-widest transition-all ${role === "user" ? "bg-white shadow-sm text-indigo-600" : "text-slate-800"}`}
+            className={`flex-1 py-2 rounded-xl text-base font-bold   transition-all ${role === "user" ? "bg-white shadow-sm text-gb-darker" : "text-black"}`}
           >
             User
           </button>
           <button
             type='button'
             onClick={() => setRole("admin")}
-            className={`flex-1 py-2 rounded-xl text-base font-black uppercase tracking-widest transition-all ${role === "admin" ? "bg-white shadow-sm text-rose-700" : "text-slate-800"}`}
+            className={`flex-1 py-2 rounded-xl text-base font-bold   transition-all ${role === "admin" ? "bg-white shadow-sm text-rose-700" : "text-black"}`}
           >
             Admin
           </button>
@@ -137,14 +136,14 @@ export default function Register() {
         <form onSubmit={handleSubmit} className='space-y-4'>
           {/* FULL NAME */}
           <div>
-            <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
+            <label className='text-base font-bold text-black ml-2 mb-1 block'>
               Full Name (First and Last Name) *
             </label>
             <input
               type='text'
               required
               placeholder='Full Name'
-              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none transition-all font-bold text-lg'
+              className='w-full px-5 py-4 bg-white border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted focus:border-gb-dark rounded-lg outline-none transition-all font-normal text-lg'
               onChange={(e) =>
                 setFormData({ ...formData, full_name: e.target.value })
               }
@@ -152,14 +151,14 @@ export default function Register() {
           </div>
           {/* EMAIL */}
           <div>
-            <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
+            <label className='text-base font-bold text-black ml-2 mb-1 block'>
               Email Address *
             </label>
             <input
               type='email'
               required
               placeholder='name@example.com'
-              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none transition-all font-bold text-lg'
+              className='w-full px-5 py-4 bg-white border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted focus:border-gb-dark rounded-lg outline-none transition-all font-normal text-lg'
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
@@ -168,14 +167,14 @@ export default function Register() {
 
           {/* PASSWORD */}
           <div>
-            <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
+            <label className='text-base font-bold text-black ml-2 mb-1 block'>
               Password *
             </label>
             <input
               type='password'
               required
               placeholder='••••••••'
-              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none transition-all font-bold text-lg'
+              className='w-full px-5 py-4 bg-white border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted focus:border-gb-dark rounded-lg outline-none transition-all font-normal text-lg'
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
@@ -184,14 +183,14 @@ export default function Register() {
 
           {/* CONFIRM PASSWORD */}
           <div>
-            <label className='text-base font-black uppercase tracking-widest text-slate-800 ml-2 mb-1 block'>
+            <label className='text-base font-bold text-black ml-2 mb-1 block'>
               Confirm Password *
             </label>
             <input
               type='password'
               required
               placeholder='••••••••'
-              className={`w-full px-5 py-4 bg-white border-2 text-slate-900 placeholder:text-slate-500 rounded-2xl outline-none transition-all font-bold text-lg ${!passwordsMatch && formData.confirmPassword ? "border-rose-400 focus:border-rose-500" : "border-slate-400 focus:border-indigo-700"}`}
+              className={`w-full px-5 py-4 bg-white border-2 text-black placeholder:text-gb-muted rounded-lg outline-none transition-all font-normal text-lg ${!passwordsMatch && formData.confirmPassword ? "border-rose-400 focus:border-gb-dark" : "border-[#9fb3bd] focus:border-gb-dark"}`}
               onChange={(e) =>
                 setFormData({ ...formData, confirmPassword: e.target.value })
               }
@@ -201,10 +200,10 @@ export default function Register() {
           {/* PHONE */}
           <div>
             <div className='flex justify-between items-center ml-2 mb-1'>
-              <label className='text-base font-black uppercase tracking-widest text-slate-800 block'>
+              <label className='text-base font-bold text-black block'>
                 Phone Number
               </label>
-              <span className='text-sm font-bold text-slate-800 uppercase tracking-tighter italic'>
+              <span className='text-sm font-bold text-black '>
                 Optional
               </span>
             </div>
@@ -213,21 +212,21 @@ export default function Register() {
               placeholder='(555) 555-5555'
               value={formData.phone}
               onChange={handlePhoneChange}
-              className='w-full px-5 py-4 bg-white border-2 border-slate-400 text-slate-900 placeholder:text-slate-500 focus:border-indigo-700 rounded-2xl outline-none transition-all font-bold text-lg'
+              className='w-full px-5 py-4 bg-white border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted focus:border-gb-dark rounded-lg outline-none transition-all font-normal text-lg'
             />
           </div>
 
           {/* ADMIN CODE */}
           {role === "admin" && (
             <div className='animate-in fade-in slide-in-from-top-2 duration-300'>
-              <label className='text-base font-black uppercase tracking-widest text-rose-700 ml-2 mb-1 block'>
+              <label className='text-base font-bold text-rose-700 ml-2 mb-1 block'>
                 Admin Code *
               </label>
               <input
                 type='text'
                 required
                 placeholder='Enter Secret Code'
-                className='w-full px-5 py-4 bg-rose-50 border-2 border-rose-100 focus:border-rose-500 rounded-2xl outline-none transition-all font-bold text-lg'
+                className='w-full px-5 py-4 bg-rose-50 border-2 border-rose-100 focus:border-gb-dark rounded-lg outline-none transition-all font-normal text-lg'
                 onChange={(e) =>
                   setFormData({ ...formData, adminCode: e.target.value })
                 }
@@ -246,23 +245,23 @@ export default function Register() {
             />
             <label
               htmlFor='agree'
-              className='text-base font-bold text-slate-700 leading-tight cursor-pointer select-none'
+              className='text-base font-bold text-gb-muted leading-tight cursor-pointer select-none'
             >
               I agree to the{" "}
-              <span className='text-indigo-600 underline'>Terms</span> and{" "}
-              <span className='text-indigo-600 underline'>Privacy Policy</span>.
+              <span className='text-gb-darker underline'>Terms</span> and{" "}
+              <span className='text-gb-darker underline'>Privacy Policy</span>.
             </label>
           </div>
 
           <button
             type='submit'
             disabled={!canSubmit}
-            className={`w-full py-4 mt-2 rounded-2xl text-white text-lg font-black uppercase tracking-widest transition-all shadow-lg ${
+            className={`w-full py-4 mt-2 rounded-lg text-white text-lg font-bold   transition-all shadow-sm ${
               !canSubmit
-                ? "bg-slate-200 cursor-not-allowed text-slate-800 shadow-none"
+                ? "bg-white cursor-not-allowed text-black shadow-none"
                 : role === "admin"
-                  ? "bg-rose-500 shadow-rose-200"
-                  : "bg-indigo-600 shadow-indigo-200 hover:scale-[1.02]"
+                  ? "bg-gb-dark "
+                  : "bg-gb-dark  hover:scale-[1.02]"
             }`}
           >
             {loading
