@@ -7,7 +7,6 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Mail, Message
-from email_sender import EmailSender
 from models import db, User, Book, BorrowRecord, ContactMessage, BookRequest
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
@@ -46,10 +45,8 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # MAIL SERVER CONFIG (Required for Email Verification)
-# Gmail by default; set MAIL_SERVER/MAIL_PORT to use an email service instead
-# (e.g. smtp-relay.brevo.com / 587), with that service's MAIL_USERNAME/MAIL_PASSWORD
-app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT", "587"))
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
 app.config["MAIL_USE_SSL"] = False
 app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
@@ -64,8 +61,6 @@ app.config["MAIL_DEFAULT_SENDER"] = (
 db.init_app(app)
 jwt = JWTManager(app)
 mail = Mail(app)
-# Sends through the Gmail API on Heroku, SMTP locally (see email_sender.py)
-email_sender = EmailSender(mail)
 serializer = URLSafeTimedSerializer(app.config["JWT_SECRET_KEY"])
 
 with app.app_context():
@@ -153,7 +148,7 @@ If you did not create this account, you can ignore this email.
 {LIBRARY_NAME}
 {FRONTEND_URL}
 """
-    email_sender.send(msg)
+    mail.send(msg)
 
 
 @app.route("/api/register", methods=["POST"])
@@ -275,7 +270,7 @@ If you did not ask to reset your password, you can ignore this email. Your passw
 {FRONTEND_URL}
 """
         try:
-            email_sender.send(msg)
+            mail.send(msg)
         except Exception as e:
             print(f"Password reset email to {email} failed: {e}")
             return jsonify({"error": EMAIL_UNAVAILABLE}), 503
@@ -729,7 +724,7 @@ def send_reminder_email(record):
     user = record.user
     if not user:
         return
-    email_sender.send(
+    mail.send(
         Message(
             subject="Reminder: Library Book Overdue",
             recipients=[user.email],
@@ -929,11 +924,12 @@ def admin_bulk_email():
         # Note: We use Bcc to prevent users from seeing each other's email addresses
         msg = Message(
             subject=subject,
+            sender=app.config["MAIL_USERNAME"],
             bcc=recipients,  # Using BCC for privacy
             body=message_body,
         )
 
-        email_sender.send(msg)
+        mail.send(msg)
         return (
             jsonify({"message": f"Successfully sent to {len(recipients)} users."}),
             200,
@@ -1114,7 +1110,7 @@ Sent:  {sent_at:%A, %B %d, %Y at %I:%M %p} ET
 Reply to this email to answer {name}. The message is also saved in the
 admin panel under Contact Messages.
 """
-        email_sender.send(notice)
+        mail.send(notice)
     except Exception as e:
         print(f"Contact email to {CONTACT_EMAIL} failed: {e}")
 
