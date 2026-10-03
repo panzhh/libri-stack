@@ -140,6 +140,9 @@ class BorrowRecord(db.Model):
     book = db.relationship("Book", backref="borrow_history")
     user = db.relationship("User")
     renewed = db.Column(db.Boolean, default=False)
+    # Due date the "due in 3 days" reminder was sent for (a renewal changes the
+    # due date, so the new date gets its own reminder)
+    due_soon_reminded_for = db.Column(db.DateTime)
 
 
 class ContactMessage(db.Model):

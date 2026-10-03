@@ -1,4 +1,4 @@
-"""Send overdue-book reminders once and exit.
+"""Send the due-soon and overdue reminders once and exit.
 
 For the Heroku Scheduler add-on (command: `python backend/send_reminders.py`),
 used instead of the in-process job when RUN_SCHEDULER=0.

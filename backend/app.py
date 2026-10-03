@@ -699,43 +699,108 @@ def get_borrow_history():
 scheduler = APScheduler()
 
 
-def check_overdue_tasks():
-    """Daily job: email members whose books are past their due date."""
+DUE_SOON_DAYS = 3
+
+
+def _as_utc(dt):
+    """Database datetimes come back without a timezone; they are UTC."""
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+
+
+def _library_date(dt):
+    """The calendar date in Eastern Time, which is what members think in."""
+    return _as_utc(dt).astimezone(ZoneInfo("America/New_York")).date()
+
+
+def _due_date_text(due_date):
+    day = _library_date(due_date)
+    return f"{day:%A, %B} {day.day}, {day.year}"
+
+
+def check_overdue_tasks(now=None):
+    """Daily job (9:00 AM ET): borrowing reminders.
+
+    - 3 days before the due date: one "due soon" email per loan (per due date).
+    - From the day after the due date: an "overdue" email every day until it
+      is returned. Days are calendar days in Eastern Time.
+    """
     with app.app_context():
-        print("Running overdue check...")
-        cutoff = datetime.now(timezone.utc)
+        now = now or datetime.now(timezone.utc)
+        today = _library_date(now)
         records = (
             BorrowRecord.query.options(
                 joinedload(BorrowRecord.user), joinedload(BorrowRecord.book)
             )
-            .filter(BorrowRecord.due_date < cutoff, BorrowRecord.status == "borrowed")
+            .filter(
+                BorrowRecord.status == "borrowed",
+                BorrowRecord.due_date <= now + timedelta(days=DUE_SOON_DAYS + 1),
+            )
             .all()
         )
 
-        sent = 0
+        sent = {"due soon": 0, "overdue": 0}
         for record in records:
+            due_day = _library_date(record.due_date)
+            if due_day < today:
+                kind = "overdue"
+            elif (
+                (due_day - today).days <= DUE_SOON_DAYS
+                and record.due_soon_reminded_for != record.due_date
+            ):
+                kind = "due soon"
+            else:
+                continue  # not due soon yet, or already reminded for this date
             try:
-                send_reminder_email(record)
-                sent += 1
+                send_reminder_email(record, kind, now)
+                if kind == "due soon":
+                    record.due_soon_reminded_for = record.due_date
+                    db.session.commit()
+                sent[kind] += 1
             except Exception as e:
-                print(f"Reminder to user {record.user_id} failed: {e}")
-        print(f"Scan complete: {sent}/{len(records)} reminders sent.")
-
-
-def send_reminder_email(record):
-    user = record.user
-    if not user:
-        return
-    mail.send(
-        Message(
-            subject="Reminder: Library Book Overdue",
-            recipients=[user.email],
-            body=(
-                f"Hi {user.full_name}, the book '{record.book.title}' was due on "
-                f"{record.due_date:%Y-%m-%d}. Please return or renew it soon!"
-            ),
+                db.session.rollback()
+                print(f"{kind} reminder to user {record.user_id} failed: {e}")
+        print(
+            f"Reminders sent: {sent['due soon']} due soon, {sent['overdue']} overdue."
         )
+        return sent
+
+
+def send_reminder_email(record, kind, now):
+    user = record.user
+    if not user or not record.book:
+        return
+    due_text = _due_date_text(record.due_date)
+    renew_line = (
+        "You can renew it once for 30 more days from your dashboard."
+        if not record.renewed
+        else "It has already been renewed, so please return it."
     )
+    if kind == "due soon":
+        subject = f"Reminder: '{record.book.title}' is due on {due_text}"
+        opening = (
+            f"This is a friendly reminder that the book '{record.book.title}' "
+            f"is due on {due_text}. Please return it on time."
+        )
+    else:
+        days = (_library_date(now) - _library_date(record.due_date)).days
+        late = f"{days} day{'s' if days != 1 else ''} ago"
+        subject = f"Overdue: please return '{record.book.title}'"
+        opening = (
+            f"The book '{record.book.title}' was due on {due_text} ({late}). "
+            "Please return it as soon as possible so other members can borrow it."
+        )
+    message = Message(subject, recipients=[user.email])
+    message.body = f"""Hi {user.full_name or "there"},
+
+{opening}
+
+{renew_line}
+Your borrowed books: {FRONTEND_URL}/user-dashboard
+
+{LIBRARY_NAME}
+{FRONTEND_URL}
+"""
+    mail.send(message)
 
 
 @app.route("/api/renew/<int:record_id>", methods=["POST"])
@@ -1289,6 +1354,9 @@ def add_missing_columns():
     from sqlalchemy import inspect, text
 
     new_columns = {
+        "borrow_records": {
+            "due_soon_reminded_for": "TIMESTAMP",
+        },
         "book_requests": {
             "copies": "INTEGER NOT NULL DEFAULT 1",
             "language": "VARCHAR(100)",
