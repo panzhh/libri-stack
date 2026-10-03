@@ -292,6 +292,8 @@ def reset_password():
     if not user:
         return jsonify({"error": "User no longer exists."}), 404
     user.set_password(data.get("password"))
+    # The reset link arrived in their inbox, so the email address is confirmed too
+    user.is_verified = True
     db.session.commit()
     return jsonify({"message": "Password updated successfully!"}), 200
 
