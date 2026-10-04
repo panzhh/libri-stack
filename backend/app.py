@@ -1,16 +1,19 @@
 import gzip
+import hashlib
+import hmac
 import json
 import os
+import secrets
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.exceptions import InternalServerError
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Mail, Message
-from models import db, User, Book, BorrowRecord, ContactMessage, BookRequest
+from models import db, User, Book, BorrowRecord, ContactMessage, BookRequest, ContactVerification
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from flask_apscheduler import APScheduler
 from sqlalchemy.orm import joinedload
 from zoneinfo import ZoneInfo
@@ -1170,18 +1173,29 @@ def delete_message(msg_id):
     return jsonify({"message": "Deleted"}), 200
 
 
-@app.route("/api/contact", methods=["POST"])
-def save_message():
-    data = request.get_json()
-    if not data.get("name") or not data.get("email") or not data.get("message"):
-        return jsonify({"error": "All fields are required"}), 400
+# --- CONTACT US (the sender confirms their email with a code first) ---
+CONTACT_CODE_MINUTES = 10
+CONTACT_CODE_MAX_ATTEMPTS = 5
+CONTACT_CODES_PER_EMAIL_PER_HOUR = 3
+CONTACT_CODES_PER_IP_PER_HOUR = 10
 
-    name = data["name"].strip()
-    email = data["email"].strip()
-    new_msg = ContactMessage(name=name, email=email, message=data["message"].strip())
+
+def _client_ip():
+    # Heroku appends the real client address last; earlier entries can be forged
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    return (forwarded.split(",")[-1].strip() if forwarded else request.remote_addr) or ""
+
+
+def _hash_code(code):
+    secret = app.config["JWT_SECRET_KEY"] or ""
+    return hmac.new(secret.encode(), code.encode(), hashlib.sha256).hexdigest()
+
+
+def deliver_contact_message(name, email, text):
+    """Save the message for the admin panel and email it to the library."""
+    new_msg = ContactMessage(name=name, email=email, message=text)
     db.session.add(new_msg)
     db.session.commit()  # saved first, so nothing is lost if the email fails
-
     try:
         sent_at = datetime.now(timezone.utc).astimezone(ZoneInfo("America/New_York"))
         notice = Message(
@@ -1192,10 +1206,10 @@ def save_message():
         notice.body = f"""New message from the {LIBRARY_NAME} website.
 
 Name:  {name}
-Email: {email}
+Email: {email} (verified)
 Sent:  {sent_at:%A, %B %d, %Y at %I:%M %p} ET
 
-{new_msg.message}
+{text}
 
 ---
 Reply to this email to answer {name}. The message is also saved in the
@@ -1205,7 +1219,127 @@ admin panel under Contact Messages.
     except Exception as e:
         print(f"Contact email to {CONTACT_EMAIL} failed: {e}")
 
-    return jsonify({"status": "success", "message": "Message sent"}), 201
+
+def _logged_in_email():
+    """The verified email of the logged-in member, if any."""
+    try:
+        verify_jwt_in_request(optional=True)
+        identity = get_jwt_identity()
+    except Exception:
+        return None
+    user = db.session.get(User, int(identity)) if identity else None
+    return user.email.lower() if user and user.is_verified else None
+
+
+@app.route("/api/contact", methods=["POST"])
+def contact_request():
+    """Step 1: email a 6-digit code to the sender (members using their own
+    account email skip the code: their address is already confirmed)."""
+    data = request.get_json() or {}
+    name = (data.get("name") or "").strip()[:255]
+    email = (data.get("email") or "").strip().lower()[:255]
+    text = (data.get("message") or "").strip()[:5000]
+    if not name or not email or not text or "@" not in email:
+        return jsonify({"error": "Please fill in your name, email and message."}), 400
+
+    if _logged_in_email() == email:
+        deliver_contact_message(name, email, text)
+        return jsonify({"status": "sent"}), 201
+
+    now = datetime.now(timezone.utc)
+    ContactVerification.query.filter(
+        ContactVerification.created_at < now - timedelta(days=1)
+    ).delete()
+    hour_ago = now - timedelta(hours=1)
+    recent = ContactVerification.query.filter(ContactVerification.created_at >= hour_ago)
+    ip = _client_ip()
+    if (
+        recent.filter_by(email=email).count() >= CONTACT_CODES_PER_EMAIL_PER_HOUR
+        or recent.filter_by(ip=ip).count() >= CONTACT_CODES_PER_IP_PER_HOUR
+    ):
+        db.session.commit()
+        return (
+            jsonify(
+                {"error": "Too many verification codes requested. Please try again in an hour."}
+            ),
+            429,
+        )
+
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    pending = ContactVerification(
+        name=name,
+        email=email,
+        message=text,
+        code_hash=_hash_code(code),
+        ip=ip,
+        expires_at=now + timedelta(minutes=CONTACT_CODE_MINUTES),
+    )
+    db.session.add(pending)
+    db.session.commit()
+
+    try:
+        msg = Message(f"Your verification code: {code}", recipients=[email])
+        msg.body = f"""Hi {name},
+
+Your verification code for the {LIBRARY_NAME} contact form is:
+
+    {code}
+
+Enter it on the website to send your message. The code expires in
+{CONTACT_CODE_MINUTES} minutes.
+
+If you did not try to contact us, you can ignore this email.
+
+{LIBRARY_NAME}
+{FRONTEND_URL}
+"""
+        mail.send(msg)
+    except Exception as e:
+        print(f"Contact verification email to {email} failed: {e}")
+        db.session.delete(pending)
+        db.session.commit()
+        return jsonify({"error": EMAIL_UNAVAILABLE}), 503
+
+    return jsonify({"status": "code_sent", "verification_id": pending.id}), 202
+
+
+def _spend(pending):
+    """Disable a code but keep the row until the daily cleanup, so it still
+    counts toward the hourly limits."""
+    pending.code_hash = ""
+    pending.message = ""
+    db.session.commit()
+
+
+@app.route("/api/contact/verify", methods=["POST"])
+def contact_verify():
+    """Step 2: check the code and deliver the message."""
+    data = request.get_json() or {}
+    code = (data.get("code") or "").strip()
+    pending = db.session.get(ContactVerification, data.get("verification_id") or 0)
+    if not pending or not pending.code_hash:
+        return jsonify({"error": "This code has expired. Please send your message again."}), 410
+
+    expires_at = pending.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires_at or pending.attempts >= CONTACT_CODE_MAX_ATTEMPTS:
+        _spend(pending)
+        return jsonify({"error": "This code has expired. Please send your message again."}), 410
+
+    if not hmac.compare_digest(pending.code_hash, _hash_code(code)):
+        pending.attempts += 1
+        db.session.commit()
+        left = CONTACT_CODE_MAX_ATTEMPTS - pending.attempts
+        return (
+            jsonify({"error": f"That code is not correct. {left} attempt{'s' if left != 1 else ''} left."}),
+            400,
+        )
+
+    name, email, text = pending.name, pending.email, pending.message
+    _spend(pending)  # a code works once
+    deliver_contact_message(name, email, text)
+    return jsonify({"status": "sent"}), 201
 
 
 # --- BOOK REQUESTS (members ask the library to order a book) ---

@@ -240,3 +240,19 @@ class BookRequest(db.Model):
             "requester_email": self.user.email if self.user else None,
             "date": self.created_at.strftime("%Y-%m-%d") if self.created_at else None,
         }
+
+
+class ContactVerification(db.Model):
+    """A Contact Us message waiting for the sender to enter the emailed code."""
+
+    __tablename__ = "contact_verifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), nullable=False, index=True)
+    message = db.Column(db.Text, nullable=False)
+    code_hash = db.Column(db.String(64), nullable=False)  # the code itself is never stored
+    ip = db.Column(db.String(64), index=True)
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at = db.Column(db.DateTime, nullable=False)
