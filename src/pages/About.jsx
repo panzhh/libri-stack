@@ -28,9 +28,9 @@ export default function About() {
           Our Mission
         </h1>
         <p className='text-lg text-black leading-relaxed font-medium max-w-3xl'>
-          The Church in Dunn Loring Library is dedicated to equipping the
-          community with the spiritual resources and historical archives to
-          foster growth in the modern age.
+          Our burden and goal is to stir up the saints' interest in pursuing
+          the truth and to encourage them to enjoy reading the spiritual
+          publications.
         </p>
       </section>
 
