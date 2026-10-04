@@ -354,8 +354,8 @@ export default function Messages() {
 
   if (!loggedIn) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-20">
-        <h1 className="gb-h1 mb-4">Messages</h1>
+      <div>
+        <h3 className="text-base font-bold text-black mb-4">Messages</h3>
         <p className="text-lg">
           Please{" "}
           <Link to="/login" className="gb-link">
@@ -394,8 +394,8 @@ export default function Messages() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="gb-h1 mb-6">Messages</h1>
+    <div>
+      <h3 className="text-base font-bold text-black mb-6">Messages</h3>
 
       <div className="flex gap-2 flex-wrap mb-6" role="tablist">
         {tabs.map(([key, label]) => (
@@ -418,7 +418,7 @@ export default function Messages() {
         </p>
       )}
 
-      <section className="bg-white border border-gb-line rounded-xl p-4 sm:p-8">
+      <div>
         {box === "compose" ? (
           <Compose
             key={JSON.stringify(draft)}
@@ -463,7 +463,7 @@ export default function Messages() {
             }}
           />
         )}
-      </section>
+      </div>
     </div>
   );
 }

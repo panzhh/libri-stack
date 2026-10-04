@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
-import { API_URL, authHeaders } from "../api";
+import React, { useState } from "react";
+import { NavLink, Link, useNavigate } from "react-router-dom";
+import useUnreadMessages from "../hooks/useUnreadMessages";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -11,25 +11,7 @@ export default function Navbar() {
   const userName = localStorage.getItem("userName");
   const role = localStorage.getItem("role");
 
-  // Unread messages: refreshed on every page change, when the Messages page
-  // reports a change, and every minute
-  const location = useLocation();
-  const [unread, setUnread] = useState(0);
-  useEffect(() => {
-    if (!token) return; // the link is hidden when logged out
-    const refresh = () =>
-      fetch(`${API_URL}/api/messages/unread-count`, { headers: authHeaders() })
-        .then((r) => (r.ok ? r.json() : { unread: 0 }))
-        .then((d) => setUnread(d.unread || 0))
-        .catch(() => {});
-    refresh();
-    const timer = setInterval(refresh, 60000);
-    window.addEventListener("messages-changed", refresh);
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener("messages-changed", refresh);
-    };
-  }, [token, location.pathname]);
+  const unread = useUnreadMessages();
 
   const handleLogout = () => {
     localStorage.clear(); // Wipes token, role, and name
@@ -118,19 +100,6 @@ export default function Navbar() {
           <NavLink to="/contact" className={linkStyles}>
             Contact
           </NavLink>
-          {token && (
-            <NavLink to="/messages" className={linkStyles}>
-              Messages
-              {unread > 0 && (
-                <span
-                  className="ml-1.5 inline-block min-w-6 px-1.5 rounded-full bg-gb-red text-white text-sm text-center no-underline"
-                  aria-label={`${unread} unread`}
-                >
-                  {unread}
-                </span>
-              )}
-            </NavLink>
-          )}
           {token && role === "admin" && (
             <NavLink to="/admin-dashboard" className={linkStyles}>
               Admin Panel
@@ -139,6 +108,14 @@ export default function Navbar() {
           {token && (
             <NavLink to="/user-dashboard" className={linkStyles}>
               {role === "admin" ? "My Borrows" : "My Dashboard"}
+              {unread > 0 && (
+                <span
+                  className="ml-1.5 inline-block min-w-6 px-1.5 rounded-full bg-gb-red text-white text-sm text-center no-underline"
+                  aria-label={`${unread} unread`}
+                >
+                  {unread}
+                </span>
+              )}
             </NavLink>
           )}
         </div>

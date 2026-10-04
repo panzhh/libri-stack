@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { API_URL, authHeaders } from "../api";
+import useUnreadMessages from "../hooks/useUnreadMessages";
 
 export default function UserDashboard() {
   const userName = localStorage.getItem("userName") || "Member";
   const userEmail = localStorage.getItem("userEmail") || "Verified User";
   const location = useLocation();
+  const unreadMessages = useUnreadMessages();
 
   const [stats, setStats] = useState({ active: 0, total: 0 });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -100,6 +102,24 @@ export default function UserDashboard() {
               }`}
             >
               🧾 My Orders
+            </Link>
+            <Link
+              to='/user-dashboard/messages'
+              className={`flex items-center justify-between w-full p-3 rounded-xl font-bold text-xs transition-all ${
+                isActive("/user-dashboard/messages")
+                  ? "bg-gb-box text-gb-darker"
+                  : "text-black hover:bg-gb-tile"
+              }`}
+            >
+              ✉️ Messages
+              {unreadMessages > 0 && (
+                <span
+                  className='min-w-6 px-1.5 rounded-full bg-gb-red text-white text-sm text-center'
+                  aria-label={`${unreadMessages} unread`}
+                >
+                  {unreadMessages}
+                </span>
+              )}
             </Link>
 
             <Link

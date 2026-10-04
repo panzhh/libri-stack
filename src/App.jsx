@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -43,7 +48,10 @@ export default function App() {
             {/* Info Pages */}
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/messages" element={<Messages />} />
+            <Route
+              path="/messages"
+              element={<Navigate to="/user-dashboard/messages" replace />}
+            />
             <Route path="/order-books" element={<OrderBooks />} />
             <Route path="/verify/:token" element={<VerifyEmail />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -51,7 +59,8 @@ export default function App() {
               {/* When the user goes to /user-dashboard, it fills the <Outlet /> with BorrowedBooks */}
               <Route index element={<BorrowedBooks />} />
               <Route path="history" element={<BorrowHistory />} />
-              <Route path="orders" element={<MyOrders />} />{" "}
+              <Route path="orders" element={<MyOrders />} />
+              <Route path="messages" element={<Messages />} />{" "}
               {/* Add this line */}
               {/* You can add more routes here later, e.g., <Route path="history" element={<History />} /> */}
             </Route>
