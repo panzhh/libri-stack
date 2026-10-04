@@ -12,6 +12,16 @@ export default function Navbar() {
   const role = localStorage.getItem("role");
 
   const unread = useUnreadMessages();
+  // Shown on the link that leads to Messages: Admin Panel for admins,
+  // My Dashboard for members
+  const unreadBadge = unread > 0 && (
+    <span
+      className="ml-1.5 inline-block min-w-6 px-1.5 rounded-full bg-gb-red text-white text-sm text-center no-underline"
+      aria-label={`${unread} unread`}
+    >
+      {unread}
+    </span>
+  );
 
   const handleLogout = () => {
     localStorage.clear(); // Wipes token, role, and name
@@ -103,19 +113,13 @@ export default function Navbar() {
           {token && role === "admin" && (
             <NavLink to="/admin-dashboard" className={linkStyles}>
               Admin Panel
+              {unreadBadge}
             </NavLink>
           )}
           {token && (
             <NavLink to="/user-dashboard" className={linkStyles}>
               {role === "admin" ? "My Borrows" : "My Dashboard"}
-              {unread > 0 && (
-                <span
-                  className="ml-1.5 inline-block min-w-6 px-1.5 rounded-full bg-gb-red text-white text-sm text-center no-underline"
-                  aria-label={`${unread} unread`}
-                >
-                  {unread}
-                </span>
-              )}
+              {role !== "admin" && unreadBadge}
             </NavLink>
           )}
         </div>

@@ -325,7 +325,7 @@ function MessageList({ box, messages, onOpen }) {
   );
 }
 
-export default function Messages() {
+export default function Messages({ showTitle = true }) {
   const loggedIn = Boolean(localStorage.getItem("token"));
   const [box, setBox] = useState("inbox"); // "inbox", "sent" or "compose"
   const [messages, setMessages] = useState([]);
@@ -395,7 +395,9 @@ export default function Messages() {
 
   return (
     <div>
-      <h3 className="text-base font-bold text-black mb-6">Messages</h3>
+      {showTitle && (
+        <h3 className="text-base font-bold text-black mb-6">Messages</h3>
+      )}
 
       <div className="flex gap-2 flex-wrap mb-6" role="tablist">
         {tabs.map(([key, label]) => (

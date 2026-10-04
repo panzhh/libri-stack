@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_URL, authHeaders, coverUrl, showFallbackCover } from "../api";
 import AdminOrders from "../components/AdminOrders";
+import Messages from "./Messages";
+import useUnreadMessages from "../hooks/useUnreadMessages";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ export default function AdminDashboard() {
 
   // --- STATE MANAGEMENT ---
   const [activeTab, setActiveTab] = useState("overview");
+  const unreadMessages = useUnreadMessages();
   const [userSubTab, setUserSubTab] = useState("user");
   const [users, setUsers] = useState([]);
   const [books, setBooks] = useState([]);
@@ -671,6 +674,24 @@ export default function AdminDashboard() {
               >
                 My Profile
               </li>
+              <li
+                onClick={() => goTab("member-messages")}
+                className={`flex items-center justify-between p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
+                  activeTab === "member-messages"
+                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
+                    : "text-black hover:bg-gb-nav border-transparent"
+                }`}
+              >
+                Messages
+                {unreadMessages > 0 && (
+                  <span
+                    className='min-w-6 px-1.5 rounded-full bg-gb-red text-white text-sm text-center'
+                    aria-label={`${unreadMessages} unread`}
+                  >
+                    {unreadMessages}
+                  </span>
+                )}
+              </li>
             </ul>
           </div>
         </nav>
@@ -701,7 +722,9 @@ export default function AdminDashboard() {
                         ? "Add New Book"
                         : activeTab === "orders"
                           ? "Order Books"
-                          : "User Management"}
+                          : activeTab === "member-messages"
+                            ? "Messages"
+                            : "User Management"}
           </h1>
         </header>
 
@@ -1915,6 +1938,11 @@ export default function AdminDashboard() {
           </section>
         )}
         {activeTab === "orders" && <AdminOrders />}
+        {activeTab === "member-messages" && (
+          <section className='bg-white border border-gb-line rounded-xl p-4 md:p-8'>
+            <Messages showTitle={false} />
+          </section>
+        )}
       </main>
     </div>
   );
