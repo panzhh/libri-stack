@@ -44,8 +44,9 @@ export default function Footer() {
               <span className='font-bold text-gb-darker'>Library</span>
             </Link>
             <p className='text-lg leading-relaxed'>
-              Equipping the community with spiritual resources and historical
-              archives to foster growth and faith in the modern age.
+              Our burden and goal is to stir up the saints' interest in
+              pursuing the truth and to encourage them to enjoy reading the
+              spiritual publications.
             </p>
           </div>
 
