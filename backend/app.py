@@ -1178,6 +1178,7 @@ CONTACT_CODE_MINUTES = 10
 CONTACT_CODE_MAX_ATTEMPTS = 5
 CONTACT_CODES_PER_EMAIL_PER_HOUR = 10
 CONTACT_CODES_PER_IP_PER_HOUR = 10
+CONTACT_MESSAGES_PER_EMAIL_PER_HOUR = 10  # applies to logged-in members too
 
 
 def _client_ip():
@@ -1242,11 +1243,18 @@ def contact_request():
     if not name or not email or not text or "@" not in email:
         return jsonify({"error": "Please fill in your name, email and message."}), 400
 
+    now = datetime.now(timezone.utc)
+    sent_last_hour = ContactMessage.query.filter(
+        db.func.lower(ContactMessage.email) == email,
+        ContactMessage.created_at >= now - timedelta(hours=1),
+    ).count()
+    if sent_last_hour >= CONTACT_MESSAGES_PER_EMAIL_PER_HOUR:
+        return jsonify({"error": "You have sent too many messages. Please try again in an hour."}), 429
+
     if _logged_in_email() == email:
         deliver_contact_message(name, email, text)
         return jsonify({"status": "sent"}), 201
 
-    now = datetime.now(timezone.utc)
     ContactVerification.query.filter(
         ContactVerification.created_at < now - timedelta(days=1)
     ).delete()
