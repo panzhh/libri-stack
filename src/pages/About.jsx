@@ -113,7 +113,7 @@ export default function About() {
       {/* --- FOOTER NOTE --- */}
       <div className='mt-12 text-center'>
         <p className='text-black text-sm font-bold '>
-          Est. 2024 • Building Faith Through Knowledge
+          Est. 2026 • Building Faith Through Ministry
         </p>
       </div>
     </div>
