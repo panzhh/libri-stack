@@ -206,9 +206,9 @@ export default function Home() {
       <section className="mb-10">
         <h1 className="gb-h1">Church in Dunn Loring Library</h1>
         <p className="text-lg leading-relaxed mt-4 max-w-4xl">
-          Spiritual books, booklets and recordings for the church in Dunn
-          Loring. Browse the collection below, borrow a book, or ask the library
-          to order one for you.
+          Ministry publications for the library in the Church in Dunn Loring.
+          Please browse the collection below, borrow books, or ask the serving
+          ones to order one for you.
         </p>
       </section>
 
