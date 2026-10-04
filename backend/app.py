@@ -1176,7 +1176,7 @@ def delete_message(msg_id):
 # --- CONTACT US (the sender confirms their email with a code first) ---
 CONTACT_CODE_MINUTES = 10
 CONTACT_CODE_MAX_ATTEMPTS = 5
-CONTACT_CODES_PER_EMAIL_PER_HOUR = 3
+CONTACT_CODES_PER_EMAIL_PER_HOUR = 10
 CONTACT_CODES_PER_IP_PER_HOUR = 10
 
 
