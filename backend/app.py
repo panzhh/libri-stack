@@ -1163,21 +1163,6 @@ def promote_user(user_id):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/admin/contact_messages", methods=["GET"])
-def get_messages():
-    # Only admins should see this (add your @admin_required decorator here)
-    messages = ContactMessage.query.order_by(ContactMessage.created_at.desc()).all()
-    return jsonify([m.to_dict() for m in messages])
-
-
-@app.route("/api/admin/delete-message/<int:msg_id>", methods=["DELETE"])
-def delete_message(msg_id):
-    msg = db.get_or_404(ContactMessage, msg_id)
-    db.session.delete(msg)
-    db.session.commit()
-    return jsonify({"message": "Deleted"}), 200
-
-
 # --- CONTACT US (the sender confirms their email with a code first) ---
 CONTACT_CODE_MINUTES = 10
 CONTACT_CODE_MAX_ATTEMPTS = 3

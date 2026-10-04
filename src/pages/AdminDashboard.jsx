@@ -52,7 +52,6 @@ export default function AdminDashboard() {
     listPriceUsd: 0.0,
   });
 
-  const [contactMessages, setContactMessages] = useState([]);
   const [borrowRecords, setBorrowRecords] = useState([]);
 
   // --- FIELD DEFINITIONS ---
@@ -79,24 +78,6 @@ export default function AdminDashboard() {
     },
     { label: "Summary", key: "summary", fullWidth: true, isTextArea: true },
   ];
-
-  // --- FETCH: CONTACT MESSAGES ---
-  const fetchMessages = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/admin/contact_messages`, {
-        headers: authHeaders(),
-      });
-      const data = await response.json();
-      setContactMessages(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Error fetching messages:", err);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === "messages") fetchMessages();
-  }, [activeTab]);
-
 
   // --- FETCH: ADMIN PROFILE ---
   const fetchAdminProfile = async () => {
@@ -400,29 +381,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // NOTE: adjust endpoint to match your backend route
-  const handleDeleteMessage = async (messageId) => {
-    if (!window.confirm("Delete this message?")) return;
-
-    try {
-      const res = await fetch(
-        `${API_URL}/api/admin/delete-message/${messageId}`,
-        {
-          method: "DELETE",
-          headers: authHeaders(),
-        },
-      );
-
-      if (res.ok) {
-        setContactMessages((prev) => prev.filter((m) => m.id !== messageId));
-      } else {
-        alert("Failed to delete message.");
-      }
-    } catch {
-      alert("Server error deleting message.");
-    }
-  };
-
   const handlePromoteUser = async (userId, name) => {
     const confirmPromote = window.confirm(
       `Are you sure you want to promote ${name} to ADMIN? This gives them full access to LibriStack.`,
@@ -637,16 +595,6 @@ export default function AdminDashboard() {
                 Add New Book
               </li>
               <li
-                onClick={() => goTab("messages")}
-                className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
-                  activeTab === "messages"
-                    ? "bg-gb-dark text-white border-gb-dark shadow-sm"
-                    : "text-black hover:bg-gb-nav border-transparent"
-                }`}
-              >
-                Contact Messages
-              </li>
-              <li
                 onClick={() => goTab("orders")}
                 className={`p-3 rounded-xl font-bold text-sm cursor-pointer border transition-all ${
                   activeTab === "orders"
@@ -716,9 +664,7 @@ export default function AdminDashboard() {
                   ? "Book Inventory"
                   : activeTab === "borrowed"
                     ? "Borrowed Books"
-                    : activeTab === "messages"
-                      ? "Contact Messages"
-                      : activeTab === "add-book"
+                    : activeTab === "add-book"
                         ? "Add New Book"
                         : activeTab === "orders"
                           ? "Order Books"
@@ -1880,63 +1826,6 @@ export default function AdminDashboard() {
           </section>
         )}
 
-        {/* MESSAGES TAB */}
-        {activeTab === "messages" && (
-          <section className='animate-in fade-in space-y-6'>
-            <div className='flex justify-between items-center mb-6 md:mb-8'>
-              <h3 className='text-xl md:text-2xl font-bold text-black '>
-                Inbox
-              </h3>
-              <span className='bg-gb-box text-gb-darker px-4 py-1 rounded-full text-xs font-bold '>
-                {contactMessages.length} Messages
-              </span>
-            </div>
-
-            <div className='grid grid-cols-1 gap-4'>
-              {contactMessages.length === 0 ? (
-                <div className='py-20 text-center bg-white rounded-xl border-2 border-dashed border-gb-line'>
-                  <p className='text-black font-bold text-xs '>
-                    No messages yet
-                  </p>
-                </div>
-              ) : (
-                contactMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className='bg-white p-6 md:p-8 rounded-xl md:rounded-xl border border-gb-line shadow-sm hover:shadow-md transition-all'
-                  >
-                    <div className='flex justify-between items-start mb-4 gap-4'>
-                      <div className='min-w-0'>
-                        <h4 className='font-bold text-black text-sm truncate'>
-                          {msg.name}
-                        </h4>
-                        <p className='text-gb-darker text-xs font-bold break-all'>
-                          {msg.email}
-                        </p>
-                      </div>
-                      <span className='text-xs font-bold text-black bg-gb-box px-3 py-1 rounded-lg'>
-                        {msg.date}
-                      </span>
-                    </div>
-
-                    <p className='text-gb-muted text-sm leading-relaxed bg-gb-box p-5 md:p-6 rounded-lg border border-gb-line break-words'>
-                      "{msg.message}"
-                    </p>
-
-                    <div className='mt-6 flex gap-3'>
-                      <button
-                        onClick={() => handleDeleteMessage(msg.id)}
-                        className='text-xs font-bold border-2 border-gb-line text-black px-6 py-3 rounded-xl hover:text-rose-700 hover:border-rose-100 transition-all'
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-        )}
         {activeTab === "orders" && <AdminOrders />}
         {activeTab === "member-messages" && (
           <section className='bg-white border border-gb-line rounded-xl p-4 md:p-8'>
