@@ -34,29 +34,32 @@ const request = async (path, options = {}) => {
 // Search registered members by name and pick one
 function RecipientPicker({ recipient, onChange }) {
   const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false); // the list shows while the box has focus
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [failed, setFailed] = useState(false);
 
+  // Search as they type; an empty box lists members A–Z
   useEffect(() => {
-    const q = query.trim();
-    if (q.length < 2) {
-      setResults([]);
-      return;
-    }
+    if (!open) return;
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
         setResults(
-          await request(`/api/members/search?q=${encodeURIComponent(q)}`),
+          await request(
+            `/api/members/search?q=${encodeURIComponent(query.trim())}`,
+          ),
         );
+        setFailed(false);
       } catch {
         setResults([]);
+        setFailed(true);
       } finally {
         setSearching(false);
       }
-    }, 250);
+    }, 200);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, open]);
 
   if (recipient) {
     return (
@@ -81,27 +84,35 @@ function RecipientPicker({ recipient, onChange }) {
     );
   }
 
-  const q = query.trim();
   return (
     <div className="relative">
       <input
         type="search"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Type a member's name"
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
+        placeholder="Search members by name"
         aria-label="Search members by name"
         className="gb-input"
         autoComplete="off"
       />
-      {q.length >= 2 && (
+      {open && (
         <ul className="absolute z-10 left-0 right-0 mt-1 bg-white border-2 border-gb-line rounded-md shadow-sm max-h-72 overflow-y-auto">
           {results.map((member) => (
             <li key={member.id}>
               <button
                 type="button"
-                onClick={() => {
+                // mousedown fires before the box loses focus and closes the list
+                onMouseDown={(e) => {
+                  e.preventDefault();
                   onChange(member);
                   setQuery("");
+                  setOpen(false);
                 }}
                 className="w-full text-left px-4 py-3 hover:bg-gb-tile"
               >
@@ -112,7 +123,11 @@ function RecipientPicker({ recipient, onChange }) {
           ))}
           {results.length === 0 && (
             <li className="px-4 py-3 text-gb-muted">
-              {searching ? "Searching..." : "No members found with that name."}
+              {searching
+                ? "Searching..."
+                : failed
+                  ? "Could not search members. Please try again."
+                  : "No members found with that name."}
             </li>
           )}
         </ul>

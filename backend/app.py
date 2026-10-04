@@ -1372,9 +1372,8 @@ def _masked_email(email):
 @app.route("/api/members/search", methods=["GET"])
 @jwt_required()
 def search_members():
-    q = (request.args.get("q") or "").strip()
-    if len(q) < 2:
-        return jsonify([]), 200
+    """Members whose name contains ?q= (the first 20 by name when q is empty)."""
+    q = (request.args.get("q") or "").strip()[:100]
     pattern = "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
     members = (
         User.query.filter(
