@@ -254,5 +254,5 @@ class ContactVerification(db.Model):
     code_hash = db.Column(db.String(64), nullable=False)  # the code itself is never stored
     ip = db.Column(db.String(64), index=True)
     attempts = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)  # plain UTC
+    expires_at = db.Column(db.DateTime, nullable=False)  # plain UTC

@@ -1244,7 +1244,9 @@ def contact_request():
     if _messages_sent_last_hour(email) >= CONTACT_MESSAGES_PER_EMAIL_PER_HOUR:
         return jsonify({"error": TOO_MANY_MESSAGES}), 429
 
-    now = datetime.now(timezone.utc)
+    # Plain UTC (no time zone attached), so a database running on local time
+    # doesn't shift these timestamps
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     ContactVerification.query.filter(
         ContactVerification.created_at < now - timedelta(days=1)
     ).delete()
@@ -1270,6 +1272,7 @@ def contact_request():
         message=text,
         code_hash=_hash_code(code),
         ip=ip,
+        created_at=now,
         expires_at=now + timedelta(minutes=CONTACT_CODE_MINUTES),
     )
     db.session.add(pending)
@@ -1318,10 +1321,8 @@ def contact_verify():
     if not pending or not pending.code_hash:
         return jsonify({"error": "This code has expired. Please send your message again."}), 410
 
-    expires_at = pending.expires_at
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if datetime.now(timezone.utc) > expires_at or pending.attempts >= CONTACT_CODE_MAX_ATTEMPTS:
+    expires_at = pending.expires_at.replace(tzinfo=None)  # stored as plain UTC
+    if datetime.now(timezone.utc).replace(tzinfo=None) > expires_at or pending.attempts >= CONTACT_CODE_MAX_ATTEMPTS:
         _spend(pending)
         return jsonify({"error": "This code has expired. Please send your message again."}), 410
 
