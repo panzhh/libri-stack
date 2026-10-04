@@ -1234,11 +1234,12 @@ def _logged_in_email():
 
 @app.route("/api/contact", methods=["POST"])
 def contact_request():
-    """Step 1: email a 6-digit code to the sender (members using their own
-    account email skip the code: their address is already confirmed)."""
+    """Step 1: email a 6-digit code to the sender. Logged-in members skip the
+    code: their message is sent from their account email, already confirmed."""
     data = request.get_json() or {}
     name = (data.get("name") or "").strip()[:255]
-    email = (data.get("email") or "").strip().lower()[:255]
+    member_email = _logged_in_email()
+    email = member_email or (data.get("email") or "").strip().lower()[:255]
     text = (data.get("message") or "").strip()[:5000]
     if not name or not email or not text or "@" not in email:
         return jsonify({"error": "Please fill in your name, email and message."}), 400
@@ -1251,7 +1252,7 @@ def contact_request():
     if sent_last_hour >= CONTACT_MESSAGES_PER_EMAIL_PER_HOUR:
         return jsonify({"error": "You have sent too many messages. Please try again in an hour."}), 429
 
-    if _logged_in_email() == email:
+    if member_email:
         deliver_contact_message(name, email, text)
         return jsonify({"status": "sent"}), 201
 

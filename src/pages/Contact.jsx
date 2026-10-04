@@ -9,6 +9,11 @@ export default function Contact() {
     message: "",
   });
 
+  // Logged-in members send from their account email without a code
+  const loggedIn = Boolean(
+    localStorage.getItem("token") && localStorage.getItem("userEmail"),
+  );
+
   // "form" -> (code emailed) "code" -> message delivered
   const [step, setStep] = useState("form");
   const [verificationId, setVerificationId] = useState(null);
@@ -170,11 +175,17 @@ export default function Contact() {
                 type="email"
                 required
                 placeholder="email@example.com"
+                readOnly={loggedIn}
+                title={
+                  loggedIn
+                    ? "Messages are sent from your account email"
+                    : undefined
+                }
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-5 py-4 bg-white border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted focus:border-gb-dark rounded-lg outline-none font-normal text-lg transition-all"
+                className={`w-full px-5 py-4 ${loggedIn ? "bg-gb-box" : "bg-white"} border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted focus:border-gb-dark rounded-lg outline-none font-normal text-lg transition-all`}
               />
             </div>
 
