@@ -13,7 +13,7 @@ from flask_mail import Mail, Message
 from models import db, User, Book, BorrowRecord, ContactMessage, BookRequest, ContactVerification
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
-from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_apscheduler import APScheduler
 from sqlalchemy.orm import joinedload
 from zoneinfo import ZoneInfo
@@ -1178,7 +1178,7 @@ CONTACT_CODE_MINUTES = 10
 CONTACT_CODE_MAX_ATTEMPTS = 5
 CONTACT_CODES_PER_EMAIL_PER_HOUR = 10
 CONTACT_CODES_PER_IP_PER_HOUR = 10
-CONTACT_MESSAGES_PER_EMAIL_PER_HOUR = 10  # applies to logged-in members too
+CONTACT_MESSAGES_PER_EMAIL_PER_HOUR = 5
 
 
 def _client_ip():
@@ -1221,41 +1221,30 @@ admin panel under Contact Messages.
         print(f"Contact email to {CONTACT_EMAIL} failed: {e}")
 
 
-def _logged_in_email():
-    """The verified email of the logged-in member, if any."""
-    try:
-        verify_jwt_in_request(optional=True)
-        identity = get_jwt_identity()
-    except Exception:
-        return None
-    user = db.session.get(User, int(identity)) if identity else None
-    return user.email.lower() if user and user.is_verified else None
+def _messages_sent_last_hour(email):
+    return ContactMessage.query.filter(
+        db.func.lower(ContactMessage.email) == email,
+        ContactMessage.created_at >= datetime.now(timezone.utc) - timedelta(hours=1),
+    ).count()
+
+
+TOO_MANY_MESSAGES = "You have sent too many messages. Please try again in an hour."
 
 
 @app.route("/api/contact", methods=["POST"])
 def contact_request():
-    """Step 1: email a 6-digit code to the sender. Logged-in members skip the
-    code: their message is sent from their account email, already confirmed."""
+    """Step 1: email a 6-digit code to the sender (everyone, logged in or not)."""
     data = request.get_json() or {}
     name = (data.get("name") or "").strip()[:255]
-    member_email = _logged_in_email()
-    email = member_email or (data.get("email") or "").strip().lower()[:255]
+    email = (data.get("email") or "").strip().lower()[:255]
     text = (data.get("message") or "").strip()[:5000]
     if not name or not email or not text or "@" not in email:
         return jsonify({"error": "Please fill in your name, email and message."}), 400
 
+    if _messages_sent_last_hour(email) >= CONTACT_MESSAGES_PER_EMAIL_PER_HOUR:
+        return jsonify({"error": TOO_MANY_MESSAGES}), 429
+
     now = datetime.now(timezone.utc)
-    sent_last_hour = ContactMessage.query.filter(
-        db.func.lower(ContactMessage.email) == email,
-        ContactMessage.created_at >= now - timedelta(hours=1),
-    ).count()
-    if sent_last_hour >= CONTACT_MESSAGES_PER_EMAIL_PER_HOUR:
-        return jsonify({"error": "You have sent too many messages. Please try again in an hour."}), 429
-
-    if member_email:
-        deliver_contact_message(name, email, text)
-        return jsonify({"status": "sent"}), 201
-
     ContactVerification.query.filter(
         ContactVerification.created_at < now - timedelta(days=1)
     ).delete()
@@ -1346,6 +1335,8 @@ def contact_verify():
         )
 
     name, email, text = pending.name, pending.email, pending.message
+    if _messages_sent_last_hour(email) >= CONTACT_MESSAGES_PER_EMAIL_PER_HOUR:
+        return jsonify({"error": TOO_MANY_MESSAGES}), 429
     _spend(pending)  # a code works once
     deliver_contact_message(name, email, text)
     return jsonify({"status": "sent"}), 201

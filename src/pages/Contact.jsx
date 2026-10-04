@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { API_URL, authHeaders } from "../api";
+import { API_URL } from "../api";
 
 export default function Contact() {
   // Logged-in members don't need to type their name and email again
@@ -8,11 +8,6 @@ export default function Contact() {
     email: localStorage.getItem("userEmail") || "",
     message: "",
   });
-
-  // Logged-in members send from their account email without a code
-  const loggedIn = Boolean(
-    localStorage.getItem("token") && localStorage.getItem("userEmail"),
-  );
 
   // "form" -> (code emailed) "code" -> message delivered
   const [step, setStep] = useState("form");
@@ -24,8 +19,7 @@ export default function Contact() {
   const post = async (path, body) => {
     const response = await fetch(`${API_URL}${path}`, {
       method: "POST",
-      // Logged-in members writing from their own email skip the code
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     const data = await response.json().catch(() => ({}));
@@ -175,17 +169,11 @@ export default function Contact() {
                 type="email"
                 required
                 placeholder="email@example.com"
-                readOnly={loggedIn}
-                title={
-                  loggedIn
-                    ? "Messages are sent from your account email"
-                    : undefined
-                }
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className={`w-full px-5 py-4 ${loggedIn ? "bg-gb-box" : "bg-white"} border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted focus:border-gb-dark rounded-lg outline-none font-normal text-lg transition-all`}
+                className="w-full px-5 py-4 bg-white border-2 border-[#9fb3bd] text-black placeholder:text-gb-muted focus:border-gb-dark rounded-lg outline-none font-normal text-lg transition-all"
               />
             </div>
 
