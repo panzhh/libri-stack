@@ -20,6 +20,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import OrderBooks from "./pages/OrderBooks";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Messages from "./pages/Messages";
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
             {/* Info Pages */}
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/order-books" element={<OrderBooks />} />
             <Route path="/verify/:token" element={<VerifyEmail />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />

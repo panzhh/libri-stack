@@ -256,3 +256,37 @@ class ContactVerification(db.Model):
     attempts = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, nullable=False)  # plain UTC
     expires_at = db.Column(db.DateTime, nullable=False)  # plain UTC
+
+
+class MemberMessage(db.Model):
+    """A message from one member to another (the site's internal mailbox)."""
+
+    __tablename__ = "member_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    recipient_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    subject = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)  # plain UTC
+    read_at = db.Column(db.DateTime)  # plain UTC; empty until the recipient opens it
+    # Each side deletes only their own copy
+    sender_deleted = db.Column(db.Boolean, default=False, nullable=False)
+    recipient_deleted = db.Column(db.Boolean, default=False, nullable=False)
+
+    sender = db.relationship("User", foreign_keys=[sender_id])
+    recipient = db.relationship("User", foreign_keys=[recipient_id])
+
+    def to_dict(self, with_body=False):
+        data = {
+            "id": self.id,
+            "subject": self.subject,
+            "sender": {"id": self.sender_id, "name": self.sender.full_name},
+            "recipient": {"id": self.recipient_id, "name": self.recipient.full_name},
+            "sent_at": self.created_at.isoformat() + "Z",
+            "read": self.read_at is not None,
+            "preview": self.body[:120],
+        }
+        if with_body:
+            data["body"] = self.body
+        return data

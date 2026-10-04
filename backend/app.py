@@ -10,7 +10,9 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_mail import Mail, Message
-from models import db, User, Book, BorrowRecord, ContactMessage, BookRequest, ContactVerification
+from models import (
+    db, User, Book, BorrowRecord, ContactMessage, BookRequest, ContactVerification, MemberMessage,
+)
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -447,6 +449,9 @@ def delete_user():
         return jsonify({"msg": f"User {email} not found"}), 404
 
     try:
+        MemberMessage.query.filter(
+            (MemberMessage.sender_id == user.id) | (MemberMessage.recipient_id == user.id)
+        ).delete(synchronize_session=False)
         db.session.delete(user)
         db.session.commit()
         return jsonify({"msg": f"User {email} deleted successfully"}), 200
@@ -1344,6 +1349,149 @@ def contact_verify():
     _spend(pending)  # a code works once
     deliver_contact_message(name, email, text)
     return jsonify({"status": "sent"}), 201
+
+
+# --- MEMBER MESSAGES (internal mailbox between registered members) ---
+MESSAGES_PER_HOUR = 30
+MESSAGE_SUBJECT_MAX = 200
+MESSAGE_BODY_MAX = 5000
+
+
+def _plain_utc_now():
+    """UTC with no time zone attached, so a database on local time doesn't shift it."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _masked_email(email):
+    """zhenhepan@gmail.com -> zh•••@gmail.com: tells same-named members apart
+    without showing their address."""
+    local, _, domain = email.partition("@")
+    return f"{local[:2]}•••@{domain}"
+
+
+@app.route("/api/members/search", methods=["GET"])
+@jwt_required()
+def search_members():
+    q = (request.args.get("q") or "").strip()
+    if len(q) < 2:
+        return jsonify([]), 200
+    pattern = "%" + q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+    members = (
+        User.query.filter(
+            User.is_verified.is_(True),
+            User.id != int(get_jwt_identity()),
+            User.full_name.ilike(pattern, escape="\\"),
+        )
+        .order_by(User.full_name)
+        .limit(20)
+        .all()
+    )
+    return jsonify([{"id": u.id, "name": u.full_name, "email_hint": _masked_email(u.email)} for u in members]), 200
+
+
+@app.route("/api/messages", methods=["GET"])
+@jwt_required()
+def list_messages():
+    """?box=inbox (default) or ?box=sent"""
+    me = int(get_jwt_identity())
+    query = MemberMessage.query.options(joinedload(MemberMessage.sender), joinedload(MemberMessage.recipient))
+    if request.args.get("box") == "sent":
+        query = query.filter_by(sender_id=me, sender_deleted=False)
+    else:
+        query = query.filter_by(recipient_id=me, recipient_deleted=False)
+    messages = query.order_by(MemberMessage.created_at.desc(), MemberMessage.id.desc()).limit(500).all()
+    return jsonify([m.to_dict() for m in messages]), 200
+
+
+@app.route("/api/messages/unread-count", methods=["GET"])
+@jwt_required()
+def unread_message_count():
+    count = MemberMessage.query.filter_by(
+        recipient_id=int(get_jwt_identity()), recipient_deleted=False, read_at=None
+    ).count()
+    return jsonify({"unread": count}), 200
+
+
+def _own_message(message_id):
+    """The message if the caller sent or received it (and hasn't deleted it)."""
+    me = int(get_jwt_identity())
+    message = db.session.get(MemberMessage, message_id)
+    if message and (
+        (message.recipient_id == me and not message.recipient_deleted)
+        or (message.sender_id == me and not message.sender_deleted)
+    ):
+        return message
+    return None
+
+
+@app.route("/api/messages/<int:message_id>", methods=["GET"])
+@jwt_required()
+def read_message(message_id):
+    message = _own_message(message_id)
+    if not message:
+        return jsonify({"error": "Message not found"}), 404
+    if message.recipient_id == int(get_jwt_identity()) and message.read_at is None:
+        message.read_at = _plain_utc_now()
+        db.session.commit()
+    return jsonify(message.to_dict(with_body=True)), 200
+
+
+@app.route("/api/messages", methods=["POST"])
+@jwt_required()
+def send_member_message():
+    me = int(get_jwt_identity())
+    sender = db.session.get(User, me)
+    if not sender or not sender.is_verified:
+        return jsonify({"error": "Please confirm your email before sending messages."}), 403
+
+    data = request.get_json() or {}
+    subject = (data.get("subject") or "").strip()
+    body = (data.get("body") or "").strip()
+    try:
+        recipient = db.session.get(User, int(data.get("recipient_id")))
+    except (TypeError, ValueError):
+        recipient = None
+    if not recipient or not recipient.is_verified:
+        return jsonify({"error": "Please choose who to send the message to."}), 400
+    if recipient.id == me:
+        return jsonify({"error": "You can't send a message to yourself."}), 400
+    if not subject or not body:
+        return jsonify({"error": "Please write a subject and a message."}), 400
+    if len(subject) > MESSAGE_SUBJECT_MAX or len(body) > MESSAGE_BODY_MAX:
+        return (
+            jsonify({"error": f"The subject can be up to {MESSAGE_SUBJECT_MAX} characters and the message up to {MESSAGE_BODY_MAX}."}),
+            400,
+        )
+
+    now = _plain_utc_now()
+    sent_last_hour = MemberMessage.query.filter(
+        MemberMessage.sender_id == me, MemberMessage.created_at >= now - timedelta(hours=1)
+    ).count()
+    if sent_last_hour >= MESSAGES_PER_HOUR:
+        return jsonify({"error": "You have sent too many messages. Please try again in an hour."}), 429
+
+    message = MemberMessage(sender_id=me, recipient_id=recipient.id, subject=subject, body=body, created_at=now)
+    db.session.add(message)
+    db.session.commit()
+    return jsonify(message.to_dict(with_body=True)), 201
+
+
+@app.route("/api/messages/<int:message_id>", methods=["DELETE"])
+@jwt_required()
+def delete_member_message(message_id):
+    """Remove the message from the caller's own mailbox; the other side keeps theirs."""
+    me = int(get_jwt_identity())
+    message = _own_message(message_id)
+    if not message:
+        return jsonify({"error": "Message not found"}), 404
+    if message.recipient_id == me:
+        message.recipient_deleted = True
+    if message.sender_id == me:
+        message.sender_deleted = True
+    if message.sender_deleted and message.recipient_deleted:
+        db.session.delete(message)
+    db.session.commit()
+    return jsonify({"status": "deleted"}), 200
 
 
 # --- BOOK REQUESTS (members ask the library to order a book) ---
