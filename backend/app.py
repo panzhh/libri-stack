@@ -1329,6 +1329,9 @@ def contact_verify():
         pending.attempts += 1
         db.session.commit()
         left = CONTACT_CODE_MAX_ATTEMPTS - pending.attempts
+        if left <= 0:
+            _spend(pending)
+            return jsonify({"error": "That code is not correct, and there are no attempts left. Please send your message again to get a new code."}), 410
         return (
             jsonify({"error": f"That code is not correct. {left} attempt{'s' if left != 1 else ''} left."}),
             400,
