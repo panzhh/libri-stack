@@ -98,16 +98,8 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className='pt-6 border-t border-gb-teal flex flex-col md:flex-row justify-between items-center gap-4 text-base'>
+        <div className='pt-6 border-t border-gb-teal text-base text-center md:text-left'>
           <p>© 2026 Church in Dunn Loring. All Rights Reserved.</p>
-          <div className='flex gap-6'>
-            <Link to='/privacy' className={linkClass}>
-              Privacy Policy
-            </Link>
-            <Link to='/terms' className={linkClass}>
-              Terms of Service
-            </Link>
-          </div>
         </div>
       </div>
     </footer>
